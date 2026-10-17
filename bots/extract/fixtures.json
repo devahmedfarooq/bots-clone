@@ -1,0 +1,4 @@
+[
+ {"name":"complete-invoice","input":"Invoice INV-104 from Cedar Supplies. Currency USD. Total payable: 149.50.","expected_json":{"vendor":"Cedar Supplies","invoice_number":"INV-104","currency":"USD","total":149.5}},
+ {"name":"missing-values","input":"Invoice from Northwind. Total EUR 20. No invoice number was provided.","expected_json":{"vendor":"Northwind","invoice_number":null,"currency":"EUR","total":20}}
+]

@@ -1,0 +1,13 @@
+{
+ "schema_version": 1,
+ "id": "extract",
+ "version": "1.0.0",
+ "description": "Extract invoice data into a consistent JSON object.",
+ "instructions": "Extract invoice data from the user's text. Output ONLY a JSON object with exactly these keys: vendor (string or null), invoice_number (string or null), currency (three-letter code or null), total (number or null). Use null for missing values. Do not invent fields or facts. Do not include Markdown or explanations.",
+ "base_model": "qwen3-1.7b-q8",
+ "tools": [],
+ "context_sources": [],
+ "generation": {"temperature": 0, "max_tokens": 256, "context_size": 4096},
+ "budgets": {"tokens": 4096, "tool_calls": 0, "seconds": 180},
+ "evaluation_suite": "fixtures.json"
+}

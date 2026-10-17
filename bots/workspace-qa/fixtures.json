@@ -1,0 +1,4 @@
+[
+ {"name":"read-project","input":"Read project.txt. Who owns Project Cedar, and which backend language and metadata database does it use? Cite the file.","contains":["Maya Chen","Go","SQLite","project.txt"],"min_tool_calls":1},
+ {"name":"search-and-read","input":"Search root 0 for the literal text Backup, then read the matching file. What is the backup schedule and retention? Cite the file.","contains":["Friday","18:00","four","operations.txt"],"min_tool_calls":2}
+]

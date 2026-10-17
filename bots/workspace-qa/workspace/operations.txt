@@ -1,0 +1,4 @@
+Project Cedar operations
+Backup schedule: every Friday at 18:00 local time.
+Retention: keep the latest four backups.
+Network requirement: no network access after installation.
