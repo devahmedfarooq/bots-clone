@@ -16,7 +16,7 @@ func NewManager(p Provider) *Manager {
 	m.slot <- struct{}{}
 	return m
 }
-func (m *Manager) Acquire(ctx context.Context, model string) (func(), error) {
+func (m *Manager) Acquire(ctx context.Context, model Model) (func(), error) {
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()

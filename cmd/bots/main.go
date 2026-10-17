@@ -72,8 +72,18 @@ func flags(name string) *flag.FlagSet {
 }
 func settings(f *flag.FlagSet) *config.Settings {
 	s := new(config.Settings)
-	f.IntVar(&s.MaxTokens, "max-tokens", 0, "override completion tokens")
-	f.IntVar(&s.ContextSize, "context", 0, "override context size")
+	positive := func(target *int) func(string) error {
+		return func(raw string) error {
+			n, e := strconv.Atoi(raw)
+			if e != nil || n < 1 {
+				return errors.New("must be a positive integer")
+			}
+			*target = n
+			return nil
+		}
+	}
+	f.Func("max-tokens", "override completion tokens", positive(&s.MaxTokens))
+	f.Func("context", "override context size", positive(&s.ContextSize))
 	f.Func("temperature", "override temperature", func(raw string) error {
 		n, e := strconv.ParseFloat(raw, 64)
 		if e == nil {
@@ -97,7 +107,20 @@ func execute(ctx context.Context, args []string) error {
 		if len(args) != 1 {
 			return errors.New("diagnostics takes no arguments")
 		}
-		return write(diagnostics.Collect())
+		report := diagnostics.Collect()
+		c, e := loadConfig(*configPath)
+		if e != nil {
+			report.Dependencies["framework_configuration"] = e.Error()
+		} else {
+			for name, path := range map[string]string{"configured_engine": c.Engine.Binary, "configured_model": c.Engine.ModelPath} {
+				if _, e = os.Stat(path); e != nil {
+					report.Dependencies[name] = "missing: " + path
+				} else {
+					report.Dependencies[name] = "available: " + path
+				}
+			}
+		}
+		return write(report)
 	}
 	c, e := loadConfig(*configPath)
 	if e != nil {

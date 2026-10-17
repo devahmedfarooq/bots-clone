@@ -86,7 +86,7 @@ func (r *Runner) Run(parent context.Context, b config.Bot, input string, o Optio
 			err = errors.Join(err, saveErr)
 		}
 	}()
-	release, e = r.Models.Acquire(ctx, b.BaseModel)
+	release, e = r.Models.Acquire(ctx, provider.Model{ID: b.BaseModel, ContextSize: settings.ContextSize})
 	if e != nil {
 		return run, e
 	}

@@ -24,7 +24,7 @@ type fake struct {
 	block          bool
 }
 
-func (f *fake) Load(context.Context, string) error {
+func (f *fake) Load(context.Context, provider.Model) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	if !f.loaded {
@@ -156,13 +156,13 @@ func TestBudgetsAndRecovery(t *testing.T) {
 func TestQueueAndCancellation(t *testing.T) {
 	f := &fake{}
 	m := provider.NewManager(f)
-	release, e := m.Acquire(context.Background(), "base")
+	release, e := m.Acquire(context.Background(), provider.Model{ID: "base", ContextSize: 4096})
 	if e != nil {
 		t.Fatal(e)
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
 	defer cancel()
-	if _, e = m.Acquire(ctx, "base"); e == nil {
+	if _, e = m.Acquire(ctx, provider.Model{ID: "base", ContextSize: 4096}); e == nil {
 		t.Fatal("cancelled queue acquired slot")
 	}
 	release()
@@ -171,7 +171,7 @@ func TestQueueAndCancellation(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			release, e := m.Acquire(context.Background(), "base")
+			release, e := m.Acquire(context.Background(), provider.Model{ID: "base", ContextSize: 4096})
 			if e != nil {
 				t.Error(e)
 				return
@@ -185,5 +185,14 @@ func TestQueueAndCancellation(t *testing.T) {
 	}
 	if e = m.Close(context.Background()); e != nil || f.unloads != 1 {
 		t.Fatal(e, f.unloads)
+	}
+}
+func TestRunDeadline(t *testing.T) {
+	f := &fake{block: true}
+	r, b := setup(t, f)
+	b.Budgets.Seconds = 1
+	run, e := r.Run(context.Background(), b, "wait", Options{})
+	if e == nil || run.Reason != "time_budget" {
+		t.Fatal(run, e)
 	}
 }

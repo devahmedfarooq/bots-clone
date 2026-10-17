@@ -47,8 +47,12 @@ type Response struct {
 	Usage   Usage
 	Finish  string
 }
+type Model struct {
+	ID          string
+	ContextSize int
+}
 type Provider interface {
-	Load(context.Context, string) error
+	Load(context.Context, Model) error
 	Count(context.Context, Request) (int, error)
 	Generate(context.Context, Request, func(string)) (Response, error)
 	Cancel()

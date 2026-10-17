@@ -31,6 +31,7 @@ type Llama struct {
 	log                                 *os.File
 	cancel                              context.CancelFunc
 	loaded                              bool
+	loadedContext                       int
 }
 
 func (p *Llama) client() *http.Client {
@@ -39,12 +40,15 @@ func (p *Llama) client() *http.Client {
 	}
 	return http.DefaultClient
 }
-func (p *Llama) Load(ctx context.Context, model string) error {
-	if model != p.ModelID {
-		return fmt.Errorf("model %q does not match configured base %q", model, p.ModelID)
+func (p *Llama) Load(ctx context.Context, model Model) error {
+	if model.ID != p.ModelID {
+		return fmt.Errorf("model %q does not match configured base %q", model.ID, p.ModelID)
+	}
+	if model.ContextSize < 512 || model.ContextSize > p.Capacity {
+		return errors.New("requested context exceeds configured engine capacity")
 	}
 	if p.loaded {
-		if e := p.Health(ctx); e == nil {
+		if e := p.Health(ctx); e == nil && p.loadedContext == model.ContextSize {
 			return nil
 		}
 		_ = p.Unload(context.Background())
@@ -69,10 +73,7 @@ func (p *Llama) Load(ctx context.Context, model string) error {
 	if err != nil {
 		return err
 	}
-	capacity := p.Capacity
-	if capacity == 0 {
-		capacity = 4096
-	}
+	capacity := model.ContextSize
 	p.cmd = exec.Command(p.Binary, "-m", p.ModelPath, "--alias", p.ModelID, "--host", "127.0.0.1", "--port", strconv.Itoa(port), "-c", strconv.Itoa(capacity), "-np", "1", "-ngl", strconv.Itoa(p.GPU), "--jinja", "--offline", "--no-webui", "--cache-ram", "0", "--log-verbosity", "2")
 	p.cmd.Stdout = p.log
 	p.cmd.Stderr = p.log
@@ -107,6 +108,7 @@ func (p *Llama) Load(ctx context.Context, model string) error {
 			cancel()
 			if err == nil {
 				p.loaded = true
+				p.loadedContext = model.ContextSize
 				return nil
 			}
 		}
