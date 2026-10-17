@@ -169,6 +169,6 @@ func (s *Store) Get(id string) (Run, error) {
 }
 func (s *Store) ToolEvents(id string) (int, error) {
 	var count int
-	e := s.db.QueryRow("SELECT count(*) FROM events WHERE run=?", id).Scan(&count)
+	e := s.db.QueryRow("SELECT count(*) FROM events WHERE run=? AND json_extract(body,'$.result.error') IS NULL", id).Scan(&count)
 	return count, e
 }

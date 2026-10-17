@@ -99,7 +99,9 @@ func (r *Registry) Call(ctx context.Context, grants []string, c provider.Call) R
 	case <-ctx.Done():
 		return failure("timeout", ctx.Err())
 	case result := <-ch:
-		if ctx.Err()!=nil{return failure("timeout",ctx.Err())}
+		if ctx.Err() != nil {
+			return failure("timeout", ctx.Err())
+		}
 		return result
 	}
 }

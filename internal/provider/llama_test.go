@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -49,10 +50,14 @@ func TestCancelAndLaterGeneration(t *testing.T) {
 	entered := make(chan struct{})
 	requests := 0
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		io.Copy(io.Discard, r.Body)
 		requests++
 		if requests == 1 {
 			close(entered)
-			<-r.Context().Done()
+			select {
+			case <-r.Context().Done():
+			case <-time.After(2 * time.Second):
+			}
 			return
 		}
 		fmt.Fprint(w, `{"choices":[{"message":{"role":"assistant","content":"recovered"},"finish_reason":"stop"}],"usage":{"prompt_tokens":1,"completion_tokens":1,"total_tokens":2}}`)

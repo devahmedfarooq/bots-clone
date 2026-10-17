@@ -23,6 +23,10 @@ func (m *Manager) Acquire(ctx context.Context, model Model) (func(), error) {
 	case <-m.slot:
 	}
 	release := func() { m.slot <- struct{}{} }
+	if err := ctx.Err(); err != nil {
+		release()
+		return nil, err
+	}
 	if m.closed {
 		release()
 		return nil, errors.New("model manager is closed")

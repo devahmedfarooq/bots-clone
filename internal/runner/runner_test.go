@@ -196,3 +196,17 @@ func TestRunDeadline(t *testing.T) {
 		t.Fatal(run, e)
 	}
 }
+func TestAlreadyCancelledCallerDoesNotLoad(t *testing.T) {
+	f := &fake{}
+	m := provider.NewManager(f)
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	if release, e := m.Acquire(ctx, provider.Model{ID: "base", ContextSize: 4096}); e == nil {
+		release()
+		t.Fatal("cancelled caller acquired model")
+	}
+	if f.loads != 0 {
+		t.Fatal("cancelled caller loaded weights")
+	}
+	m.Close(context.Background())
+}

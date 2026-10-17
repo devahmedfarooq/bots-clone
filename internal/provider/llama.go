@@ -20,18 +20,19 @@ import (
 )
 
 type Llama struct {
-	Binary, ModelPath, ModelID, LogPath string
-	Capacity                            int
-	GPU                                 int
-	URL                                 string
-	Client                              *http.Client
-	mu                                  sync.Mutex
-	cmd                                 *exec.Cmd
-	done                                chan error
-	log                                 *os.File
-	cancel                              context.CancelFunc
-	loaded                              bool
-	loadedContext                       int
+	Binary, ModelPath, ModelID, LogPath, Device string
+	Capacity                                    int
+	GPU                                         int
+	URL                                         string
+	Client                                      *http.Client
+	mu                                          sync.Mutex
+	cmd                                         *exec.Cmd
+	done                                        chan error
+	log                                         *os.File
+	cancel                                      context.CancelFunc
+	loaded                                      bool
+	loadedContext                               int
+	Starts                                      int
 }
 
 func (p *Llama) client() *http.Client {
@@ -75,6 +76,9 @@ func (p *Llama) Load(ctx context.Context, model Model) error {
 	}
 	capacity := model.ContextSize
 	p.cmd = exec.Command(p.Binary, "-m", p.ModelPath, "--alias", p.ModelID, "--host", "127.0.0.1", "--port", strconv.Itoa(port), "-c", strconv.Itoa(capacity), "-np", "1", "-ngl", strconv.Itoa(p.GPU), "--jinja", "--offline", "--no-webui", "--cache-ram", "0", "--log-verbosity", "2")
+	if p.Device != "" {
+		p.cmd.Args = append(p.cmd.Args, "--device", p.Device, "--split-mode", "none")
+	}
 	p.cmd.Stdout = p.log
 	p.cmd.Stderr = p.log
 	if err = p.cmd.Start(); err != nil {
@@ -83,6 +87,7 @@ func (p *Llama) Load(ctx context.Context, model Model) error {
 		return fmt.Errorf("start llama-server: %w", err)
 	}
 	p.done = make(chan error, 1)
+	p.Starts++
 	cmd := p.cmd
 	go func() { p.done <- cmd.Wait() }()
 	timer := time.NewTimer(2 * time.Minute)

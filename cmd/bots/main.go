@@ -34,6 +34,7 @@ type appConfig struct {
 		ModelID   string `json:"model_id"`
 		Context   int    `json:"context_size"`
 		GPU       int    `json:"gpu_layers"`
+		Device    string `json:"device"`
 	} `json:"engine"`
 }
 
@@ -225,7 +226,7 @@ func execute(ctx context.Context, args []string) error {
 		return e
 	}
 	defer unlock()
-	p := &provider.Llama{Binary: c.Engine.Binary, ModelPath: c.Engine.ModelPath, ModelID: c.Engine.ModelID, Capacity: c.Engine.Context, GPU: c.Engine.GPU, LogPath: filepath.Join(c.Home, "engine.log")}
+	p := &provider.Llama{Binary: c.Engine.Binary, ModelPath: c.Engine.ModelPath, ModelID: c.Engine.ModelID, Capacity: c.Engine.Context, GPU: c.Engine.GPU, Device: c.Engine.Device, LogPath: filepath.Join(c.Home, "engine.log")}
 	manager := provider.NewManager(p)
 	defer func() {
 		shutdown, cancel := context.WithTimeout(context.Background(), 15*time.Second)
@@ -264,6 +265,7 @@ func execute(ctx context.Context, args []string) error {
 		if e != nil {
 			return e
 		}
+		report.Runtime = map[string]any{"model_id": c.Engine.ModelID, "engine_binary": c.Engine.Binary, "model_path": c.Engine.ModelPath, "device": c.Engine.Device, "process_starts": p.Starts, "artifact_lock": "artifacts/baseline.lock.json"}
 		data, e := json.MarshalIndent(report, "", "  ")
 		if e != nil {
 			return e

@@ -7,7 +7,6 @@ import (
 	"os"
 	"reflect"
 	"strings"
-	"sync"
 	"time"
 
 	"bots/internal/config"
@@ -39,18 +38,18 @@ type Report struct {
 	PeakVRAMMiB   uint64               `json:"peak_device_vram_mib"`
 	PeakRAMBytes  uint64               `json:"peak_system_used_ram_bytes"`
 	Notes         string               `json:"notes"`
+	Runtime       map[string]any       `json:"runtime"`
 }
 
-func Execute(ctx context.Context, r *runner.Runner, bots []config.Bot, contexts []int) (Report, error) {
-	report := Report{At: time.Now().UTC(), Hardware: diagnostics.Collect(), Notes: "Memory is sampled device-wide VRAM and system-wide used RAM, including other applications; not isolated model allocations. First case includes cold load; later cases reuse weights. Synthetic fixtures are a baseline, not specialization evidence."}
-	var mu sync.Mutex
+func Execute(ctx context.Context, r *runner.Runner, bots []config.Bot, contexts []int) (report Report, err error) {
+	report = Report{At: time.Now().UTC(), Hardware: diagnostics.Collect(), Notes: "Memory is sampled device-wide VRAM and system-wide used RAM, including other applications; not isolated model allocations. First case at each context size includes cold load; later cases at that size reuse weights. Synthetic fixtures are a baseline, not specialization evidence."}
+	var samples []diagnostics.Sample
+	var peakVRAM, peakRAM uint64
 	sample := func() {
 		s := diagnostics.Measure()
-		mu.Lock()
-		report.MemorySamples = append(report.MemorySamples, s)
-		report.PeakVRAMMiB = max(report.PeakVRAMMiB, s.VRAMMiB)
-		report.PeakRAMBytes = max(report.PeakRAMBytes, s.RAMBytes)
-		mu.Unlock()
+		samples = append(samples, s)
+		peakVRAM = max(peakVRAM, s.VRAMMiB)
+		peakRAM = max(peakRAM, s.RAMBytes)
 	}
 	sample()
 	monitorCtx, stop := context.WithCancel(context.Background())
@@ -68,8 +67,14 @@ func Execute(ctx context.Context, r *runner.Runner, bots []config.Bot, contexts 
 			}
 		}
 	}()
-	finish := sync.OnceFunc(func() { stop(); <-done })
-	defer finish()
+	defer func() {
+		stop()
+		<-done
+		sample()
+		report.MemorySamples = samples
+		report.PeakVRAMMiB = peakVRAM
+		report.PeakRAMBytes = peakRAM
+	}()
 	passed := 0
 	for _, size := range contexts {
 		for _, b := range bots {
@@ -114,8 +119,6 @@ func Execute(ctx context.Context, r *runner.Runner, bots []config.Bot, contexts 
 			}
 		}
 	}
-	finish()
-	sample()
 	if len(report.Cases) > 0 {
 		report.PassRate = float64(passed) / float64(len(report.Cases))
 	}
