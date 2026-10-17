@@ -1,0 +1,11 @@
+.cache/
+.local/
+bin/
+models/
+runtime/
+*.gguf
+*.safetensors
+*.db*
+*.log
+*.exe
+*.zip
