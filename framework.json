@@ -1,0 +1,10 @@
+{
+  "home": ".local",
+  "engine": {
+    "binary": "runtime/llama/llama-server.exe",
+    "model_path": "models/Qwen3-1.7B-Q8_0.gguf",
+    "model_id": "qwen3-1.7b-q8",
+    "context_size": 4096,
+    "gpu_layers": 99
+  }
+}
