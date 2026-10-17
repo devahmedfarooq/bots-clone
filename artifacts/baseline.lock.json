@@ -1,0 +1,22 @@
+{
+ "engine": {
+  "name": "llama.cpp",
+  "tag": "b11669",
+  "commit": "620d2225c",
+  "backend": "Vulkan",
+  "license": "MIT",
+  "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11669/llama-b11669-bin-win-vulkan-x64.zip",
+  "sha256": "2c07574e7bde71321cb785282b20cc821e951132149eeceeea32ddebdbf0598e"
+ },
+ "model": {
+  "repository": "Qwen/Qwen3-1.7B-GGUF",
+  "revision": "90862c4b9d2787eaed51d12237eafdfe7c5f6077",
+  "filename": "Qwen3-1.7B-Q8_0.gguf",
+  "quantization": "Q8_0",
+  "architecture": "qwen3",
+  "license": "Apache-2.0",
+  "bytes": 1834426016,
+  "url": "https://huggingface.co/Qwen/Qwen3-1.7B-GGUF/resolve/90862c4b9d2787eaed51d12237eafdfe7c5f6077/Qwen3-1.7B-Q8_0.gguf",
+  "sha256": "061b54daade076b5d3362dac252678d17da8c68f07560be70818cace6590cb1a"
+ }
+}
