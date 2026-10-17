@@ -1,0 +1,21 @@
+{
+  "os": "windows",
+  "arch": "amd64",
+  "go_version": "go1.27.2",
+  "cpu_threads": 16,
+  "gpu": "NVIDIA GeForce RTX 5050 Laptop GPU, 8151 MiB, 1423 MiB, 610.74",
+  "memory": {
+    "available_bytes": 2239533056,
+    "total_bytes": 16873545728
+  },
+  "disks": {
+    "workspace_available_bytes": 149374164992,
+    "workspace_total_bytes": 510980517888
+  },
+  "dependencies": {
+    "configured_engine": "available: A:\\projects\\bots-clone\\runtime\\llama\\llama-server.exe",
+    "configured_model": "available: A:\\projects\\bots-clone\\models\\Qwen3-1.7B-Q8_0.gguf",
+    "go": "C:\\Program Files\\Go\\bin\\go.exe",
+    "llama-server": "missing from PATH"
+  }
+}

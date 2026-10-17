@@ -1,0 +1,557 @@
+{
+  "at": "2026-10-17T23:47:57.8685607Z",
+  "hardware": {
+    "os": "windows",
+    "arch": "amd64",
+    "go_version": "go1.27.2",
+    "cpu_threads": 16,
+    "gpu": "NVIDIA GeForce RTX 5050 Laptop GPU, 8151 MiB, 1422 MiB, 610.74",
+    "memory": {
+      "available_bytes": 2240098304,
+      "total_bytes": 16873545728
+    },
+    "disks": {
+      "workspace_available_bytes": 149373997056,
+      "workspace_total_bytes": 510980517888
+    },
+    "dependencies": {
+      "go": "C:\\Program Files\\Go\\bin\\go.exe",
+      "llama-server": "missing from PATH"
+    }
+  },
+  "cases": [
+    {
+      "bot": "extract",
+      "fixture": "complete-invoice",
+      "context_size": 1024,
+      "passed": true,
+      "run": {
+        "id": "ca837f36b29d5ef37cb9142b7940f2fb",
+        "session": "5192b9e6b4af04ec7f122fe020b6900a",
+        "bot": "extract",
+        "version": "1.0.0",
+        "status": "completed",
+        "termination_reason": "stop",
+        "output": "{\n  \"vendor\": \"Cedar Supplies\",\n  \"invoice_number\": \"INV-104\",\n  \"currency\": \"USD\",\n  \"total\": 149.50\n}",
+        "usage": {
+          "prompt_tokens": 107,
+          "completion_tokens": 43,
+          "total_tokens": 150
+        },
+        "started": "2026-10-18T04:47:58.115189+05:00",
+        "duration_ms": 22602
+      }
+    },
+    {
+      "bot": "extract",
+      "fixture": "missing-values",
+      "context_size": 1024,
+      "passed": true,
+      "run": {
+        "id": "1a3a804e3087fea07db87f57541f6374",
+        "session": "1ece383a698be32852d03534ef3e6e7a",
+        "bot": "extract",
+        "version": "1.0.0",
+        "status": "completed",
+        "termination_reason": "stop",
+        "output": "{\n  \"vendor\": \"Northwind\",\n  \"invoice_number\": null,\n  \"currency\": \"EUR\",\n  \"total\": 20\n}",
+        "usage": {
+          "prompt_tokens": 100,
+          "completion_tokens": 33,
+          "total_tokens": 133
+        },
+        "started": "2026-10-18T04:48:20.7203162+05:00",
+        "duration_ms": 320
+      }
+    },
+    {
+      "bot": "workspace-qa",
+      "fixture": "read-project",
+      "context_size": 1024,
+      "passed": true,
+      "run": {
+        "id": "9b8c9cd6680459956fcd3b37c95ec14a",
+        "session": "fad630b463c1106e129df8d2974a7b30",
+        "bot": "workspace-qa",
+        "version": "1.0.0",
+        "status": "completed",
+        "termination_reason": "stop",
+        "output": "Project Cedar is owned by Maya Chen. It uses the Go backend language and the SQLite metadata database. The file used to answer this question is `project.txt`.",
+        "usage": {
+          "prompt_tokens": 846,
+          "completion_tokens": 60,
+          "total_tokens": 906
+        },
+        "started": "2026-10-18T04:48:21.0457284+05:00",
+        "duration_ms": 10581
+      }
+    },
+    {
+      "bot": "workspace-qa",
+      "fixture": "search-and-read",
+      "context_size": 1024,
+      "passed": false,
+      "run": {
+        "id": "142eade7910d3d88f204b86f55b15210",
+        "session": "51cded5dda77fc1c3aee9247ad5809c9",
+        "bot": "workspace-qa",
+        "version": "1.0.0",
+        "status": "completed",
+        "termination_reason": "stop",
+        "output": "The backup schedule is every Friday at 18:00 local time, as stated in `operations.txt`. The retention period for backups is not explicitly mentioned in the provided file. The file cited is `operations.txt`.",
+        "usage": {
+          "prompt_tokens": 916,
+          "completion_tokens": 106,
+          "total_tokens": 1022
+        },
+        "started": "2026-10-18T04:48:31.6334462+05:00",
+        "duration_ms": 1799
+      }
+    },
+    {
+      "bot": "extract",
+      "fixture": "complete-invoice",
+      "context_size": 2048,
+      "passed": true,
+      "run": {
+        "id": "8f14c06923401df8a8137fe9399c38a4",
+        "session": "921c8c7f80c83d29d0f31ea25af0f498",
+        "bot": "extract",
+        "version": "1.0.0",
+        "status": "completed",
+        "termination_reason": "stop",
+        "output": "{\n  \"vendor\": \"Cedar Supplies\",\n  \"invoice_number\": \"INV-104\",\n  \"currency\": \"USD\",\n  \"total\": 149.50\n}",
+        "usage": {
+          "prompt_tokens": 107,
+          "completion_tokens": 43,
+          "total_tokens": 150
+        },
+        "started": "2026-10-18T04:48:33.4348374+05:00",
+        "duration_ms": 5673
+      }
+    },
+    {
+      "bot": "extract",
+      "fixture": "missing-values",
+      "context_size": 2048,
+      "passed": true,
+      "run": {
+        "id": "b41bd5c659ef07bdf887481ed4d057d4",
+        "session": "cd69d80d62578f43379dee1e452fb4c3",
+        "bot": "extract",
+        "version": "1.0.0",
+        "status": "completed",
+        "termination_reason": "stop",
+        "output": "{\n  \"vendor\": \"Northwind\",\n  \"invoice_number\": null,\n  \"currency\": \"EUR\",\n  \"total\": 20\n}",
+        "usage": {
+          "prompt_tokens": 100,
+          "completion_tokens": 33,
+          "total_tokens": 133
+        },
+        "started": "2026-10-18T04:48:39.1106528+05:00",
+        "duration_ms": 318
+      }
+    },
+    {
+      "bot": "workspace-qa",
+      "fixture": "read-project",
+      "context_size": 2048,
+      "passed": true,
+      "run": {
+        "id": "42b255f3a106b78206a5b6978a8d7100",
+        "session": "17ee65d0aee192ec9e7542a901ad420c",
+        "bot": "workspace-qa",
+        "version": "1.0.0",
+        "status": "completed",
+        "termination_reason": "stop",
+        "output": "Project Cedar is owned by Maya Chen. It uses the Go backend language and the SQLite metadata database. The file used to answer this question is `project.txt`.",
+        "usage": {
+          "prompt_tokens": 846,
+          "completion_tokens": 60,
+          "total_tokens": 906
+        },
+        "started": "2026-10-18T04:48:39.4326674+05:00",
+        "duration_ms": 653
+      }
+    },
+    {
+      "bot": "workspace-qa",
+      "fixture": "search-and-read",
+      "context_size": 2048,
+      "passed": false,
+      "run": {
+        "id": "c00d2a4c7e4effa829447db96eae64a6",
+        "session": "1bcc9a5903c5e62ec7b0b072a8dcea96",
+        "bot": "workspace-qa",
+        "version": "1.0.0",
+        "status": "completed",
+        "termination_reason": "stop",
+        "output": "The backup schedule is every Friday at 18:00 local time, as stated in `operations.txt`. The retention period for backups is not explicitly mentioned in the provided file. The file cited is `operations.txt`.",
+        "usage": {
+          "prompt_tokens": 916,
+          "completion_tokens": 106,
+          "total_tokens": 1022
+        },
+        "started": "2026-10-18T04:48:40.0884387+05:00",
+        "duration_ms": 1108
+      }
+    },
+    {
+      "bot": "extract",
+      "fixture": "complete-invoice",
+      "context_size": 4096,
+      "passed": true,
+      "run": {
+        "id": "c89ea7d8518a793775e7f46b5947a838",
+        "session": "53f4b13e5ffc960e4256daa06669cb52",
+        "bot": "extract",
+        "version": "1.0.0",
+        "status": "completed",
+        "termination_reason": "stop",
+        "output": "{\n  \"vendor\": \"Cedar Supplies\",\n  \"invoice_number\": \"INV-104\",\n  \"currency\": \"USD\",\n  \"total\": 149.50\n}",
+        "usage": {
+          "prompt_tokens": 107,
+          "completion_tokens": 43,
+          "total_tokens": 150
+        },
+        "started": "2026-10-18T04:48:41.1999604+05:00",
+        "duration_ms": 4364
+      }
+    },
+    {
+      "bot": "extract",
+      "fixture": "missing-values",
+      "context_size": 4096,
+      "passed": true,
+      "run": {
+        "id": "95daf76e90e86bb71f22b3a70f89e769",
+        "session": "65e0febc2e7d9e74b9fb00e3f8cd1be9",
+        "bot": "extract",
+        "version": "1.0.0",
+        "status": "completed",
+        "termination_reason": "stop",
+        "output": "{\n  \"vendor\": \"Northwind\",\n  \"invoice_number\": null,\n  \"currency\": \"EUR\",\n  \"total\": 20\n}",
+        "usage": {
+          "prompt_tokens": 100,
+          "completion_tokens": 33,
+          "total_tokens": 133
+        },
+        "started": "2026-10-18T04:48:45.5667219+05:00",
+        "duration_ms": 304
+      }
+    },
+    {
+      "bot": "workspace-qa",
+      "fixture": "read-project",
+      "context_size": 4096,
+      "passed": true,
+      "run": {
+        "id": "e508802482c6182f1bd27231477f78b8",
+        "session": "ca5c82119b40584f9e3fdae58cd547bd",
+        "bot": "workspace-qa",
+        "version": "1.0.0",
+        "status": "completed",
+        "termination_reason": "stop",
+        "output": "Project Cedar is owned by Maya Chen. It uses the Go backend language and the SQLite metadata database. The file used to answer this question is `project.txt`.",
+        "usage": {
+          "prompt_tokens": 846,
+          "completion_tokens": 60,
+          "total_tokens": 906
+        },
+        "started": "2026-10-18T04:48:45.878055+05:00",
+        "duration_ms": 767
+      }
+    },
+    {
+      "bot": "workspace-qa",
+      "fixture": "search-and-read",
+      "context_size": 4096,
+      "passed": false,
+      "run": {
+        "id": "9325abb3676e0099057e7594a9358cee",
+        "session": "7a126ed4c9b62138877cd97c45425ffe",
+        "bot": "workspace-qa",
+        "version": "1.0.0",
+        "status": "completed",
+        "termination_reason": "stop",
+        "output": "The backup schedule is every Friday at 18:00 local time, as stated in `operations.txt`. The retention period for backups is not explicitly mentioned in the provided file. The file cited is `operations.txt`.",
+        "usage": {
+          "prompt_tokens": 916,
+          "completion_tokens": 106,
+          "total_tokens": 1022
+        },
+        "started": "2026-10-18T04:48:46.6499366+05:00",
+        "duration_ms": 1244
+      }
+    }
+  ],
+  "pass_rate": 0.75,
+  "memory_samples": [
+    {
+      "at": "2026-10-17T23:47:58.0384913Z",
+      "device_vram_mib": 1422,
+      "system_used_ram_bytes": 14624497664
+    },
+    {
+      "at": "2026-10-17T23:47:59.1103333Z",
+      "device_vram_mib": 1532,
+      "system_used_ram_bytes": 14776496128
+    },
+    {
+      "at": "2026-10-17T23:48:00.1102504Z",
+      "device_vram_mib": 1649,
+      "system_used_ram_bytes": 14803890176
+    },
+    {
+      "at": "2026-10-17T23:48:01.1102127Z",
+      "device_vram_mib": 1664,
+      "system_used_ram_bytes": 14902706176
+    },
+    {
+      "at": "2026-10-17T23:48:02.1102148Z",
+      "device_vram_mib": 1669,
+      "system_used_ram_bytes": 15983464448
+    },
+    {
+      "at": "2026-10-17T23:48:03.1103493Z",
+      "device_vram_mib": 1668,
+      "system_used_ram_bytes": 15844601856
+    },
+    {
+      "at": "2026-10-17T23:48:04.1101626Z",
+      "device_vram_mib": 3408,
+      "system_used_ram_bytes": 15876071424
+    },
+    {
+      "at": "2026-10-17T23:48:05.1101697Z",
+      "device_vram_mib": 3405,
+      "system_used_ram_bytes": 15502491648
+    },
+    {
+      "at": "2026-10-17T23:48:06.1102151Z",
+      "device_vram_mib": 3215,
+      "system_used_ram_bytes": 15917654016
+    },
+    {
+      "at": "2026-10-17T23:48:07.1100705Z",
+      "device_vram_mib": 3102,
+      "system_used_ram_bytes": 16681992192
+    },
+    {
+      "at": "2026-10-17T23:48:08.1102387Z",
+      "device_vram_mib": 3119,
+      "system_used_ram_bytes": 16483053568
+    },
+    {
+      "at": "2026-10-17T23:48:09.110329Z",
+      "device_vram_mib": 3109,
+      "system_used_ram_bytes": 16198770688
+    },
+    {
+      "at": "2026-10-17T23:48:10.1100176Z",
+      "device_vram_mib": 3048,
+      "system_used_ram_bytes": 15808937984
+    },
+    {
+      "at": "2026-10-17T23:48:11.1104423Z",
+      "device_vram_mib": 3034,
+      "system_used_ram_bytes": 16033542144
+    },
+    {
+      "at": "2026-10-17T23:48:12.1103422Z",
+      "device_vram_mib": 3030,
+      "system_used_ram_bytes": 16032382976
+    },
+    {
+      "at": "2026-10-17T23:48:13.1102184Z",
+      "device_vram_mib": 2978,
+      "system_used_ram_bytes": 16049250304
+    },
+    {
+      "at": "2026-10-17T23:48:14.1100184Z",
+      "device_vram_mib": 2964,
+      "system_used_ram_bytes": 16114200576
+    },
+    {
+      "at": "2026-10-17T23:48:15.1104158Z",
+      "device_vram_mib": 2967,
+      "system_used_ram_bytes": 16343883776
+    },
+    {
+      "at": "2026-10-17T23:48:16.1103697Z",
+      "device_vram_mib": 2988,
+      "system_used_ram_bytes": 16425177088
+    },
+    {
+      "at": "2026-10-17T23:48:17.111138Z",
+      "device_vram_mib": 2991,
+      "system_used_ram_bytes": 16327114752
+    },
+    {
+      "at": "2026-10-17T23:48:18.1102401Z",
+      "device_vram_mib": 2994,
+      "system_used_ram_bytes": 16280317952
+    },
+    {
+      "at": "2026-10-17T23:48:19.1104091Z",
+      "device_vram_mib": 2994,
+      "system_used_ram_bytes": 16103583744
+    },
+    {
+      "at": "2026-10-17T23:48:20.110154Z",
+      "device_vram_mib": 2988,
+      "system_used_ram_bytes": 16067661824
+    },
+    {
+      "at": "2026-10-17T23:48:21.110006Z",
+      "device_vram_mib": 2989,
+      "system_used_ram_bytes": 15960899584
+    },
+    {
+      "at": "2026-10-17T23:48:22.110135Z",
+      "device_vram_mib": 3166,
+      "system_used_ram_bytes": 15998361600
+    },
+    {
+      "at": "2026-10-17T23:48:23.1107204Z",
+      "device_vram_mib": 3152,
+      "system_used_ram_bytes": 16117751808
+    },
+    {
+      "at": "2026-10-17T23:48:24.1114514Z",
+      "device_vram_mib": 3159,
+      "system_used_ram_bytes": 16226816000
+    },
+    {
+      "at": "2026-10-17T23:48:25.1102023Z",
+      "device_vram_mib": 3372,
+      "system_used_ram_bytes": 16325648384
+    },
+    {
+      "at": "2026-10-17T23:48:26.1104474Z",
+      "device_vram_mib": 3405,
+      "system_used_ram_bytes": 16426168320
+    },
+    {
+      "at": "2026-10-17T23:48:27.1102802Z",
+      "device_vram_mib": 3396,
+      "system_used_ram_bytes": 16499179520
+    },
+    {
+      "at": "2026-10-17T23:48:28.1100771Z",
+      "device_vram_mib": 3327,
+      "system_used_ram_bytes": 16541503488
+    },
+    {
+      "at": "2026-10-17T23:48:29.1113087Z",
+      "device_vram_mib": 3335,
+      "system_used_ram_bytes": 16405745664
+    },
+    {
+      "at": "2026-10-17T23:48:30.1105229Z",
+      "device_vram_mib": 3077,
+      "system_used_ram_bytes": 16413757440
+    },
+    {
+      "at": "2026-10-17T23:48:31.1099636Z",
+      "device_vram_mib": 3075,
+      "system_used_ram_bytes": 16172978176
+    },
+    {
+      "at": "2026-10-17T23:48:32.1099452Z",
+      "device_vram_mib": 3127,
+      "system_used_ram_bytes": 16227323904
+    },
+    {
+      "at": "2026-10-17T23:48:33.1104366Z",
+      "device_vram_mib": 3170,
+      "system_used_ram_bytes": 15933607936
+    },
+    {
+      "at": "2026-10-17T23:48:34.1101946Z",
+      "device_vram_mib": 1207,
+      "system_used_ram_bytes": 13885464576
+    },
+    {
+      "at": "2026-10-17T23:48:35.1101833Z",
+      "device_vram_mib": 1195,
+      "system_used_ram_bytes": 13915811840
+    },
+    {
+      "at": "2026-10-17T23:48:36.1100157Z",
+      "device_vram_mib": 1223,
+      "system_used_ram_bytes": 13989416960
+    },
+    {
+      "at": "2026-10-17T23:48:37.1101115Z",
+      "device_vram_mib": 2239,
+      "system_used_ram_bytes": 15978065920
+    },
+    {
+      "at": "2026-10-17T23:48:38.1104474Z",
+      "device_vram_mib": 2946,
+      "system_used_ram_bytes": 15275798528
+    },
+    {
+      "at": "2026-10-17T23:48:39.1101285Z",
+      "device_vram_mib": 3212,
+      "system_used_ram_bytes": 15455911936
+    },
+    {
+      "at": "2026-10-17T23:48:40.1102824Z",
+      "device_vram_mib": 3267,
+      "system_used_ram_bytes": 15496921088
+    },
+    {
+      "at": "2026-10-17T23:48:41.110804Z",
+      "device_vram_mib": 3253,
+      "system_used_ram_bytes": 15510323200
+    },
+    {
+      "at": "2026-10-17T23:48:42.111631Z",
+      "device_vram_mib": 1203,
+      "system_used_ram_bytes": 13327323136
+    },
+    {
+      "at": "2026-10-17T23:48:43.1103874Z",
+      "device_vram_mib": 1194,
+      "system_used_ram_bytes": 13463527424
+    },
+    {
+      "at": "2026-10-17T23:48:44.1104762Z",
+      "device_vram_mib": 2930,
+      "system_used_ram_bytes": 15424749568
+    },
+    {
+      "at": "2026-10-17T23:48:45.110985Z",
+      "device_vram_mib": 3427,
+      "system_used_ram_bytes": 15275720704
+    },
+    {
+      "at": "2026-10-17T23:48:46.1101207Z",
+      "device_vram_mib": 3463,
+      "system_used_ram_bytes": 15281356800
+    },
+    {
+      "at": "2026-10-17T23:48:47.1113693Z",
+      "device_vram_mib": 3456,
+      "system_used_ram_bytes": 15305052160
+    },
+    {
+      "at": "2026-10-17T23:48:47.931206Z",
+      "device_vram_mib": 3453,
+      "system_used_ram_bytes": 15309955072
+    }
+  ],
+  "peak_device_vram_mib": 3463,
+  "peak_system_used_ram_bytes": 16681992192,
+  "notes": "Memory is sampled device-wide VRAM and system-wide used RAM, including other applications; not isolated model allocations. First case at each context size includes cold load; later cases at that size reuse weights. Synthetic fixtures are a baseline, not specialization evidence.",
+  "runtime": {
+    "artifact_lock": "artifacts/baseline.lock.json",
+    "device": "Vulkan0",
+    "engine_binary": "A:\\projects\\bots-clone\\runtime\\llama\\llama-server.exe",
+    "model_id": "qwen3-1.7b-q8",
+    "model_path": "A:\\projects\\bots-clone\\models\\Qwen3-1.7B-Q8_0.gguf",
+    "process_starts": 3
+  }
+}

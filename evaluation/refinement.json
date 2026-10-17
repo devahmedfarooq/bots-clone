@@ -1,0 +1,166 @@
+{
+  "at": "2026-10-17T23:52:33.2406226Z",
+  "hardware": {
+    "os": "windows",
+    "arch": "amd64",
+    "go_version": "go1.27.2",
+    "cpu_threads": 16,
+    "gpu": "NVIDIA GeForce RTX 5050 Laptop GPU, 8151 MiB, 1128 MiB, 610.74",
+    "memory": {
+      "available_bytes": 4089769984,
+      "total_bytes": 16873545728
+    },
+    "disks": {
+      "workspace_available_bytes": 149363384320,
+      "workspace_total_bytes": 510980517888
+    },
+    "dependencies": {
+      "go": "C:\\Program Files\\Go\\bin\\go.exe",
+      "llama-server": "missing from PATH"
+    }
+  },
+  "cases": [
+    {
+      "bot": "extract",
+      "fixture": "complete-invoice",
+      "context_size": 2048,
+      "passed": true,
+      "run": {
+        "id": "17b5f006e632f57b25e57656a6fd805e",
+        "session": "5215f7eba5c69be7f25cb5836d56bf30",
+        "bot": "extract",
+        "version": "1.0.0",
+        "status": "completed",
+        "termination_reason": "stop",
+        "output": "{\n  \"vendor\": \"Cedar Supplies\",\n  \"invoice_number\": \"INV-104\",\n  \"currency\": \"USD\",\n  \"total\": 149.50\n}",
+        "usage": {
+          "prompt_tokens": 107,
+          "completion_tokens": 43,
+          "total_tokens": 150
+        },
+        "started": "2026-10-18T04:52:33.3626917+05:00",
+        "duration_ms": 3416
+      }
+    },
+    {
+      "bot": "extract",
+      "fixture": "missing-values",
+      "context_size": 2048,
+      "passed": true,
+      "run": {
+        "id": "ee71b51c1b51ec95ae80a6235a3176b6",
+        "session": "2907592af6f1f618b7c9d0a80d1768fd",
+        "bot": "extract",
+        "version": "1.0.0",
+        "status": "completed",
+        "termination_reason": "stop",
+        "output": "{\n  \"vendor\": \"Northwind\",\n  \"invoice_number\": null,\n  \"currency\": \"EUR\",\n  \"total\": 20\n}",
+        "usage": {
+          "prompt_tokens": 100,
+          "completion_tokens": 33,
+          "total_tokens": 133
+        },
+        "started": "2026-10-18T04:52:36.7822817+05:00",
+        "duration_ms": 309
+      }
+    },
+    {
+      "bot": "workspace-qa",
+      "fixture": "read-project",
+      "context_size": 2048,
+      "passed": true,
+      "run": {
+        "id": "e1176451ff267719fdf236c46f98dc4e",
+        "session": "fb5d529eaf9f21baf63d35b95acb7912",
+        "bot": "workspace-qa",
+        "version": "1.0.2",
+        "status": "completed",
+        "termination_reason": "stop",
+        "output": "Project Cedar is owned by Maya Chen. It uses the Go backend language and the SQLite metadata database. These details are cited from the `project.txt` file.",
+        "usage": {
+          "prompt_tokens": 1004,
+          "completion_tokens": 60,
+          "total_tokens": 1064
+        },
+        "started": "2026-10-18T04:52:37.1046776+05:00",
+        "duration_ms": 782
+      }
+    },
+    {
+      "bot": "workspace-qa",
+      "fixture": "search-and-read",
+      "context_size": 2048,
+      "passed": false,
+      "run": {
+        "id": "e5adf318dbfe95145c74969f13156b30",
+        "session": "a4383a30a7cc739c9dbd9b8651bab700",
+        "bot": "workspace-qa",
+        "version": "1.0.2",
+        "status": "completed",
+        "termination_reason": "stop",
+        "output": "The search for the text \"Backup\" in the root directory (root 0) returned a match in the file `operations.txt` at line 2. However, attempting to read the file `backup.txt` failed, as the file was not found.\n\nFrom the evidence provided, the backup schedule is described as follows:\n\n**Backup schedule: every Friday at 18:00 local time.**\n\nThis information is found in the file `operations.txt`.",
+        "usage": {
+          "prompt_tokens": 1060,
+          "completion_tokens": 151,
+          "total_tokens": 1211
+        },
+        "started": "2026-10-18T04:52:37.8913084+05:00",
+        "duration_ms": 1536
+      }
+    }
+  ],
+  "pass_rate": 0.75,
+  "memory_samples": [
+    {
+      "at": "2026-10-17T23:52:33.3077393Z",
+      "device_vram_mib": 1128,
+      "system_used_ram_bytes": 12783775744
+    },
+    {
+      "at": "2026-10-17T23:52:34.3593297Z",
+      "device_vram_mib": 1154,
+      "system_used_ram_bytes": 12904931328
+    },
+    {
+      "at": "2026-10-17T23:52:35.3596029Z",
+      "device_vram_mib": 2170,
+      "system_used_ram_bytes": 14713049088
+    },
+    {
+      "at": "2026-10-17T23:52:36.3592404Z",
+      "device_vram_mib": 3368,
+      "system_used_ram_bytes": 14778871808
+    },
+    {
+      "at": "2026-10-17T23:52:37.3592683Z",
+      "device_vram_mib": 3363,
+      "system_used_ram_bytes": 14828220416
+    },
+    {
+      "at": "2026-10-17T23:52:38.3590093Z",
+      "device_vram_mib": 3339,
+      "system_used_ram_bytes": 14835220480
+    },
+    {
+      "at": "2026-10-17T23:52:39.3620891Z",
+      "device_vram_mib": 3388,
+      "system_used_ram_bytes": 14855323648
+    },
+    {
+      "at": "2026-10-17T23:52:39.4518323Z",
+      "device_vram_mib": 3388,
+      "system_used_ram_bytes": 14853296128
+    }
+  ],
+  "peak_device_vram_mib": 3388,
+  "peak_system_used_ram_bytes": 14855323648,
+  "notes": "Memory is sampled device-wide VRAM and system-wide used RAM, including other applications; not isolated model allocations. First case at each context size includes cold load; later cases at that size reuse weights. Synthetic fixtures are a baseline, not specialization evidence.",
+  "runtime": {
+    "artifact_lock": "artifacts/baseline.lock.json",
+    "device": "Vulkan0",
+    "engine_binary": "A:\\projects\\bots-clone\\runtime\\llama\\llama-server.exe",
+    "model_id": "qwen3-1.7b-q8",
+    "model_path": "A:\\projects\\bots-clone\\models\\Qwen3-1.7B-Q8_0.gguf",
+    "process_starts": 1
+  }
+}

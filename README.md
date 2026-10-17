@@ -2,6 +2,8 @@
 
 Phase 1 is a Go CLI for declarative prompt bots sharing one local llama.cpp model. Phase 2 adds trained adapters and portable packages; Phase 3 adds a service, dashboard and workflows. See [todo.md](todo.md) for acceptance status and [specs](specs/project.spec.md) for module pseudocode.
 
+Prompt-only bots are temporary baseline fixtures. The intended specialized bots use QLoRA-trained adapters; JSON remains their configuration and metadata. The recorded baseline is **9/12**, with the search-to-read quality failure explicitly deferred to adapter evaluation. `eval` currently exits 1 for that known failure; expectations have not been weakened.
+
 ## Install on Windows
 
 Requirements: Go 1.26 or later, Git, PowerShell, curl, and a GPU driver supporting Vulkan (or CPU inference). No Python is required. The pinned model is about 1.84 GB; allow several GB more for the engine and Go cache. Artifacts, metadata and caches stay in this project and are ignored by Git.

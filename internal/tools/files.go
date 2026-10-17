@@ -22,6 +22,11 @@ type FileArgs struct {
 	Query   string `json:"query,omitempty"`
 	Content string `json:"content,omitempty"`
 }
+type SearchMatch struct {
+	Path string `json:"path"`
+	Line int    `json:"line"`
+	Text string `json:"text"`
+}
 type FileTool struct {
 	Kind  string
 	Roots []*os.Root
@@ -58,7 +63,7 @@ func (t *FileTool) Definition() provider.ToolDefinition {
 	if t.Kind == "file-search" {
 		properties["query"] = map[string]string{"type": "string"}
 		required = append(required, "query")
-		description = "Search literal text within files beneath relative path (use . for root). Returns path:line:text."
+		description = "Search literal text under relative path (. means root). Returns a JSON array of path, line, text records. To read full context, pass the EXACT path field from a match to file-read."
 	}
 	if t.Kind == "file-write" {
 		properties["content"] = map[string]string{"type": "string"}
@@ -145,7 +150,8 @@ func (t *FileTool) Execute(ctx context.Context, raw json.RawMessage) (string, er
 		}
 		return "created " + a.Path, closeErr
 	case "file-search":
-		var out strings.Builder
+		matches := []SearchMatch{}
+		outputBytes := 0
 		visited := 0
 		e = fs.WalkDir(root.FS(), filepath.ToSlash(a.Path), func(path string, d fs.DirEntry, walkErr error) error {
 			if e := ctx.Err(); e != nil {
@@ -155,7 +161,7 @@ func (t *FileTool) Execute(ctx context.Context, raw json.RawMessage) (string, er
 				return walkErr
 			}
 			visited++
-			if visited > 2000 || out.Len() > 16384 {
+			if visited > 2000 || outputBytes > 16384 {
 				return fs.SkipAll
 			}
 			if d.IsDir() {
@@ -187,15 +193,20 @@ func (t *FileTool) Execute(ctx context.Context, raw json.RawMessage) (string, er
 				}
 				line++
 				if strings.Contains(scan.Text(), a.Query) {
-					fmt.Fprintf(&out, "%s:%d:%s\n", path, line, scan.Text())
-					if out.Len() > 16384 {
+					matches = append(matches, SearchMatch{Path: path, Line: line, Text: scan.Text()})
+					outputBytes += len(path) + len(scan.Text()) + 32
+					if outputBytes > 16384 {
 						return fs.SkipAll
 					}
 				}
 			}
 			return scan.Err()
 		})
-		return out.String(), e
+		if e != nil {
+			return "", e
+		}
+		data, e := json.Marshal(matches)
+		return string(data), e
 	}
 	return "", errors.New("unsupported file tool")
 }

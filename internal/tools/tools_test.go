@@ -8,7 +8,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
-	"strings"
 	"testing"
 	"time"
 )
@@ -49,8 +48,10 @@ func TestGrantsAndFileBoundaries(t *testing.T) {
 	if result := r.Call(ctx, grants, call("file-read", `{"root":0,"path":"ok.txt"}`)); result.Output != "hello needle" {
 		t.Fatal(result)
 	}
-	if result := r.Call(ctx, grants, call("file-search", `{"root":0,"path":".","query":"needle"}`)); !strings.Contains(result.Output, "ok.txt:1:") {
-		t.Fatal(result)
+	result := r.Call(ctx, grants, call("file-search", `{"root":0,"path":".","query":"needle"}`))
+	var matches []SearchMatch
+	if e = json.Unmarshal([]byte(result.Output), &matches); e != nil || len(matches) != 1 || matches[0].Path != "ok.txt" || matches[0].Line != 1 || matches[0].Text != "hello needle" {
+		t.Fatal(result, e)
 	}
 	if result := r.Call(ctx, grants, call("file-write", `{"root":0,"path":"new.txt","content":"new"}`)); result.Error != nil {
 		t.Fatal(result)

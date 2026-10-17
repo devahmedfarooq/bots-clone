@@ -76,6 +76,7 @@ func (p *Llama) Load(ctx context.Context, model Model) error {
 	}
 	capacity := model.ContextSize
 	p.cmd = exec.Command(p.Binary, "-m", p.ModelPath, "--alias", p.ModelID, "--host", "127.0.0.1", "--port", strconv.Itoa(port), "-c", strconv.Itoa(capacity), "-np", "1", "-ngl", strconv.Itoa(p.GPU), "--jinja", "--offline", "--no-webui", "--cache-ram", "0", "--log-verbosity", "2")
+	p.cmd.Args = append(p.cmd.Args, "--no-cache-idle-slots", "--cors-origins", "localhost", "--no-cors-credentials")
 	if p.Device != "" {
 		p.cmd.Args = append(p.cmd.Args, "--device", p.Device, "--split-mode", "none")
 	}

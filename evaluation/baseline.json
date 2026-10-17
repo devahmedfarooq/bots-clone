@@ -1,0 +1,417 @@
+{
+  "at": "2026-10-17T23:50:47.1076859Z",
+  "hardware": {
+    "os": "windows",
+    "arch": "amd64",
+    "go_version": "go1.27.2",
+    "cpu_threads": 16,
+    "gpu": "NVIDIA GeForce RTX 5050 Laptop GPU, 8151 MiB, 1234 MiB, 610.74",
+    "memory": {
+      "available_bytes": 4130402304,
+      "total_bytes": 16873545728
+    },
+    "disks": {
+      "workspace_available_bytes": 149365448704,
+      "workspace_total_bytes": 510980517888
+    },
+    "dependencies": {
+      "go": "C:\\Program Files\\Go\\bin\\go.exe",
+      "llama-server": "missing from PATH"
+    }
+  },
+  "cases": [
+    {
+      "bot": "extract",
+      "fixture": "complete-invoice",
+      "context_size": 1024,
+      "passed": true,
+      "run": {
+        "id": "48823b835e30cd54d5fa0177de4c0b42",
+        "session": "1770aaff75d4ba8f9076ae6f87685791",
+        "bot": "extract",
+        "version": "1.0.0",
+        "status": "completed",
+        "termination_reason": "stop",
+        "output": "{\n  \"vendor\": \"Cedar Supplies\",\n  \"invoice_number\": \"INV-104\",\n  \"currency\": \"USD\",\n  \"total\": 149.50\n}",
+        "usage": {
+          "prompt_tokens": 107,
+          "completion_tokens": 43,
+          "total_tokens": 150
+        },
+        "started": "2026-10-18T04:50:47.2868239+05:00",
+        "duration_ms": 4966
+      }
+    },
+    {
+      "bot": "extract",
+      "fixture": "missing-values",
+      "context_size": 1024,
+      "passed": true,
+      "run": {
+        "id": "ee113079d3f8960d07de76e7399a9dd7",
+        "session": "468aa532b58ffef51cbdc0960b90c91a",
+        "bot": "extract",
+        "version": "1.0.0",
+        "status": "completed",
+        "termination_reason": "stop",
+        "output": "{\n  \"vendor\": \"Northwind\",\n  \"invoice_number\": null,\n  \"currency\": \"EUR\",\n  \"total\": 20\n}",
+        "usage": {
+          "prompt_tokens": 100,
+          "completion_tokens": 33,
+          "total_tokens": 133
+        },
+        "started": "2026-10-18T04:50:52.2574584+05:00",
+        "duration_ms": 308
+      }
+    },
+    {
+      "bot": "workspace-qa",
+      "fixture": "read-project",
+      "context_size": 1024,
+      "passed": true,
+      "run": {
+        "id": "47666deaedcc570a5421c32a579138b4",
+        "session": "01230c14e45e7c86bd118f5b88405407",
+        "bot": "workspace-qa",
+        "version": "1.0.1",
+        "status": "completed",
+        "termination_reason": "stop",
+        "output": "Project Cedar is owned by Maya Chen. It uses the Go backend language and the SQLite metadata database. This information is cited from the file `project.txt`.",
+        "usage": {
+          "prompt_tokens": 948,
+          "completion_tokens": 59,
+          "total_tokens": 1007
+        },
+        "started": "2026-10-18T04:50:52.5712515+05:00",
+        "duration_ms": 1597
+      }
+    },
+    {
+      "bot": "workspace-qa",
+      "fixture": "search-and-read",
+      "context_size": 1024,
+      "passed": false,
+      "run": {
+        "id": "a701e7bf6b68b9ff17712ba3bd0d260e",
+        "session": "eaa485eddf4359eae024e10b0fcc7171",
+        "bot": "workspace-qa",
+        "version": "1.0.1",
+        "status": "completed",
+        "termination_reason": "stop",
+        "output": "The search for the text \"Backup\" in the root directory returned a file named `root0_backup_schedule_and_retention.txt`, but the file was not found. Therefore, I cannot provide the backup schedule and retention information. Please check the file name or ensure that the file exists in the specified directory.",
+        "usage": {
+          "prompt_tokens": 1008,
+          "completion_tokens": 125,
+          "total_tokens": 1133
+        },
+        "started": "2026-10-18T04:50:54.1729374+05:00",
+        "duration_ms": 1246
+      }
+    },
+    {
+      "bot": "extract",
+      "fixture": "complete-invoice",
+      "context_size": 2048,
+      "passed": true,
+      "run": {
+        "id": "59f3535138d229d1d68a25c90b3a66ff",
+        "session": "fdc46f85f9aa8ecf21e37b7d8fbf3fa3",
+        "bot": "extract",
+        "version": "1.0.0",
+        "status": "completed",
+        "termination_reason": "stop",
+        "output": "{\n  \"vendor\": \"Cedar Supplies\",\n  \"invoice_number\": \"INV-104\",\n  \"currency\": \"USD\",\n  \"total\": 149.50\n}",
+        "usage": {
+          "prompt_tokens": 107,
+          "completion_tokens": 43,
+          "total_tokens": 150
+        },
+        "started": "2026-10-18T04:50:55.4233702+05:00",
+        "duration_ms": 4171
+      }
+    },
+    {
+      "bot": "extract",
+      "fixture": "missing-values",
+      "context_size": 2048,
+      "passed": true,
+      "run": {
+        "id": "dad64972048cf58a5c84c8e384324461",
+        "session": "01f3a438d5bad19858180769c7fc2be3",
+        "bot": "extract",
+        "version": "1.0.0",
+        "status": "completed",
+        "termination_reason": "stop",
+        "output": "{\n  \"vendor\": \"Northwind\",\n  \"invoice_number\": null,\n  \"currency\": \"EUR\",\n  \"total\": 20\n}",
+        "usage": {
+          "prompt_tokens": 100,
+          "completion_tokens": 33,
+          "total_tokens": 133
+        },
+        "started": "2026-10-18T04:50:59.5973634+05:00",
+        "duration_ms": 345
+      }
+    },
+    {
+      "bot": "workspace-qa",
+      "fixture": "read-project",
+      "context_size": 2048,
+      "passed": true,
+      "run": {
+        "id": "bdbbaa95b8b5a18040396b86a062626c",
+        "session": "49cd8ba0798212c37b192960adfea03c",
+        "bot": "workspace-qa",
+        "version": "1.0.1",
+        "status": "completed",
+        "termination_reason": "stop",
+        "output": "Project Cedar is owned by Maya Chen. It uses the Go backend language and the SQLite metadata database. This information is cited from the file `project.txt`.",
+        "usage": {
+          "prompt_tokens": 948,
+          "completion_tokens": 59,
+          "total_tokens": 1007
+        },
+        "started": "2026-10-18T04:50:59.9466095+05:00",
+        "duration_ms": 714
+      }
+    },
+    {
+      "bot": "workspace-qa",
+      "fixture": "search-and-read",
+      "context_size": 2048,
+      "passed": false,
+      "run": {
+        "id": "0e8ebdc5a66825168bef083270dc1db0",
+        "session": "f5779c20e687c9421a8734db8669875f",
+        "bot": "workspace-qa",
+        "version": "1.0.1",
+        "status": "completed",
+        "termination_reason": "stop",
+        "output": "The search for the text \"Backup\" in the root directory returned a file named `root0_backup_schedule_and_retention.txt`, but the file was not found. Therefore, I cannot provide the backup schedule and retention information. Please check the file name or ensure that the file exists in the specified directory.",
+        "usage": {
+          "prompt_tokens": 1008,
+          "completion_tokens": 125,
+          "total_tokens": 1133
+        },
+        "started": "2026-10-18T04:51:00.6636561+05:00",
+        "duration_ms": 1274
+      }
+    },
+    {
+      "bot": "extract",
+      "fixture": "complete-invoice",
+      "context_size": 4096,
+      "passed": true,
+      "run": {
+        "id": "b1cbd9c661e33b9efa9e764651e95e00",
+        "session": "407a96aecdbe4b680a190bb00f1fab81",
+        "bot": "extract",
+        "version": "1.0.0",
+        "status": "completed",
+        "termination_reason": "stop",
+        "output": "{\n  \"vendor\": \"Cedar Supplies\",\n  \"invoice_number\": \"INV-104\",\n  \"currency\": \"USD\",\n  \"total\": 149.50\n}",
+        "usage": {
+          "prompt_tokens": 107,
+          "completion_tokens": 43,
+          "total_tokens": 150
+        },
+        "started": "2026-10-18T04:51:01.9406285+05:00",
+        "duration_ms": 4343
+      }
+    },
+    {
+      "bot": "extract",
+      "fixture": "missing-values",
+      "context_size": 4096,
+      "passed": true,
+      "run": {
+        "id": "1082ee57956f448bb5ed96ec3bdc7ef8",
+        "session": "f09cb24a3d328ab129e3dcdcb5751e49",
+        "bot": "extract",
+        "version": "1.0.0",
+        "status": "completed",
+        "termination_reason": "stop",
+        "output": "{\n  \"vendor\": \"Northwind\",\n  \"invoice_number\": null,\n  \"currency\": \"EUR\",\n  \"total\": 20\n}",
+        "usage": {
+          "prompt_tokens": 100,
+          "completion_tokens": 33,
+          "total_tokens": 133
+        },
+        "started": "2026-10-18T04:51:06.2868553+05:00",
+        "duration_ms": 333
+      }
+    },
+    {
+      "bot": "workspace-qa",
+      "fixture": "read-project",
+      "context_size": 4096,
+      "passed": true,
+      "run": {
+        "id": "614f70f6ea1b0344fd5bf28cc18bbef6",
+        "session": "19d5557a5ffa4f8339d6a01bff7d4b53",
+        "bot": "workspace-qa",
+        "version": "1.0.1",
+        "status": "completed",
+        "termination_reason": "stop",
+        "output": "Project Cedar is owned by Maya Chen. It uses the Go backend language and the SQLite metadata database. This information is cited from the file `project.txt`.",
+        "usage": {
+          "prompt_tokens": 948,
+          "completion_tokens": 59,
+          "total_tokens": 1007
+        },
+        "started": "2026-10-18T04:51:06.6241171+05:00",
+        "duration_ms": 729
+      }
+    },
+    {
+      "bot": "workspace-qa",
+      "fixture": "search-and-read",
+      "context_size": 4096,
+      "passed": false,
+      "run": {
+        "id": "4439a406386319da7aefa390f899b899",
+        "session": "618df197f739831a41dd4744d9d1e345",
+        "bot": "workspace-qa",
+        "version": "1.0.1",
+        "status": "completed",
+        "termination_reason": "stop",
+        "output": "The search for the text \"Backup\" in the root directory returned a file named `root0_backup_schedule_and_retention.txt`, but the file was not found. Therefore, I cannot provide the backup schedule and retention information. Please check the file name or ensure that the file exists in the specified directory.",
+        "usage": {
+          "prompt_tokens": 1008,
+          "completion_tokens": 125,
+          "total_tokens": 1133
+        },
+        "started": "2026-10-18T04:51:07.355318+05:00",
+        "duration_ms": 1270
+      }
+    }
+  ],
+  "pass_rate": 0.75,
+  "memory_samples": [
+    {
+      "at": "2026-10-17T23:50:47.210194Z",
+      "device_vram_mib": 1233,
+      "system_used_ram_bytes": 12745469952
+    },
+    {
+      "at": "2026-10-17T23:50:48.2829172Z",
+      "device_vram_mib": 1212,
+      "system_used_ram_bytes": 12683776000
+    },
+    {
+      "at": "2026-10-17T23:50:49.2831202Z",
+      "device_vram_mib": 1154,
+      "system_used_ram_bytes": 12762923008
+    },
+    {
+      "at": "2026-10-17T23:50:50.2833052Z",
+      "device_vram_mib": 1147,
+      "system_used_ram_bytes": 14570102784
+    },
+    {
+      "at": "2026-10-17T23:50:51.2831882Z",
+      "device_vram_mib": 2895,
+      "system_used_ram_bytes": 14281244672
+    },
+    {
+      "at": "2026-10-17T23:50:52.2830152Z",
+      "device_vram_mib": 3073,
+      "system_used_ram_bytes": 14598225920
+    },
+    {
+      "at": "2026-10-17T23:50:53.2828237Z",
+      "device_vram_mib": 3079,
+      "system_used_ram_bytes": 14626770944
+    },
+    {
+      "at": "2026-10-17T23:50:54.2829499Z",
+      "device_vram_mib": 3075,
+      "system_used_ram_bytes": 14654558208
+    },
+    {
+      "at": "2026-10-17T23:50:55.2831022Z",
+      "device_vram_mib": 3079,
+      "system_used_ram_bytes": 14679523328
+    },
+    {
+      "at": "2026-10-17T23:50:56.2832099Z",
+      "device_vram_mib": 1159,
+      "system_used_ram_bytes": 12726951936
+    },
+    {
+      "at": "2026-10-17T23:50:57.2832302Z",
+      "device_vram_mib": 1174,
+      "system_used_ram_bytes": 12803784704
+    },
+    {
+      "at": "2026-10-17T23:50:58.2828427Z",
+      "device_vram_mib": 2917,
+      "system_used_ram_bytes": 14180810752
+    },
+    {
+      "at": "2026-10-17T23:50:59.2829026Z",
+      "device_vram_mib": 3215,
+      "system_used_ram_bytes": 14722871296
+    },
+    {
+      "at": "2026-10-17T23:51:00.2826954Z",
+      "device_vram_mib": 3221,
+      "system_used_ram_bytes": 14775115776
+    },
+    {
+      "at": "2026-10-17T23:51:01.2831163Z",
+      "device_vram_mib": 3218,
+      "system_used_ram_bytes": 14787231744
+    },
+    {
+      "at": "2026-10-17T23:51:02.2827312Z",
+      "device_vram_mib": 1169,
+      "system_used_ram_bytes": 13537546240
+    },
+    {
+      "at": "2026-10-17T23:51:03.283025Z",
+      "device_vram_mib": 1184,
+      "system_used_ram_bytes": 12904710144
+    },
+    {
+      "at": "2026-10-17T23:51:04.2828342Z",
+      "device_vram_mib": 2199,
+      "system_used_ram_bytes": 14537494528
+    },
+    {
+      "at": "2026-10-17T23:51:05.2828168Z",
+      "device_vram_mib": 2919,
+      "system_used_ram_bytes": 14702370816
+    },
+    {
+      "at": "2026-10-17T23:51:06.2827691Z",
+      "device_vram_mib": 3430,
+      "system_used_ram_bytes": 14836355072
+    },
+    {
+      "at": "2026-10-17T23:51:07.2829308Z",
+      "device_vram_mib": 3431,
+      "system_used_ram_bytes": 14855073792
+    },
+    {
+      "at": "2026-10-17T23:51:08.2828747Z",
+      "device_vram_mib": 3432,
+      "system_used_ram_bytes": 14862512128
+    },
+    {
+      "at": "2026-10-17T23:51:08.6270484Z",
+      "device_vram_mib": 3432,
+      "system_used_ram_bytes": 14880993280
+    }
+  ],
+  "peak_device_vram_mib": 3432,
+  "peak_system_used_ram_bytes": 14880993280,
+  "notes": "Memory is sampled device-wide VRAM and system-wide used RAM, including other applications; not isolated model allocations. First case at each context size includes cold load; later cases at that size reuse weights. Synthetic fixtures are a baseline, not specialization evidence.",
+  "runtime": {
+    "artifact_lock": "artifacts/baseline.lock.json",
+    "device": "Vulkan0",
+    "engine_binary": "A:\\projects\\bots-clone\\runtime\\llama\\llama-server.exe",
+    "model_id": "qwen3-1.7b-q8",
+    "model_path": "A:\\projects\\bots-clone\\models\\Qwen3-1.7B-Q8_0.gguf",
+    "process_starts": 3
+  }
+}

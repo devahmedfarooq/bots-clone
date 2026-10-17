@@ -27,27 +27,35 @@ Target: RTX 5050 laptop. Start with one shared quantized base model, one active 
 
 Deliverable: a CLI runs multiple prompt-configured bots through the same local model with isolated state and enforceable tool permissions. Establish the baseline before adding trained adapters.
 
-- [ ] **P1-01 — Bootstrap repository.** Initialize Git, create the project structure, and record the three-phase scope. Done when feature branches can be created and generated files/model weights are ignored.
-- [ ] **P1-02 — Establish the stack.** Use Go for the backend, orchestrator, CLI, and tool execution, with typed configuration, SQLite metadata, and an existing inference engine behind a provider interface. Connect to the inference engine through its supported API or process interface. Done when Go dependencies are pinned and a clean setup passes a smoke check; Python is not required for the Go backend.
-- [ ] **P1-03 — Define bot configuration.** Implement the core bot schema with versioning and clear validation errors. Done when valid definitions load and invalid IDs, settings, and references fail predictably.
-- [ ] **P1-04 — Implement configuration resolution.** Define precedence for framework defaults, bot settings, and per-run overrides; resolve artifact paths consistently. Done when effective settings are inspectable and invalid overrides are rejected.
-- [ ] **P1-05 — Inventory the laptop.** Detect GPU/VRAM, driver, RAM, and available disk. Done when a diagnostics command reports actual hardware and missing runtime dependencies.
-- [ ] **P1-06 — Select a baseline model and engine.** Verify license, tool-call behavior, quantization, hardware support, and an adapter deployment path. Done when one candidate loads and completes a local smoke task; record the decision.
-- [ ] **P1-07 — Implement inference provider interface.** Expose load, generate/stream, cancel, health, and unload operations. Done when the orchestrator has no engine-specific calls outside its provider implementation.
-- [ ] **P1-08 — Manage model residency.** Serialize GPU inference, reuse loaded weights, and release resources on shutdown. Done when repeated bot runs avoid duplicate model loads and simultaneous callers queue safely.
-- [ ] **P1-09 — Implement bot registry.** Register, list, inspect, validate, and remove local bot definitions. Done when a bot can be installed from a directory without editing framework source.
-- [ ] **P1-10 — Isolate run state.** Persist run IDs, bot versions, messages, and statuses separately. Done when separate bots/sessions cannot receive each other's conversation history.
-- [ ] **P1-11 — Implement tool contracts.** Define typed arguments/results, errors, timeouts, output limits, and tool registration. Done when malformed calls fail before execution and tool errors return structured results.
-- [ ] **P1-12 — Enforce tool grants.** Check each call against the bot's declared capabilities. Done when unknown and ungranted tools are denied independently of model instructions.
-- [ ] **P1-13 — Add scoped file tools.** Implement read, search, and controlled write tools. Done when traversal, absolute-path escape, and symlink/junction escape checks prevent access outside allowed roots.
-- [ ] **P1-14 — Implement the execution loop.** Connect input, generation, tool calls, tool results, and final output. Done when a bot completes a multi-step fixture and stops at its token, time, or tool-call budget.
-- [ ] **P1-15 — Add CLI commands.** Support diagnostics, bot registration/listing/inspection, interactive runs, and machine-readable results. Done when two bots run through the same interface with meaningful exit codes.
-- [ ] **P1-16 — Add cancellation and failure handling.** Handle model failure, invalid output, tool timeout, and user cancellation with bounded retries. Done when failed runs terminate clearly and later runs still work.
-- [ ] **P1-17 — Add two baseline bots.** Provide a structured document-extraction bot and a workspace-question-answering bot using the same model. Done when each has a definition, fixtures, and expected outputs with no role-specific framework branches.
-- [ ] **P1-18 — Establish baseline evaluation.** Measure fixture pass rate, latency, token usage, and peak VRAM/RAM at several context sizes. Done when results and practical laptop defaults are saved reproducibly.
-- [ ] **P1-19 — Document local setup.** Write installation, model acquisition, CLI usage, troubleshooting, and offline startup instructions. Done when a clean environment can reproduce the baseline demo.
+- [x] **P1-01 — Bootstrap repository.** Initialize Git, create the project structure, and record the three-phase scope. Done when feature branches can be created and generated files/model weights are ignored.
+- [x] **P1-02 — Establish the stack.** Use Go for the backend, orchestrator, CLI, and tool execution, with typed configuration, SQLite metadata, and an existing inference engine behind a provider interface. Connect to the inference engine through its supported API or process interface. Done when Go dependencies are pinned and a clean setup passes a smoke check; Python is not required for the Go backend.
+- [x] **P1-03 — Define bot configuration.** Implement the core bot schema with versioning and clear validation errors. Done when valid definitions load and invalid IDs, settings, and references fail predictably.
+- [x] **P1-04 — Implement configuration resolution.** Define precedence for framework defaults, bot settings, and per-run overrides; resolve artifact paths consistently. Done when effective settings are inspectable and invalid overrides are rejected.
+- [x] **P1-05 — Inventory the laptop.** Detect GPU/VRAM, driver, RAM, and available disk. Done when a diagnostics command reports actual hardware and missing runtime dependencies.
+- [x] **P1-06 — Select a baseline model and engine.** Verify license, tool-call behavior, quantization, hardware support, and an adapter deployment path. Done when one candidate loads and completes a local smoke task; record the decision.
+- [x] **P1-07 — Implement inference provider interface.** Expose load, generate/stream, cancel, health, and unload operations. Done when the orchestrator has no engine-specific calls outside its provider implementation.
+- [x] **P1-08 — Manage model residency.** Serialize GPU inference, reuse loaded weights, and release resources on shutdown. Done when repeated bot runs avoid duplicate model loads and simultaneous callers queue safely.
+- [x] **P1-09 — Implement bot registry.** Register, list, inspect, validate, and remove local bot definitions. Done when a bot can be installed from a directory without editing framework source.
+- [x] **P1-10 — Isolate run state.** Persist run IDs, bot versions, messages, and statuses separately. Done when separate bots/sessions cannot receive each other's conversation history.
+- [x] **P1-11 — Implement tool contracts.** Define typed arguments/results, errors, timeouts, output limits, and tool registration. Done when malformed calls fail before execution and tool errors return structured results.
+- [x] **P1-12 — Enforce tool grants.** Check each call against the bot's declared capabilities. Done when unknown and ungranted tools are denied independently of model instructions.
+- [x] **P1-13 — Add scoped file tools.** Implement read, search, and controlled write tools. Done when traversal, absolute-path escape, and symlink/junction escape checks prevent access outside allowed roots.
+- [x] **P1-14 — Implement the execution loop.** Connect input, generation, tool calls, tool results, and final output. Done when a bot completes a multi-step fixture and stops at its token, time, or tool-call budget.
+- [x] **P1-15 — Add CLI commands.** Support diagnostics, bot registration/listing/inspection, interactive runs, and machine-readable results. Done when two bots run through the same interface with meaningful exit codes.
+- [x] **P1-16 — Add cancellation and failure handling.** Handle model failure, invalid output, tool timeout, and user cancellation with bounded retries. Done when failed runs terminate clearly and later runs still work.
+- [x] **P1-17 — Add two baseline bots.** Provide a structured document-extraction bot and a workspace-question-answering bot using the same model. Done when each has a definition, fixtures, and expected outputs with no role-specific framework branches.
+- [x] **P1-18 — Establish baseline evaluation.** Measure fixture pass rate, latency, token usage, and peak VRAM/RAM at several context sizes. Done when results and practical laptop defaults are saved reproducibly.
+- [x] **P1-19 — Document local setup.** Write installation, model acquisition, CLI usage, troubleshooting, and offline startup instructions. Done when a clean environment can reproduce the baseline demo.
 
 **Phase exit:** both bots run locally through one shared model, state stays isolated, permissions hold, and the baseline has recorded measurements. Trained adapters are not required yet.
+
+**Phase 1 completed (2026-10-18), with an explicitly approved quality deferral.**
+
+- Go CLI/runtime, SQLite isolation, registry, settings, tool permissions, confined file access, budgets, cancellation and model residency are implemented. Each implementation ticket has its feature branch and module pseudocode spec.
+- All contract tests and `go vet ./...` pass. The documented offline setup verifies pinned artifacts, uses cached dependencies, rebuilds and passes its smoke checks.
+- Real Qwen3-1.7B Q8_0 / llama.cpp Vulkan runs measured contexts 1024, 2048 and 4096. Baseline: **9/12**; exactly one model process per context, shared across both bots. Measurements and tested laptop defaults: [evaluation/README.md](evaluation/README.md).
+- **Deferred by user:** search finds the correct file but the prompt-only bot chooses a different path for its next read. Keep the failed fixture and nonzero evaluation exit; reassess with QLoRA adapters in Phase 2. No claim that training will automatically fix it.
+- Prompt-only bot definitions are baseline fixtures. Intended specialization comes from **QLoRA-trained adapters**; JSON remains configuration, package metadata and grants.
 
 ## Phase 2: Adapter-backed specialization and bot packages
 
@@ -66,9 +74,9 @@ Deliverable: installing a compatible adapter-backed package creates a new specia
 - [ ] **P2-11 — Harden untrusted inputs.** Keep retrieved documents/tool outputs separate from authority and enforce permissions outside the model. Done when adversarial fixtures cannot grant tools or widen filesystem access.
 - [ ] **P2-12 — Define specialization datasets.** Document role/task scope, example schema, source/license tracking, train/validation/test splits, and deduplication. Done when evaluation fixtures are excluded from training.
 - [ ] **P2-13 — Build dataset validation.** Check formatting, expected schemas, duplicates, source metadata, and sensitive data. Done when rejected records include reasons and clean records can be exported for training.
-- [ ] **P2-14 — Add reproducible adapter training configuration.** Keep Python-based ML training tools separate from the Go backend. Record exact base revision, seed, data version, LoRA settings, and environment. Done when a small training smoke run produces a loadable artifact and manifest consumable by the inference provider; use external GPU hardware only if authorized and needed.
-- [ ] **P2-15 — Train or acquire the first task adapter.** Use verified task data or a compatible licensed artifact. Done when provenance is recorded and the adapter passes P2-02 through the normal package path.
-- [ ] **P2-16 — Compare specialization fairly.** Compare base-only, role-prompted base, and adapter plus role prompt with matching task/context/tool budgets. Done when held-out quality, latency, and memory results show gains, regressions, or no improvement explicitly.
+- [ ] **P2-14 — Add reproducible QLoRA training configuration.** Keep Python-based ML training tools separate from the Go backend. Record exact base/tokenizer revisions, seed, data version, 4-bit training quantization, LoRA settings, and environment. Done when a small training smoke run produces a loadable artifact and manifest consumable by the inference provider; use external GPU hardware only if authorized and needed.
+- [ ] **P2-15 — Train or acquire the first QLoRA-trained task adapter.** Use verified task data or a compatible licensed artifact. Done when provenance is recorded and the adapter passes P2-02 through the normal package path.
+- [ ] **P2-16 — Compare specialization fairly.** Compare base-only, role-prompted base, and adapter plus role prompt with matching task/context/tool budgets. Include the deferred Phase 1 search-to-read fixture and held-out variants. Done when held-out quality, latency, and memory results show gains, regressions, or no improvement explicitly.
 - [ ] **P2-17 — Validate a second specialization.** Add a materially different adapter-backed bot using the same base and contracts. Done when it requires no framework code changes and passes compatibility and switching checks.
 - [ ] **P2-18 — Optimize laptop memory.** Measure context limits, cache precision, adapter memory, and switch overhead. Done when a stable configuration fits measured available VRAM and documents any CPU offload.
 - [ ] **P2-19 — Document bot authoring.** Provide a minimal package template and steps for prompt-only and trained-adapter bots. Done when the template installs and its example evaluation runs end to end.
