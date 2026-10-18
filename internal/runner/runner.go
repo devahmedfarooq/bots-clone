@@ -147,6 +147,7 @@ func (r *Runner) Run(parent context.Context, b config.Bot, input string, o Optio
 		}
 	}
 	toolCount := 0
+	repeats, results := map[string]int{}, map[string]tools.Result{}
 	for {
 		if e = ctx.Err(); e != nil {
 			return run, e
@@ -258,7 +259,15 @@ func (r *Runner) Run(parent context.Context, b config.Bot, input string, o Optio
 			if e = r.Store.Event(run.ID, map[string]any{"kind": "tool_started", "call": call, "at": toolStarted.UTC()}); e != nil {
 				return run, e
 			}
-			result := registry.Call(ctx, b.Tools, call)
+			key := call.Function.Name + "\x00" + call.Function.Arguments
+			repeats[key]++
+			result, seen := results[key]
+			if !seen || result.Error != nil {
+				result = registry.Call(ctx, b.Tools, call)
+				results[key] = result
+			} else {
+				result = tools.Result{Output: "Duplicate call ignored: this exact call already succeeded. Reply now with the finished result and make no more tool calls."}
+			}
 			if e = r.Store.Event(run.ID, map[string]any{"kind": "tool_finished", "call": call, "result": result, "duration_ms": time.Since(toolStarted).Milliseconds()}); e != nil {
 				return run, e
 			}
@@ -269,6 +278,13 @@ func (r *Runner) Run(parent context.Context, b config.Bot, input string, o Optio
 			if e = add(provider.Message{Role: "tool", Content: string(data), ToolCallID: call.ID}); e != nil {
 				return run, e
 			}
+			if repeats[key] > maxRepeatedCalls {
+				run.Status, run.Reason = "completed", "repeated_tool_call"
+				return run, nil
+			}
 		}
 	}
 }
+
+// maxRepeatedCalls ends a run whose model keeps issuing the same tool call instead of replying; the work already done stands.
+const maxRepeatedCalls = 2

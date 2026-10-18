@@ -684,7 +684,7 @@ func TestPlanPromptDescribesWorkersAndForbidsManagerOwner(t *testing.T) {
 	}
 	b, _ := a.Snapshot()
 	prompt := a.prompt(b, b.Goals[0], b.Cards[0])
-	for _, want := range []string{"- echo: ", "never use manager", "ONE task", "use writer when unsure"} {
+	for _, want := range []string{"- echo (", "never use manager", "ONE task", "use writer when unsure"} {
 		if !strings.Contains(prompt, want) {
 			t.Errorf("plan prompt missing %q", want)
 		}

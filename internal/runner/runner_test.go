@@ -2,6 +2,7 @@ package runner
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"path/filepath"
 	"strings"
@@ -209,4 +210,37 @@ func TestAlreadyCancelledCallerDoesNotLoad(t *testing.T) {
 		t.Fatal("cancelled caller loaded weights")
 	}
 	m.Close(context.Background())
+}
+
+func TestRepeatedIdenticalToolCallRunsOnceThenEndsTheRun(t *testing.T) {
+	call := `{"root":0,"path":"page.html","content":"<h1>Hi</h1>","overwrite":true}`
+	f := &fake{responses: []provider.Response{tool("file-write", call), tool("file-write", call), tool("file-write", call), final("never reached")}}
+	r, b := setup(t, f)
+	run, e := r.Run(context.Background(), b, "write the page", Options{})
+	if e != nil || run.Status != "completed" || run.Reason != "repeated_tool_call" {
+		t.Fatalf("run should end cleanly: %+v %v", run, e)
+	}
+	events, e := r.Store.Trace(run.ID)
+	if e != nil {
+		t.Fatal(e)
+	}
+	executed, ignored := 0, 0
+	for _, raw := range events {
+		var event struct {
+			Kind   string `json:"kind"`
+			Result struct {
+				Output string `json:"output"`
+			} `json:"result"`
+		}
+		if json.Unmarshal(raw, &event) == nil && event.Kind == "tool_finished" {
+			if strings.HasPrefix(event.Result.Output, "Duplicate call ignored") {
+				ignored++
+			} else {
+				executed++
+			}
+		}
+	}
+	if executed != 1 || ignored != 2 {
+		t.Fatalf("executed=%d ignored=%d", executed, ignored)
+	}
 }

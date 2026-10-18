@@ -68,15 +68,25 @@ func mergeSameOwner(tasks []TaskPlan) []TaskPlan {
 	return merged
 }
 
-// workerList describes each allowed worker so the planner can match tasks to specialists.
+// roleHints are short keyword lists; full descriptions were copied by the planner into task requirements.
+var roleHints = map[string]string{
+	"writer":       "text, ideas, suggestions, plans, posts, articles, poems",
+	"landing-page": "web pages, HTML and CSS",
+	"code-writer":  "programs and scripts",
+	"math-solver":  "math problems",
+	"qa-assistant": "reviews, tests and audits",
+}
+
+// workerList names each allowed worker with a short role so the planner can match tasks to specialists.
 func (a *Autonomy) workerList(g Goal) string {
 	lines := []string{}
 	for _, w := range a.capabilities(g) {
-		description := w.Requirements
-		if len(description) > 110 {
-			description = strings.ToValidUTF8(description[:110], "") + "..."
+		hint, ok := roleHints[w.Owner]
+		if !ok {
+			words := strings.Fields(w.Requirements)
+			hint = strings.Join(words[:min(len(words), 5)], " ")
 		}
-		lines = append(lines, "- "+w.Owner+": "+description)
+		lines = append(lines, "- "+w.Owner+" ("+hint+")")
 	}
 	return strings.Join(lines, "\n")
 }
