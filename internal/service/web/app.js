@@ -81,6 +81,6 @@ function form(id, action) {
 $('bot').onchange=selected;
 $('refresh').onclick=refresh;
 form('run-form',async()=>{await api('jobs',{bot:$('bot').value,input:$('input').value});$('notice').textContent='Task submitted.';await refresh();});
-form('install-form',async()=>{await api('packages',{directory:$('directory').value});await loadBots();$('notice').textContent='Bot installed. Review its tools and folders above.';});
+form('install-form',async()=>{await api('packages',{[$('package-kind').value]:$('directory').value});await loadBots();$('notice').textContent='Bot installed. Review its tools and folders above.';});
 loadBots().then(refresh).catch(report);
 setInterval(()=>{if(!document.hidden)refresh();},2000);

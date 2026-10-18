@@ -180,6 +180,12 @@ func execute(ctx context.Context, args []string) error {
 			return errors.New("bot command requires one directory or ID")
 		}
 		switch args[1] {
+		case "import":
+			b, e := catalog.Import(args[2], filepath.Join(c.Home, "packages"))
+			if e != nil {
+				return e
+			}
+			return write(b)
 		case "register", "validate":
 			b, e := catalog.Validate(args[2])
 			if e != nil {

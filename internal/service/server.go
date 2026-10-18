@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"path/filepath"
 	"sort"
 	"time"
 
@@ -14,10 +15,11 @@ import (
 )
 
 type Server struct {
-	Catalog   application.Catalog
-	Queue     *Queue
-	Store     *state.Store
-	Workflows *Workflows
+	Catalog     application.Catalog
+	Queue       *Queue
+	Store       *state.Store
+	Workflows   *Workflows
+	PackageHome string
 }
 
 func respond(w http.ResponseWriter, code int, v any) {
@@ -125,12 +127,27 @@ func (s *Server) Handler() http.Handler {
 	m.HandleFunc("POST /api/packages", func(w http.ResponseWriter, r *http.Request) {
 		var req struct {
 			Directory string `json:"directory"`
+			Archive   string `json:"archive,omitempty"`
 		}
 		if err := body(w, r, &req); err != nil {
 			problem(w, err)
 			return
 		}
-		b, err := s.Catalog.Install(req.Directory)
+		if (req.Directory == "") == (req.Archive == "") {
+			http.Error(w, "specify exactly one directory or archive", 400)
+			return
+		}
+		var b config.Bot
+		var err error
+		if req.Archive != "" {
+			home := s.PackageHome
+			if home == "" {
+				home = filepath.Join(filepath.Dir(s.Catalog.Registry.Dir), "packages")
+			}
+			b, err = s.Catalog.Import(req.Archive, home)
+		} else {
+			b, err = s.Catalog.Install(req.Directory)
+		}
 		if err != nil {
 			problem(w, err)
 			return
