@@ -60,7 +60,7 @@ ADAPTIVE_CONTEXT (autonomous plan/work/review, including direct tasks):
     grow context toward min(engine configured maximum, remaining reserved run tokens)
     release/reacquire single model slot; reload serially; retry fitting only, never replay tools
     record context_allocated event; preserve full current task, tool pairs and all budget caps
-  engine maximum for this laptop = 8192; normal bot context stays 4096
+  engine maximum for this laptop = 16384 (measured, f16 KV); normal bot context stays 4096
   never silently increase goal/per-run token limits or tool/file grants
   if capped, report current context, engine maximum and remaining run tokens with recovery action
 PROMPT_CONTEXT:
