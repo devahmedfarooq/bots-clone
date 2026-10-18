@@ -13,3 +13,13 @@ runtime/
 
 __pycache__/
 .venv/
+
+# OS, editor and generated output
+output/
+.env
+.env.*
+*.pyc
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

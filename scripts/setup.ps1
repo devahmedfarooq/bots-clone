@@ -27,4 +27,4 @@ if ($LASTEXITCODE -ne 0) { throw 'Contract tests failed' }
 if ($LASTEXITCODE -ne 0) { throw 'Build failed' }
 & bin/bots.exe diagnostics
 if ($LASTEXITCODE -ne 0) { throw 'Diagnostics failed' }
-Write-Output 'Setup complete. Register bots/extract and bots/workspace-qa, then run eval.'
+Write-Output 'Setup complete. Next: scripts/register-studio-bots.ps1, then scripts/start.ps1.'

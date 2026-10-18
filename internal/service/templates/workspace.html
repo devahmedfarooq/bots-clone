@@ -19,7 +19,7 @@
       <label for="package-kind">Package format</label>
       <select id="package-kind" name="kind" class="field"><option value="directory">Local directory</option><option value="archive">ZIP archive</option></select>
       <label for="directory">Local path</label>
-      <input id="directory" name="path" class="field" placeholder="A:\projects\bots-clone\bots\extract" required>
+      <input id="directory" name="path" class="field" placeholder="C:\path\to\bot-folder" required>
       {{template "button" (dict "Label" "Install bot" "Type" "submit" "Secondary" true)}}
       <span class="htmx-indicator muted ml-3" role="status">Installing…</span>
     </form>
