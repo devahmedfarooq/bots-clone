@@ -59,7 +59,8 @@ func serve(ctx context.Context, c appConfig, catalog application.Catalog, args [
 	}
 	defer q.Close()
 	s := &service.Server{Catalog: catalog, Queue: q, Store: store}
-	server := &http.Server{Handler: s.Handler(), ReadHeaderTimeout: 5 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
+	token := state.ID() + state.ID()
+	server := &http.Server{Handler: service.Secure(s.Handler(), ln.Addr().String(), token), ReadHeaderTimeout: 5 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
 	done := make(chan struct{})
 	go func() {
 		select {
@@ -70,7 +71,7 @@ func serve(ctx context.Context, c appConfig, catalog application.Catalog, args [
 		case <-done:
 		}
 	}()
-	fmt.Fprintln(os.Stderr, "Local dashboard: http://"+ln.Addr().String())
+	fmt.Fprintln(os.Stderr, "Local dashboard: http://"+ln.Addr().String()+"/#token="+token)
 	err = server.Serve(ln)
 	close(done)
 	if errors.Is(err, http.ErrServerClosed) {

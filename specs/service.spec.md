@@ -7,3 +7,5 @@ Cancel queued -> mark cancelled; cancel running -> cancel only its context; neve
 Restart -> mark queued/running jobs interrupted and running model runs uncertain -> do not replay tool actions.
 GET bots/runs/trace/jobs; POST packages/jobs/cancel; job events via SSE until terminal state.
 Service stores no raw submission inputs. Streams contain redacted job snapshots, not raw model token fragments.
+Access -> exact listener Host (DNS rebinding denied) -> same origin if present -> reject cross-site fetch -> constant-time per-start bearer token on every API -> JSON-only mutations. No remote bind allowed.
+Browser boot token comes from URL fragment, removed immediately; assets use strict self-only CSP and no external resources.
