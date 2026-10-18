@@ -753,3 +753,17 @@ func TestPlanPromptDoesNotShowThePlanCardsOwnFields(t *testing.T) {
 		t.Fatal("reviewers still need the task")
 	}
 }
+
+func TestPlanSchemaGeneratesFieldsInDependencyOrder(t *testing.T) {
+	schema := string(outputSchema(Card{Phase: "plan"}, Goal{GoalRequest: GoalRequest{Workers: []string{"writer", "landing-page"}}}))
+	order := []int{}
+	for _, field := range []string{`"title"`, `"requirements"`, `"acceptance"`, `"owner"`} {
+		order = append(order, strings.LastIndex(schema, field))
+	}
+	if !(order[0] < order[1] && order[1] < order[2] && order[2] < order[3]) || !strings.Contains(schema, `"enum":["writer","landing-page"]`) {
+		t.Fatalf("plan schema order or owners wrong: %s", schema)
+	}
+	if verdict := string(outputSchema(Card{Phase: "verify"}, Goal{})); strings.Index(verdict, `"reason"`) > strings.LastIndex(verdict, `"approved"`) {
+		t.Fatalf("the reviewer must explain before it decides: %s", verdict)
+	}
+}

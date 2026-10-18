@@ -92,30 +92,17 @@ func (a *Autonomy) workerList(g Goal) string {
 }
 
 // outputSchema constrains the manager's decoding: valid JSON, bounded fields, owners limited to real workers.
+// Property order is the generation order, so each field is written after the ones it depends on.
 func outputSchema(c Card, g Goal) json.RawMessage {
 	if g.Direct {
 		return nil
 	}
-	text := func(limit int) map[string]any { return map[string]any{"type": "string", "maxLength": limit} }
-	var schema map[string]any
 	switch c.Phase {
 	case "plan":
-		task := map[string]any{
-			"type": "object", "additionalProperties": false, "required": []string{"title", "requirements", "acceptance", "owner"},
-			"properties": map[string]any{"title": text(200), "requirements": text(2000), "acceptance": text(600), "owner": map[string]any{"type": "string", "enum": g.Workers}},
-		}
-		schema = map[string]any{
-			"type": "object", "additionalProperties": false, "required": []string{"tasks"},
-			"properties": map[string]any{"tasks": map[string]any{"type": "array", "minItems": 1, "maxItems": 12, "items": task}},
-		}
+		owners, _ := json.Marshal(g.Workers)
+		return json.RawMessage(fmt.Sprintf(`{"type":"object","additionalProperties":false,"required":["tasks"],"properties":{"tasks":{"type":"array","minItems":1,"maxItems":12,"items":{"type":"object","additionalProperties":false,"required":["title","requirements","acceptance","owner"],"properties":{"title":{"type":"string","maxLength":200},"requirements":{"type":"string","maxLength":2000},"acceptance":{"type":"string","maxLength":600},"owner":{"type":"string","enum":%s}}}}}}`, owners))
 	case "verify":
-		schema = map[string]any{
-			"type": "object", "additionalProperties": false, "required": []string{"approved", "reason"},
-			"properties": map[string]any{"approved": map[string]any{"type": "boolean"}, "reason": text(400)},
-		}
-	default:
-		return nil
+		return json.RawMessage(`{"type":"object","additionalProperties":false,"required":["reason","approved"],"properties":{"reason":{"type":"string","maxLength":400},"approved":{"type":"boolean"}}}`)
 	}
-	data, _ := json.Marshal(schema)
-	return data
+	return nil
 }

@@ -147,12 +147,12 @@ func (r *Runner) Run(parent context.Context, b config.Bot, input string, o Optio
 		}
 	}
 	toolCount := 0
-	repeats, results := map[string]int{}, map[string]tools.Result{}
+	repeats, results, offered := map[string]int{}, map[string]tools.Result{}, definitions
 	for {
 		if e = ctx.Err(); e != nil {
 			return run, e
 		}
-		request := provider.Request{Model: b.BaseModel, Messages: messages, Tools: definitions, Settings: settings, Schema: o.Schema}
+		request := provider.Request{Model: b.BaseModel, Messages: messages, Tools: offered, Settings: settings, Schema: o.Schema}
 		request, prompt, e := fit(ctx, r.Models.Provider, request, current)
 		if errors.Is(e, ErrContextBudget) && o.AdaptiveContext {
 			limit := min(r.ContextLimit, b.Budgets.Tokens-run.Usage.Total)
@@ -278,6 +278,9 @@ func (r *Runner) Run(parent context.Context, b config.Bot, input string, o Optio
 			if e = add(provider.Message{Role: "tool", Content: string(data), ToolCallID: call.ID}); e != nil {
 				return run, e
 			}
+			if repeats[key] > 1 {
+				offered = nil
+			}
 			if repeats[key] > maxRepeatedCalls {
 				run.Status, run.Reason = "completed", "repeated_tool_call"
 				return run, nil
@@ -286,5 +289,6 @@ func (r *Runner) Run(parent context.Context, b config.Bot, input string, o Optio
 	}
 }
 
-// maxRepeatedCalls ends a run whose model keeps issuing the same tool call instead of replying; the work already done stands.
+// A repeated identical tool call is ignored and takes the tools away for the next turn so the model must reply in text;
+// maxRepeatedCalls is the backstop that ends a run whose model still repeats it.
 const maxRepeatedCalls = 2

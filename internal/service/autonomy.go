@@ -665,7 +665,7 @@ func (a *Autonomy) prompt(b Board, g Goal, c Card) string {
 			base += "\nYour previous plan was rejected: " + c.Feedback + ". Return a corrected plan."
 		}
 	case "verify":
-		base += `Verify the card output against ALL requirements and acceptance criteria. Reject unsupported claims and missing evidence. Reject output that only names or describes a deliverable (for example a file name or a summary) instead of containing it. Reject output that only repeats the task description or acceptance criteria. Schema: {"approved":true,"reason":"one or two sentences naming what in the output meets or misses the requirements"}.`
+		base += `Verify the card output against ALL requirements and acceptance criteria. Reject unsupported claims and missing evidence. Reject output that only names or describes a deliverable (for example a file name or a summary) instead of containing it. Reject output that only repeats the task description or acceptance criteria. Schema: {"reason":"one or two sentences naming what in the output meets or misses the requirements","approved":true}.`
 		if c.Shrink > 0 {
 			base += fmt.Sprintf("\nNOTE: the output is %d characters; only its beginning and end are shown. Judge only what is shown and do not confirm claims about omitted parts.", len(c.Output))
 		}

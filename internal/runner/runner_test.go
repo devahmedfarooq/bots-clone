@@ -240,6 +240,9 @@ func TestRepeatedIdenticalToolCallRunsOnceThenEndsTheRun(t *testing.T) {
 			}
 		}
 	}
+	if len(f.requests) < 3 || len(f.requests[1].Tools) == 0 || len(f.requests[2].Tools) != 0 {
+		t.Fatalf("tools must be withdrawn after a duplicate call, requests=%d", len(f.requests))
+	}
 	if executed != 1 || ignored != 2 {
 		t.Fatalf("executed=%d ignored=%d", executed, ignored)
 	}
