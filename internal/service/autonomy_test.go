@@ -24,6 +24,8 @@ type boardEngine struct {
 	fixOnRetry   bool
 	bigReview    bool
 	alwaysBig    bool
+	noEvidence   bool
+	echoFirst    bool
 	arrayPlan    bool
 	workerStatus string
 	reject       bool
@@ -46,12 +48,20 @@ func (e *boardEngine) Generate(_ context.Context, r provider.Request, _ func(str
 			output = strings.TrimSuffix(strings.TrimPrefix(output, `{"tasks":`), `}`)
 		}
 	} else if strings.Contains(prompt, "Verify the card") {
-		output = `{"approved":true,"reason":"Output contains the required answer 42."}`
+		evidence := ""
+		if _, rest, found := strings.Cut(prompt, `"output":"`); found && !e.noEvidence {
+			evidence = rest[:min(strings.IndexAny(rest+`"`, `\"`), 12)]
+		}
+		data, _ := json.Marshal(map[string]any{"approved": true, "reason": "Output contains the required answer 42.", "evidence": evidence})
+		output = string(data)
 		if e.reject {
 			output = `{"approved":false,"reason":"Missing evidence."}`
 		}
 	} else if e.plain != "" {
 		output = e.plain
+		if e.echoFirst && strings.Contains(prompt, "previous reply was rejected") {
+			output = "Verified answer: 42"
+		}
 	} else if e.workerStatus != "" {
 		data, _ := json.Marshal(map[string]string{"status": e.workerStatus, "output": "Partial work", "message": "Need user input"})
 		output = string(data)
@@ -629,5 +639,102 @@ func TestReviewStillTooLargeAfterEveryExcerptBlocksWithReason(t *testing.T) {
 	c := b.Cards[1]
 	if c.Shrink != maxReviewShrink || b.Goals[0].Runs != 2+1+maxReviewShrink || !strings.Contains(c.History[len(c.History)-1].Text, "Job failed") {
 		t.Fatalf("bad block: shrink=%d runs=%d last=%q", c.Shrink, b.Goals[0].Runs, c.History[len(c.History)-1].Text)
+	}
+}
+
+func TestRestatesTask(t *testing.T) {
+	card := Card{TaskPlan: TaskPlan{Title: "Write a complex task plan", Requirements: "Suggest a complicated task that will generate at least 15 sub-tasks", Acceptance: "A detailed task plan with at least 15 sub-tasks, each assigned to a specific worker, and acceptance criteria for each sub-task"}}
+	for output, want := range map[string]bool{
+		"A detailed task plan with at least 15 sub-tasks, each assigned to a specific worker, and acceptance criteria for each sub-task":        true,
+		"  a detailed TASK plan with at least 15 sub-tasks,\n each assigned to a specific worker, and acceptance criteria for each sub-task.  ": true,
+		"Write a complex task plan":                          true,
+		"1. Design the schema\n2. Build the API\n3. Test it": false,
+		"42": false,
+		"":   false,
+	} {
+		if got := restatesTask(output, card); got != want {
+			t.Errorf("restatesTask(%.40q) = %v, want %v", output, got, want)
+		}
+	}
+}
+
+func TestCitesOutput(t *testing.T) {
+	out := "Roses are red,\nviolets are blue."
+	for _, test := range []struct {
+		evidence string
+		want     bool
+	}{{"Roses are red", true}, {"ROSES  are\nred,", true}, {"", false}, {"violets are green", false}, {"x", false}} {
+		if got := citesOutput(test.evidence, out); got != test.want {
+			t.Errorf("citesOutput(%q) = %v", test.evidence, got)
+		}
+	}
+	if !citesOutput("x = 3", "x = 3") {
+		t.Error("short outputs may be cited whole")
+	}
+}
+
+func TestWorkerRepeatingItsTaskIsRetriedOnceThenBlocked(t *testing.T) {
+	a, e := testAutonomy(t)
+	e.plain = "Answer equals 42"
+	if _, err := a.Create(goalRequest()); err != nil {
+		t.Fatal(err)
+	}
+	b := driveBoard(t, a, func(b Board) bool { return len(b.Cards) == 2 && b.Cards[1].Status == Blocked })
+	c := b.Cards[1]
+	if b.Goals[0].Runs != 3 || c.Feedback == "" || !strings.Contains(c.History[len(c.History)-1].Text, "kept repeating the task") {
+		t.Fatalf("bad block: runs=%d last=%q", b.Goals[0].Runs, c.History[len(c.History)-1].Text)
+	}
+}
+
+func TestWorkerRepeatingOnceThenDoingTheTaskSucceeds(t *testing.T) {
+	a, e := testAutonomy(t)
+	e.plain, e.echoFirst = "Answer equals 42", true
+	if _, err := a.Create(goalRequest()); err != nil {
+		t.Fatal(err)
+	}
+	b := driveBoard(t, a, func(b Board) bool { return b.Goals[0].Status == Done })
+	if c := b.Cards[1]; c.Output != "Verified answer: 42" || c.Feedback != "" || b.Goals[0].Runs != 4 {
+		t.Fatalf("bad result: output=%q feedback=%q runs=%d", c.Output, c.Feedback, b.Goals[0].Runs)
+	}
+}
+
+func TestApprovalWithoutEvidenceNeedsUserSignOff(t *testing.T) {
+	a, e := testAutonomy(t)
+	e.noEvidence = true
+	if _, err := a.Create(goalRequest()); err != nil {
+		t.Fatal(err)
+	}
+	b := driveBoard(t, a, func(b Board) bool { return len(b.Cards) == 2 && b.Cards[1].Status == Approval })
+	c := b.Cards[1]
+	if !c.Manual || c.Gate != "done" || b.Goals[0].Runs != 4 {
+		t.Fatalf("bad state: manual=%v gate=%q runs=%d", c.Manual, c.Gate, b.Goals[0].Runs)
+	}
+	for i := 0; i < 5; i++ {
+		a.mu.Lock()
+		_ = a.tick()
+		a.mu.Unlock()
+	}
+	if after, _ := a.Snapshot(); after.Cards[1].Status != Approval {
+		t.Fatal("unverified approval was auto-accepted")
+	}
+	if err := a.Action(c.ID, "approve", "looks right"); err != nil {
+		t.Fatal(err)
+	}
+	if done, _ := a.Snapshot(); done.Cards[1].Status != Done {
+		t.Fatal("user sign-off ignored")
+	}
+}
+
+func TestPlanPromptDescribesWorkersAndForbidsManagerOwner(t *testing.T) {
+	a, _ := testAutonomy(t)
+	if _, err := a.Create(goalRequest()); err != nil {
+		t.Fatal(err)
+	}
+	b, _ := a.Snapshot()
+	prompt := a.prompt(b, b.Goals[0], b.Cards[0])
+	for _, want := range []string{"- echo: ", "never use manager", "ONE task", "use writer when unsure"} {
+		if !strings.Contains(prompt, want) {
+			t.Errorf("plan prompt missing %q", want)
+		}
 	}
 }

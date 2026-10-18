@@ -95,6 +95,7 @@ type Card struct {
 	Gate     string         `json:"gate,omitempty"`
 	Feedback string         `json:"feedback,omitempty"`
 	Shrink   int            `json:"review_shrink,omitempty"`
+	Manual   bool           `json:"manual_signoff,omitempty"`
 }
 
 type Board struct {
@@ -379,7 +380,7 @@ func (a *Autonomy) tick() error {
 				c.Status = Ready
 				return a.save(b)
 			}
-			if c.Gate == "done" && !g.Rules.BeforeDone && c.Shrink == 0 {
+			if c.Gate == "done" && !g.Rules.BeforeDone && c.Shrink == 0 && !c.Manual {
 				c.Status = Done
 				record(c, "manager", "Approved under updated rules.")
 				return a.save(b)
@@ -533,6 +534,9 @@ func (a *Autonomy) advance(b Board, i int) error {
 				block(c, err.Error())
 				return a.save(b)
 			}
+			if restatesTask(text, *c) {
+				return a.rework(b, i, text)
+			}
 			return a.finishDirect(b, i, text)
 		}
 		var result struct {
@@ -554,8 +558,11 @@ func (a *Autonomy) advance(b Board, i int) error {
 				block(c, err.Error())
 			} else if strings.TrimSpace(text) == "" {
 				block(c, "Worker supplied no result.")
+			} else if restatesTask(text, *c) {
+				return a.rework(b, i, text)
 			} else {
 				c.Output = text
+				c.Feedback = ""
 				c.Status = Review
 				record(c, "manager", "Result submitted for verification.")
 			}
@@ -571,12 +578,24 @@ func (a *Autonomy) advance(b Board, i int) error {
 		var result struct {
 			Approved bool   `json:"approved"`
 			Reason   string `json:"reason"`
+			Evidence string `json:"evidence"`
 		}
 		if err := decodeBotOutput(output, &result); err != nil || strings.TrimSpace(result.Reason) == "" {
 			block(c, "Manager returned invalid verification. Output: "+output)
 			return a.save(b)
 		}
 		record(c, "manager", "Verification: "+result.Reason)
+		if result.Approved && !citesOutput(result.Evidence, c.Output) {
+			if c.Feedback == "" {
+				c.Feedback, c.Status, c.Key, c.Job = "An approval must quote a phrase copied exactly from the output as evidence.", Ready, "", ""
+				record(c, "manager", "Approval had no verifiable evidence. Asking the manager once more.")
+				return a.save(b)
+			}
+			c.Status, c.Gate, c.Manual = Approval, "done", true
+			record(c, "manager", "The manager could not cite evidence from the result. Please read it and sign off.")
+			return a.save(b)
+		}
+		c.Feedback = ""
 		if !result.Approved {
 			block(c, "Verification failed. Retry review with an instruction, or create a corrected goal.")
 		} else if g.Rules.BeforeDone || c.Shrink > 0 {
@@ -602,6 +621,7 @@ func (a *Autonomy) finishDirect(b Board, i int, output string) error {
 		return a.save(b)
 	}
 	c.Output = text
+	c.Feedback = ""
 	record(c, c.Owner, "Result ready.")
 	if b.Goals[goalIndex(b, c.Goal)].Rules.BeforeDone {
 		c.Status, c.Gate = Approval, "done"
@@ -611,19 +631,22 @@ func (a *Autonomy) finishDirect(b Board, i int, output string) error {
 	return a.save(b)
 }
 
-func directPrompt(g Goal) string {
+func directPrompt(g Goal, feedback string) string {
 	text := "Complete this task and reply with the finished deliverable only: no JSON, no preamble. If you also save a file, use a relative path in your goal workspace (an existing name is saved as a new version) and still include the full content in your reply.\n" + g.Requirements
 	for _, m := range g.Chat[1:] {
 		if m.Actor == "user" {
 			text += "\nUser instruction: " + m.Text
 		}
 	}
+	if feedback != "" {
+		text += "\nYour previous reply was rejected: " + feedback
+	}
 	return text
 }
 
 func (a *Autonomy) prompt(b Board, g Goal, c Card) string {
 	if g.Direct {
-		return directPrompt(g)
+		return directPrompt(g, c.Feedback)
 	}
 	context := struct {
 		Goal         string     `json:"goal"`
@@ -650,12 +673,15 @@ func (a *Autonomy) prompt(b Board, g Goal, c Card) string {
 	}
 	switch c.Phase {
 	case "plan":
-		base += `Break the goal into the FEWEST tasks that fully deliver it, in execution order: one task for a simple request such as a poem, post, page or answer. Add research or file tasks only when the goal needs them. Never require saving files unless the goal asks for a file; the deliverable itself is returned as the task result. Each task's owner must be exactly one of: ` + strings.Join(g.Workers, ", ") + `. Each task must contain a complete input and testable acceptance. Every task needs all four fields as plain strings, including owner. Do not write the deliverable itself in the plan; workers produce it. Example: {"tasks":[{"title":"Write the poem","requirements":"Write a 3-stanza poem about rain.","acceptance":"The reply contains a 3-stanza poem about rain.","owner":"` + exampleOwner(g.Workers) + `"}]}`
+		base += `Break the goal into the FEWEST tasks that fully deliver it, in execution order: one task for a simple request such as a poem, post, page or answer. Add research or file tasks only when the goal needs them. Never require saving files unless the goal asks for a file; the deliverable itself is returned as the task result. A question, idea, suggestion or write-up request is ONE task whose requirements restate the goal itself; never make a task whose only job is to make a plan unless the user asked for a plan. Each task's owner must be exactly one of these workers; choose the one whose description fits the task, use writer when unsure, and never use manager:` + "\n" + a.workerList(g) + "\n" + `Each task must contain a complete input and testable acceptance. Every task needs all four fields as plain strings, including owner. Do not write the deliverable itself in the plan; workers produce it. Example: {"tasks":[{"title":"Write the poem","requirements":"Write a 3-stanza poem about rain.","acceptance":"The reply contains a 3-stanza poem about rain.","owner":"` + exampleOwner(g.Workers) + `"}]}`
 		if c.Feedback != "" {
 			base += "\nYour previous plan was rejected: " + c.Feedback + ". Return a corrected plan."
 		}
 	case "verify":
-		base += `Verify the card output against ALL requirements and acceptance criteria. Reject unsupported claims and missing evidence. Reject output that only names or describes a deliverable (for example a file name or a summary) instead of containing it. Schema: {"approved":true,"reason":"specific evidence or missing requirement"}.`
+		base += `Verify the card output against ALL requirements and acceptance criteria. Reject unsupported claims and missing evidence. Reject output that only names or describes a deliverable (for example a file name or a summary) instead of containing it. Reject output that only repeats the task description or acceptance criteria. Schema: {"approved":true,"reason":"why","evidence":"a short phrase copied exactly from the output that proves it"}.`
+		if c.Feedback != "" {
+			base += "\nYour previous answer was rejected: " + c.Feedback
+		}
 		if c.Shrink > 0 {
 			base += fmt.Sprintf("\nNOTE: the output is %d characters; only its beginning and end are shown. Judge only what is shown and do not confirm claims about omitted parts.", len(c.Output))
 		}
@@ -684,6 +710,9 @@ func (a *Autonomy) prompt(b Board, g Goal, c Card) string {
 				base += "\nPrior task " + other.Title + ": " + other.Output
 			}
 		}
+	}
+	if c.Phase == "work" && c.Feedback != "" {
+		base += "\nYour previous reply was rejected: " + c.Feedback
 	}
 	return base + "\nContext:\n" + string(contextData)
 }

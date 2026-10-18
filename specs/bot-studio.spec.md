@@ -95,3 +95,15 @@ REVIEW_FALLBACK (review prompt too large even at the engine maximum):
   UI: notice says the manager could only review an excerpt; read the full result, then approve or reject
   still too large after shrink 3 -> Blocked with the real error; full output is never truncated or lost
   the stored/copy/download output is always the complete deliverable
+
+WORKER_QUALITY:
+  ECHO_GUARD: worker/direct output that equals (ignoring case, spacing, edge punctuation) or is a fragment of its own
+    acceptance, requirements or title is not a result; fragments need ref>=12 and output>=20 chars; short real answers pass
+    first time -> card Ready again with feedback "repeated the task description, do the task itself"; second time -> Blocked
+    feedback is cleared when a phase succeeds
+  PLAN_MATCHING: plan prompt lists every allowed worker as "- id: description"; choose the fitting one, writer when unsure,
+    never manager; question/idea/suggestion/write-up = ONE task restating the goal; no "make a plan" task unless asked
+  REVIEW_EVIDENCE: approval JSON = {approved, reason, evidence}; evidence must be a phrase present in the output
+    (case/space-insensitive, >= min(8, output length) chars); rejection needs none
+    missing/invalid evidence -> one retry with feedback; still invalid -> Needs your OK (manual_signoff), never auto-accepted
+  reason: a 1.7B reviewer approved an output that was only the acceptance text; evidence makes that detectable
