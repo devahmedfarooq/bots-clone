@@ -138,7 +138,17 @@ func (q *Queue) work() {
 			}
 			q.jobs[j.ID] = j
 			q.mu.Unlock()
-			run, err := q.runner.Run(task.ctx, task.bot, task.request.Input, runner.Options{Settings: task.request.Settings})
+			run, err := q.runner.Run(task.ctx, task.bot, task.request.Input, runner.Options{Settings: task.request.Settings, Started: func(r state.Run) error {
+				q.mu.Lock()
+				defer q.mu.Unlock()
+				current := q.jobs[task.id]
+				current.Run = &r
+				if err := q.runner.Store.Checkpoint("job", current.ID, current); err != nil {
+					return err
+				}
+				q.jobs[current.ID] = current
+				return nil
+			}})
 			q.mu.Lock()
 			j.Status = run.Status
 			if run.ID != "" {

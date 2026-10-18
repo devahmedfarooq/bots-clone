@@ -56,3 +56,35 @@ func TestWorkflowExecutionIsolationAndBlockedDependencies(t *testing.T) {
 		t.Fatal(f)
 	}
 }
+
+func TestResumeSkipsCompletedAndRejectsUncertain(t *testing.T) {
+	q, e, s := testQueue(t, 4)
+	close(e.gate)
+	f := Flow{ID: "checkpoint", Definition: chain(), Status: "running", Steps: map[string]StepResult{"first": {Status: "completed", Version: "1.0.0", Output: "checkpoint output"}, "second": {Status: "pending", Version: "1.0.0"}}}
+	if err := s.Checkpoint("workflow", f.ID, f); err != nil {
+		t.Fatal(err)
+	}
+	w, err := NewWorkflows(q)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer w.Close()
+	if _, err = w.Resume(f.ID); err != nil {
+		t.Fatal(err)
+	}
+	f = awaitFlow(t, w, f.ID)
+	if f.Status != "completed" || f.Steps["first"].Job != "" || f.Steps["second"].Output != "checkpoint output" {
+		t.Fatal(f)
+	}
+	f.ID = "uncertain"
+	f.Status = "interrupted"
+	step := f.Steps["second"]
+	step.Status = "uncertain"
+	f.Steps["second"] = step
+	if err = w.save(f); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = w.Resume(f.ID); err == nil {
+		t.Fatal("uncertain action replayed")
+	}
+}

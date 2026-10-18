@@ -21,6 +21,7 @@ type Options struct {
 	Session  string
 	Settings config.Settings
 	Emit     func(string)
+	Started  func(state.Run) error
 }
 
 func (r *Runner) Run(parent context.Context, b config.Bot, input string, o Options) (run state.Run, err error) {
@@ -86,6 +87,11 @@ func (r *Runner) Run(parent context.Context, b config.Bot, input string, o Optio
 			err = errors.Join(err, saveErr)
 		}
 	}()
+	if o.Started != nil {
+		if e = o.Started(run); e != nil {
+			return run, e
+		}
+	}
 	release, e = r.Models.Acquire(ctx, provider.Model{ID: b.BaseModel, ContextSize: settings.ContextSize})
 	if e != nil {
 		return run, e

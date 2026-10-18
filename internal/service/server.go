@@ -42,6 +42,14 @@ func (s *Server) Handler() http.Handler {
 	m := http.NewServeMux()
 	m.Handle("GET /", dashboard())
 	if s.Workflows != nil {
+		m.HandleFunc("POST /api/workflows/{id}/resume", func(w http.ResponseWriter, r *http.Request) {
+			f, err := s.Workflows.Resume(r.PathValue("id"))
+			if err != nil {
+				problem(w, err)
+				return
+			}
+			respond(w, 202, f)
+		})
 		m.HandleFunc("GET /api/workflows", func(w http.ResponseWriter, r *http.Request) { respond(w, 200, s.Workflows.List()) })
 		m.HandleFunc("POST /api/workflows", func(w http.ResponseWriter, r *http.Request) {
 			var d workflow.Definition

@@ -50,8 +50,14 @@ func NewWorkflows(q *Queue) (*Workflows, error) {
 			f.Status = "interrupted"
 			for id, step := range f.Steps {
 				if step.Status == "running" {
-					step.Status = "uncertain"
-					step.Error = "Inspect the saved job and tool trace; this step cannot be replayed automatically."
+					job, ok := q.Get(step.Job)
+					if ok && job.Status == "completed" && job.Run != nil {
+						step.Status = "completed"
+						step.Output = job.Run.Output
+					} else {
+						step.Status = "uncertain"
+						step.Error = "Inspect the saved job and tool trace; this step cannot be replayed automatically."
+					}
 					f.Steps[id] = step
 				}
 			}
@@ -286,4 +292,51 @@ func (w *Workflows) Close() {
 	}
 	w.mu.Unlock()
 	w.wg.Wait()
+}
+
+func (w *Workflows) Resume(id string) (Flow, error) {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	f, ok := w.flows[id]
+	if !ok {
+		return Flow{}, errors.New("workflow not found")
+	}
+	if w.closed || w.q.ctx.Err() != nil || len(w.cancels) >= 8 {
+		return Flow{}, errors.New("service stopped or workflow capacity reached")
+	}
+	if f.Status != "interrupted" {
+		return Flow{}, errors.New("only interrupted workflows can resume")
+	}
+	ordered, err := f.Definition.Validate(w.q.catalog.Registry)
+	if err != nil {
+		return Flow{}, err
+	}
+	for _, step := range ordered {
+		result := f.Steps[step.ID]
+		if result.Status != "pending" && result.Status != "completed" {
+			return Flow{}, errors.New("workflow has uncertain or failed steps; inspect traces and submit a new definition")
+		}
+		b, err := w.q.catalog.Registry.Get(step.Bot)
+		if err != nil || b.Version != result.Version {
+			return Flow{}, errors.New("bot version changed")
+		}
+		if result.Status == "completed" {
+			if err = workflow.Value(step.OutputType, result.Output); err != nil {
+				return Flow{}, err
+			}
+		}
+	}
+	f = cloneFlow(f)
+	f.Status = "running"
+	f.Error = ""
+	if err = w.q.runner.Store.Checkpoint("workflow", f.ID, f); err != nil {
+		return Flow{}, err
+	}
+	w.flows[id] = cloneFlow(f)
+	ctx, cancel := context.WithCancel(w.q.ctx)
+	w.cancels[id] = cancel
+	w.wg.Add(1)
+	initial := cloneFlow(f)
+	go w.execute(ctx, f, ordered)
+	return initial, nil
 }

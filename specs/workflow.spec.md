@@ -7,3 +7,5 @@ Each step executes with a new Runner session; route only declared dependency out
 Start -> pin bot versions -> checkpoint all pending -> topological worker -> checkpoint running BEFORE submit -> shared queue -> checkpoint job ID -> poll terminal -> validate output type -> checkpoint result.
 Failed dependency -> mark blocked; independent steps may continue. Declared retries apply only to bots without tools. Workflow concurrency limited to eight; model still has one queue slot.
 Cancel -> cancel only current job -> mark step uncertain -> stop. Restart running flow -> interrupted; in-flight step -> uncertain; never replay automatically.
+Recovery may promote an in-flight step from its already completed job checkpoint; resume validates output contract and pinned bot versions -> only completed/pending steps allowed -> skip completed steps -> continue pending. Uncertain actions require trace review and a new explicit definition.
+Runner Started callback -> durably link job to run ID BEFORE model acquisition/tool actions, so interrupted jobs have attributable traces.
