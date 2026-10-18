@@ -61,3 +61,7 @@ HUMAN_INTERFACE:
       visuals: distinctive green approve and red reject styling
     token_persistence:
       dual_storage: sync token between sessionStorage and localStorage to survive page refresh
+
+  CHAT_SUBMIT:
+    capture submitting form before asynchronous mutation
+    POST text from that form; reset only after successful response
