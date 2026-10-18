@@ -11,6 +11,7 @@ import (
 	"sync"
 	"testing"
 	"time"
+	"unicode/utf8"
 
 	"bots/internal/provider"
 	"bots/internal/state"
@@ -21,6 +22,8 @@ type boardEngine struct {
 	mu           sync.Mutex
 	invalidPlan  bool
 	fixOnRetry   bool
+	bigReview    bool
+	alwaysBig    bool
 	arrayPlan    bool
 	workerStatus string
 	reject       bool
@@ -566,5 +569,65 @@ func TestVerifyPromptCarriesFileOnceNotInToolEvidence(t *testing.T) {
 	prompt := a.prompt(b, b.Goals[0], c)
 	if strings.Count(prompt, "assignment answer") != 400 || !strings.Contains(prompt, "file-write out/index.html: ok (9600 bytes)") {
 		t.Fatalf("file content duplicated or evidence missing (copies=%d)", strings.Count(prompt, "assignment answer"))
+	}
+}
+
+// Count simulates a review prompt that cannot fit unless it is the excerpt version.
+func (e *boardEngine) Count(_ context.Context, r provider.Request) (int, error) {
+	prompt := r.Messages[len(r.Messages)-1].Content
+	if strings.Contains(prompt, "Verify the card") && (e.alwaysBig || e.bigReview && !strings.Contains(prompt, "only its beginning and end are shown")) {
+		return 1 << 20, nil
+	}
+	return 10, nil
+}
+
+func TestExcerptKeepsHeadAndTailAndStatesOmission(t *testing.T) {
+	text := strings.Repeat("a", 3000) + strings.Repeat("é", 1000) + strings.Repeat("z", 3000)
+	got := excerpt(text, 3000)
+	if !strings.HasPrefix(got, strings.Repeat("a", 2000)) || !strings.HasSuffix(got, strings.Repeat("z", 1000)) || !strings.Contains(got, "characters omitted for review") || !utf8.ValidString(got) {
+		t.Fatalf("bad excerpt: %.80q", got)
+	}
+	if excerpt("short", 3000) != "short" {
+		t.Fatal("short text must be unchanged")
+	}
+}
+
+func TestOversizedReviewFallsBackToExcerptAndNeedsSignOff(t *testing.T) {
+	a, e := testAutonomy(t)
+	e.bigReview = true
+	if _, err := a.Create(goalRequest()); err != nil {
+		t.Fatal(err)
+	}
+	b := driveBoard(t, a, func(b Board) bool { return len(b.Cards) == 2 && b.Cards[1].Status == Approval })
+	c := b.Cards[1]
+	if c.Gate != "done" || c.Shrink != 1 || b.Goals[0].Runs != 4 {
+		t.Fatalf("bad fallback state: gate=%q shrink=%d runs=%d", c.Gate, c.Shrink, b.Goals[0].Runs)
+	}
+	for i := 0; i < 5; i++ {
+		a.mu.Lock()
+		_ = a.tick()
+		a.mu.Unlock()
+	}
+	if after, _ := a.Snapshot(); after.Cards[1].Status != Approval {
+		t.Fatal("excerpt-reviewed result was auto-approved")
+	}
+	if err := a.Action(c.ID, "approve", "read it"); err != nil {
+		t.Fatal(err)
+	}
+	if done, _ := a.Snapshot(); done.Cards[1].Status != Done {
+		t.Fatal("user approval ignored")
+	}
+}
+
+func TestReviewStillTooLargeAfterEveryExcerptBlocksWithReason(t *testing.T) {
+	a, e := testAutonomy(t)
+	e.alwaysBig = true
+	if _, err := a.Create(goalRequest()); err != nil {
+		t.Fatal(err)
+	}
+	b := driveBoard(t, a, func(b Board) bool { return len(b.Cards) == 2 && b.Cards[1].Status == Blocked })
+	c := b.Cards[1]
+	if c.Shrink != maxReviewShrink || b.Goals[0].Runs != 2+1+maxReviewShrink || !strings.Contains(c.History[len(c.History)-1].Text, "Job failed") {
+		t.Fatalf("bad block: shrink=%d runs=%d last=%q", c.Shrink, b.Goals[0].Runs, c.History[len(c.History)-1].Text)
 	}
 }

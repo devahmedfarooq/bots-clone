@@ -189,3 +189,5 @@ Plan from the file/workspace review. Spec: [goal workspace spec](specs/goal-work
 WS-01 live evidence (real Qwen3-1.7B, 2026-10-19): the coffee-shop landing page + announcement goal ran twice with identical file names; both finished Done, each saving index.html/announcement.txt in its own `.local/workspaces/<goal>/` folder, with nothing written into the repo.
 
 CTX-16K (2026-10-19): engine.context_size raised 8192 -> 16384 after measuring VRAM on the RTX 5050 (3889 / 4341 / 5245 MiB at 4096 / 8192 / 16384, ~113 KB per token, f16 KV). About 2.9 GB stays free. 32768 would need roughly 7 GB total and was not adopted. Normal bot context stays 4096; growth is automatic and per task.
+
+REVIEW-FALLBACK (2026-10-19): oversized reviews no longer block. They retry on an excerpt (up to 3 shrink levels) and then require the user's sign-off; the complete output is never truncated. Verified with real runner/queue code and a simulated oversized prompt (3 tests); not yet exercised with a naturally oversized live review.

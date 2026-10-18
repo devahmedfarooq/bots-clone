@@ -84,3 +84,14 @@ REVIEW_PROMPT:
   tool evidence for file-write = path, status, byte count (never the file content, already in the output)
   other tools = name, path, status, first 200 chars of result
   reason: repeating a saved file in the review prompt doubled its size and exceeded the 8192 context
+
+REVIEW_FALLBACK (review prompt too large even at the engine maximum):
+  trigger: verify run fails with termination_reason context_budget and card.review_shrink < 3
+  action: review_shrink += 1; card Ready again (same phase); history says the result is too long to review whole
+  prompt at shrink n: output replaced by head(2/3) + "[... N characters omitted for review ...]" + tail(1/3)
+    limit = max(1000, engine maximum * 2 >> n) characters; prompt carries a NOTE: only the beginning and end are shown
+  result of an excerpt review: never auto-approved; card goes to "Needs your OK" (done gate) even when no sign-off rule is set
+    tick must not auto-approve it when rules later change
+  UI: notice says the manager could only review an excerpt; read the full result, then approve or reject
+  still too large after shrink 3 -> Blocked with the real error; full output is never truncated or lost
+  the stored/copy/download output is always the complete deliverable

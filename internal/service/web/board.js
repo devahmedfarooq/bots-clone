@@ -138,7 +138,7 @@ function emptyMessage(card) {
 function cardNotice(card) {
   const last = card.history.length ? card.history[card.history.length - 1].text : '';
   if (card.status === 'Blocked') return 'Needs attention: ' + last;
-  if (card.status === 'Needs Your Approval') return card.gate === 'done' ? 'Review the result below, then approve or reject it.' : 'This task is waiting for your approval before it runs.';
+  if (card.status === 'Needs Your Approval') return card.gate === 'done' ? (card.review_shrink ? 'The manager could only review an excerpt of this long result. Read it in full, then approve or reject it.' : 'Review the result below, then approve or reject it.') : 'This task is waiting for your approval before it runs.';
   return '';
 }
 
