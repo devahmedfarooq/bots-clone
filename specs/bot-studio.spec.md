@@ -121,3 +121,5 @@ PLAN_FIELDS: plan schema emits title, requirements, acceptance, owner in that or
 PLAN_CONTEXT: the planner is not shown the plan card's own task fields (it copied "Plan goal" text into plans) and gets
   short role hints per worker, not full descriptions (it copied descriptions into requirements); no worked example (leaked)
 TOOL_CALL_TEXT: a reply that is a printed file-write call JSON is unwrapped to its content before deliverable recovery
+
+ONE_TASK_CAP: a single-clause goal (no "and", comma, semicolon, line break, then, also, plus, &) gets maxItems 1 in the plan schema; anything else up to 12

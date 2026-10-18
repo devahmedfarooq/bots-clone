@@ -784,3 +784,22 @@ func TestUnwrapToolCallText(t *testing.T) {
 		}
 	}
 }
+
+func TestSingleClauseGoalsGetOneTaskPlans(t *testing.T) {
+	for goal, want := range map[string]int{
+		"Build a simple landing page for a coffee shop called Bean There.":        1,
+		"Suggest me a complicated task which will atleast make you make 15 tasks": 1,
+		"Build a landing page for Bean There, and write an announcement post":     12,
+		"Write a poem about rain and a poem about snow":                           12,
+		"Review the login flow; then write tests":                                 12,
+		"Step one: research\nStep two: write":                                     12,
+	} {
+		if got := maxPlanTasks(goal); got != want {
+			t.Errorf("maxPlanTasks(%.40q) = %d, want %d", goal, got, want)
+		}
+	}
+	schema := string(outputSchema(Card{Phase: "plan"}, Goal{GoalRequest: GoalRequest{Requirements: "Build a page", Workers: []string{"writer"}}}))
+	if !strings.Contains(schema, `"maxItems":1,`) {
+		t.Fatalf("single-clause goal must cap the plan at one task: %s", schema)
+	}
+}

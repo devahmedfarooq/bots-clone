@@ -100,7 +100,7 @@ func outputSchema(c Card, g Goal) json.RawMessage {
 	switch c.Phase {
 	case "plan":
 		owners, _ := json.Marshal(g.Workers)
-		return json.RawMessage(fmt.Sprintf(`{"type":"object","additionalProperties":false,"required":["tasks"],"properties":{"tasks":{"type":"array","minItems":1,"maxItems":12,"items":{"type":"object","additionalProperties":false,"required":["title","requirements","acceptance","owner"],"properties":{"title":{"type":"string","maxLength":200},"requirements":{"type":"string","maxLength":2000},"acceptance":{"type":"string","maxLength":600},"owner":{"type":"string","enum":%s}}}}}}`, owners))
+		return json.RawMessage(fmt.Sprintf(`{"type":"object","additionalProperties":false,"required":["tasks"],"properties":{"tasks":{"type":"array","minItems":1,"maxItems":%d,"items":{"type":"object","additionalProperties":false,"required":["title","requirements","acceptance","owner"],"properties":{"title":{"type":"string","maxLength":200},"requirements":{"type":"string","maxLength":2000},"acceptance":{"type":"string","maxLength":600},"owner":{"type":"string","enum":%s}}}}}}`, maxPlanTasks(g.Requirements), owners))
 	case "verify":
 		return json.RawMessage(`{"type":"object","additionalProperties":false,"required":["reason","approved"],"properties":{"reason":{"type":"string","maxLength":400},"approved":{"type":"boolean"}}}`)
 	}
@@ -120,4 +120,15 @@ func unwrapToolCallText(output string) string {
 		return output
 	}
 	return call.Arguments.Content
+}
+
+// maxPlanTasks lets a single-clause request become one task only; "and", commas, semicolons or line breaks allow a split.
+func maxPlanTasks(goal string) int {
+	text := " " + strings.ToLower(goal) + " "
+	for _, joiner := range []string{" and ", ",", ";", "\n", " then ", " also ", " plus ", "&", " + "} {
+		if strings.Contains(text, joiner) {
+			return 12
+		}
+	}
+	return 1
 }
