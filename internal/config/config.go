@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"time"
 )
 
@@ -23,19 +24,24 @@ type Budgets struct {
 	ToolCalls int `json:"tool_calls"`
 	Seconds   int `json:"seconds"`
 }
+type ContextSource struct {
+	Root int    `json:"root"`
+	Path string `json:"path"`
+}
 type Bot struct {
-	Schema         int      `json:"schema_version"`
-	ID             string   `json:"id"`
-	Version        string   `json:"version"`
-	Description    string   `json:"description"`
-	Instructions   string   `json:"instructions"`
-	BaseModel      string   `json:"base_model"`
-	Adapter        string   `json:"adapter,omitempty"`
-	Tools          []string `json:"tools"`
-	ContextSources []string `json:"context_sources"`
-	Settings       Settings `json:"generation"`
-	Budgets        Budgets  `json:"budgets"`
-	Evaluation     string   `json:"evaluation_suite"`
+	Schema         int             `json:"schema_version"`
+	ID             string          `json:"id"`
+	Version        string          `json:"version"`
+	Description    string          `json:"description"`
+	Instructions   string          `json:"instructions"`
+	BaseModel      string          `json:"base_model"`
+	Adapter        string          `json:"adapter,omitempty"`
+	Tools          []string        `json:"tools"`
+	Retrieval      []ContextSource `json:"retrieval,omitempty"`
+	ContextSources []string        `json:"context_sources"`
+	Settings       Settings        `json:"generation"`
+	Budgets        Budgets         `json:"budgets"`
+	Evaluation     string          `json:"evaluation_suite"`
 }
 
 var identifier = regexp.MustCompile(`^[a-z][a-z0-9-]{0,63}$`)
@@ -83,6 +89,9 @@ func Load(path string) (Bot, error) {
 		}
 		b.ContextSources[i] = p
 	}
+	if b.Adapter != "" && !filepath.IsAbs(b.Adapter) {
+		b.Adapter = filepath.Join(base, b.Adapter)
+	}
 	if b.Evaluation != "" {
 		if !filepath.IsAbs(b.Evaluation) {
 			b.Evaluation = filepath.Join(base, b.Evaluation)
@@ -103,10 +112,19 @@ func (b Bot) Validate() error {
 		return errors.New("version must use major.minor.patch")
 	case b.Description == "" || b.Instructions == "" || b.BaseModel == "":
 		return errors.New("description, instructions and base_model are required")
-	case b.Adapter != "":
-		return errors.New("adapters require the unfinished Phase 2 compatibility and provider operations")
 	case b.Budgets.Tokens < 1 || b.Budgets.Tokens > 131072 || b.Budgets.ToolCalls < 0 || b.Budgets.ToolCalls > 100 || b.Budgets.Seconds < 1 || b.Budgets.Seconds > 3600:
 		return errors.New("budgets: tokens 1..131072, tool_calls 0..100, seconds 1..3600 required")
+	}
+	if len(b.Retrieval) > 0 && !slices.Contains(b.Tools, "file-read") {
+		return errors.New("retrieval requires file-read grant")
+	}
+	if len(b.Retrieval) > 16 {
+		return errors.New("retrieval allows at most 16 sources")
+	}
+	for _, s := range b.Retrieval {
+		if s.Root < 0 || s.Root >= len(b.ContextSources) || !filepath.IsLocal(s.Path) {
+			return errors.New("retrieval requires a granted root index and local relative path")
+		}
 	}
 	seen := map[string]bool{}
 	for _, t := range b.Tools {

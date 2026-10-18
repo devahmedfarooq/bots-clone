@@ -1,0 +1,5 @@
+Project Cedar is an offline document index for local laptops.
+Project owner: Maya Chen.
+Backend language: Go.
+Metadata database: SQLite.
+Release codename: Juniper.

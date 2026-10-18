@@ -1,0 +1,102 @@
+[
+  {
+    "name": "complete-invoice",
+    "input": "Invoice INV-104 from Cedar Supplies. Currency USD. Total payable: 149.50.",
+    "expected_json": {
+      "vendor": "Cedar Supplies",
+      "invoice_number": "INV-104",
+      "currency": "USD",
+      "total": 149.5
+    }
+  },
+  {
+    "name": "missing-values",
+    "input": "Invoice from Northwind. Total EUR 20. No invoice number was provided.",
+    "expected_json": {
+      "vendor": "Northwind",
+      "invoice_number": null,
+      "currency": "EUR",
+      "total": 20
+    }
+  },
+  {
+    "name": "extract-80",
+    "input": "Invoice DOC-580 from Birch Supplies 80. Currency USD. Total due 592.50.",
+    "expected_json": {
+      "vendor": "Birch Supplies 80",
+      "invoice_number": "DOC-580",
+      "currency": "USD",
+      "total": 592.5
+    }
+  },
+  {
+    "name": "extract-81",
+    "input": "Invoice DOC-581 from Maple Supplies 81. Currency EUR. Total due 599.75.",
+    "expected_json": {
+      "vendor": "Maple Supplies 81",
+      "invoice_number": "DOC-581",
+      "currency": "EUR",
+      "total": 599.75
+    }
+  },
+  {
+    "name": "extract-82",
+    "input": "Invoice DOC-582 from Willow Supplies 82. Currency PKR. Total due 607.00.",
+    "expected_json": {
+      "vendor": "Willow Supplies 82",
+      "invoice_number": "DOC-582",
+      "currency": "PKR",
+      "total": 607
+    }
+  },
+  {
+    "name": "extract-83",
+    "input": "Invoice DOC-583 from Aspen Supplies 83. Currency GBP. Total due 614.25.",
+    "expected_json": {
+      "vendor": "Aspen Supplies 83",
+      "invoice_number": "DOC-583",
+      "currency": "GBP",
+      "total": 614.25
+    }
+  },
+  {
+    "name": "extract-84",
+    "input": "Invoice DOC-584 from Birch Supplies 84. Currency USD. Total due 621.50.",
+    "expected_json": {
+      "vendor": "Birch Supplies 84",
+      "invoice_number": "DOC-584",
+      "currency": "USD",
+      "total": 621.5
+    }
+  },
+  {
+    "name": "extract-85",
+    "input": "Invoice DOC-585 from Maple Supplies 85. Currency EUR. Total due 628.75.",
+    "expected_json": {
+      "vendor": "Maple Supplies 85",
+      "invoice_number": "DOC-585",
+      "currency": "EUR",
+      "total": 628.75
+    }
+  },
+  {
+    "name": "extract-86",
+    "input": "Invoice DOC-586 from Willow Supplies 86. Currency PKR. Total due 636.00.",
+    "expected_json": {
+      "vendor": "Willow Supplies 86",
+      "invoice_number": "DOC-586",
+      "currency": "PKR",
+      "total": 636
+    }
+  },
+  {
+    "name": "extract-87",
+    "input": "Invoice DOC-587 from Aspen Supplies 87. Currency GBP. Total due 643.25.",
+    "expected_json": {
+      "vendor": "Aspen Supplies 87",
+      "invoice_number": "DOC-587",
+      "currency": "GBP",
+      "total": 643.25
+    }
+  }
+]

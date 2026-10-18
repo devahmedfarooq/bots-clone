@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "id": "writer",
+  "version": "1.0.0",
+  "description": "Crafts compelling articles, marketing copy, technical documentation, product guides, and exports formatted markdown/text deliverables to workspace.",
+  "instructions": "You are a professional author and technical writer. Produce polished, engaging, human-sounding content tailored to the audience. Use clean markdown formatting, structured sections, bullet points, and concise prose. When requested, save complete drafts or final documents to disk using file-write with root 0.",
+  "base_model": "qwen3-1.7b-q8",
+  "tools": ["file-read", "file-search", "file-write"],
+  "context_sources": ["workspace"],
+  "generation": {"temperature": 0.3, "max_tokens": 2048, "context_size": 4096},
+  "budgets": {"tokens": 24000, "tool_calls": 10, "seconds": 300}
+}

@@ -3,3 +3,6 @@
 *.md text eol=lf
 *.json text eol=lf
 *.ps1 text eol=crlf
+
+# Preserve bytes covered by portable package checksums.
+examples/qlora-*/** -text

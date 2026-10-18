@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"bots/internal/artifacts"
 	"bots/internal/config"
 	"bots/internal/state"
 )
@@ -125,9 +126,21 @@ func Extract(path, home string) (dir string, cleanup func(), err error) {
 	if bot.ID != manifest.ID || bot.Version != manifest.Version {
 		return "", nil, errors.New("package and bot identity mismatch")
 	}
-	for _, path := range append(append([]string{}, bot.ContextSources...), bot.Evaluation) {
+	for _, path := range append(append([]string{}, bot.ContextSources...), bot.Evaluation, bot.Adapter) {
 		if path != "" && !safeName(path) {
 			return "", nil, errors.New("archive references must remain inside the package")
+		}
+	}
+	if bot.Adapter != "" {
+		var a artifacts.Adapter
+		if err = config.Decode(files[bot.Adapter], &a); err != nil {
+			return "", nil, err
+		}
+		if err = a.Validate(); err != nil {
+			return "", nil, err
+		}
+		if a.Artifact != "sha256:"+a.SHA256 {
+			return "", nil, errors.New("archive adapters require a content-addressed sha256 artifact reference; import weights separately")
 		}
 	}
 	if err = os.MkdirAll(home, 0700); err != nil {

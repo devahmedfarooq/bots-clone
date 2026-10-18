@@ -1,0 +1,228 @@
+{
+  "cases": [
+    {
+      "cycle": 1,
+      "target": "qlora-extract",
+      "run": {
+        "id": "78101d07880cb946e274cd00c5bbbaca",
+        "session": "38206f3ab546b44a8697eaf89804f933",
+        "bot": "qlora-extract",
+        "version": "0.1.0",
+        "base_model": "qwen3-1.7b-q8",
+        "adapter": "A:\\projects\\bots-clone\\.local\\worktrees\\phase2-completion\\.local\\phase2\\artifacts\\manifests\\qlora-extract-0.1.0-dfba51c515a9141e81cf95632144e0bafdf4d0a80ebe9e052617911a3901e4fa.json",
+        "status": "completed",
+        "termination_reason": "stop",
+        "output": "{\"vendor\":\"null\",\"invoice_number\":\"null\",\"currency\":\"null\",\"total\":null}",
+        "usage": {
+          "prompt_tokens": 88,
+          "completion_tokens": 19,
+          "total_tokens": 107
+        },
+        "started": "2026-10-18T22:58:19.4554497+05:00",
+        "duration_ms": 14113
+      },
+      "switch_and_run_ms": 14121,
+      "acquire_ms": 13571,
+      "repeatable": true
+    },
+    {
+      "cycle": 1,
+      "target": "qlora-workspace",
+      "run": {
+        "id": "abdd8e989f479c832387fd0c7fbafd65",
+        "session": "2349a311e9119d9355da839774809457",
+        "bot": "qlora-workspace",
+        "version": "0.1.0",
+        "base_model": "qwen3-1.7b-q8",
+        "adapter": "A:\\projects\\bots-clone\\.local\\worktrees\\phase2-completion\\.local\\phase2\\artifacts\\manifests\\qlora-workspace-0.1.0-36b1aa4cfd9d65965397557d392980dae6523355034915db256b387325ad43ed.json",
+        "status": "completed",
+        "termination_reason": "stop",
+        "output": "Hello!",
+        "usage": {
+          "prompt_tokens": 441,
+          "completion_tokens": 3,
+          "total_tokens": 444
+        },
+        "started": "2026-10-18T22:58:33.5775976+05:00",
+        "duration_ms": 6619
+      },
+      "switch_and_run_ms": 6624,
+      "acquire_ms": 6394,
+      "repeatable": true
+    },
+    {
+      "cycle": 1,
+      "target": "base",
+      "run": {
+        "id": "3bbd8a222a91a21756d29c503884c94f",
+        "session": "78f75bfe9405c1b33762509ff72fff9e",
+        "bot": "qlora-extract",
+        "version": "0.1.0",
+        "base_model": "qwen3-1.7b-q8",
+        "status": "completed",
+        "termination_reason": "stop",
+        "output": "Hello! How can I assist you today?",
+        "usage": {
+          "prompt_tokens": 27,
+          "completion_tokens": 10,
+          "total_tokens": 37
+        },
+        "started": "2026-10-18T22:58:40.2013372+05:00",
+        "duration_ms": 2209
+      },
+      "switch_and_run_ms": 2215,
+      "acquire_ms": 2028,
+      "repeatable": true
+    },
+    {
+      "cycle": 2,
+      "target": "qlora-extract",
+      "run": {
+        "id": "573faf8ab7f6134f229b174086009593",
+        "session": "580b5ff7b3c181471b5dbad7b71580cf",
+        "bot": "qlora-extract",
+        "version": "0.1.0",
+        "base_model": "qwen3-1.7b-q8",
+        "adapter": "A:\\projects\\bots-clone\\.local\\worktrees\\phase2-completion\\.local\\phase2\\artifacts\\manifests\\qlora-extract-0.1.0-dfba51c515a9141e81cf95632144e0bafdf4d0a80ebe9e052617911a3901e4fa.json",
+        "status": "completed",
+        "termination_reason": "stop",
+        "output": "{\"vendor\":\"null\",\"invoice_number\":\"null\",\"currency\":\"null\",\"total\":null}",
+        "usage": {
+          "prompt_tokens": 88,
+          "completion_tokens": 19,
+          "total_tokens": 107
+        },
+        "started": "2026-10-18T22:58:42.4173713+05:00",
+        "duration_ms": 6339
+      },
+      "switch_and_run_ms": 6344,
+      "acquire_ms": 5919,
+      "repeatable": true
+    },
+    {
+      "cycle": 2,
+      "target": "qlora-workspace",
+      "run": {
+        "id": "687e075732713c7bed64f2a3e208c27f",
+        "session": "921a2591291683f6e2ae3f0f6abfb1f2",
+        "bot": "qlora-workspace",
+        "version": "0.1.0",
+        "base_model": "qwen3-1.7b-q8",
+        "adapter": "A:\\projects\\bots-clone\\.local\\worktrees\\phase2-completion\\.local\\phase2\\artifacts\\manifests\\qlora-workspace-0.1.0-36b1aa4cfd9d65965397557d392980dae6523355034915db256b387325ad43ed.json",
+        "status": "completed",
+        "termination_reason": "stop",
+        "output": "Hello!",
+        "usage": {
+          "prompt_tokens": 441,
+          "completion_tokens": 3,
+          "total_tokens": 444
+        },
+        "started": "2026-10-18T22:58:48.7618659+05:00",
+        "duration_ms": 6297
+      },
+      "switch_and_run_ms": 6303,
+      "acquire_ms": 6004,
+      "repeatable": true
+    },
+    {
+      "cycle": 2,
+      "target": "base",
+      "run": {
+        "id": "dda81fc24bb40210f3a598983f6628a7",
+        "session": "50aea95f8d2e717f8d06ae31a2d12982",
+        "bot": "qlora-extract",
+        "version": "0.1.0",
+        "base_model": "qwen3-1.7b-q8",
+        "status": "completed",
+        "termination_reason": "stop",
+        "output": "Hello! How can I assist you today?",
+        "usage": {
+          "prompt_tokens": 27,
+          "completion_tokens": 10,
+          "total_tokens": 37
+        },
+        "started": "2026-10-18T22:58:55.0649417+05:00",
+        "duration_ms": 2125
+      },
+      "switch_and_run_ms": 2128,
+      "acquire_ms": 1945,
+      "repeatable": true
+    },
+    {
+      "cycle": 3,
+      "target": "qlora-extract",
+      "run": {
+        "id": "e9f4655d37e8200882d04c15a2bc1bd3",
+        "session": "546bac31ab36d67d8659637b07d4710b",
+        "bot": "qlora-extract",
+        "version": "0.1.0",
+        "base_model": "qwen3-1.7b-q8",
+        "adapter": "A:\\projects\\bots-clone\\.local\\worktrees\\phase2-completion\\.local\\phase2\\artifacts\\manifests\\qlora-extract-0.1.0-dfba51c515a9141e81cf95632144e0bafdf4d0a80ebe9e052617911a3901e4fa.json",
+        "status": "completed",
+        "termination_reason": "stop",
+        "output": "{\"vendor\":\"null\",\"invoice_number\":\"null\",\"currency\":\"null\",\"total\":null}",
+        "usage": {
+          "prompt_tokens": 88,
+          "completion_tokens": 19,
+          "total_tokens": 107
+        },
+        "started": "2026-10-18T22:58:57.1930935+05:00",
+        "duration_ms": 6799
+      },
+      "switch_and_run_ms": 6801,
+      "acquire_ms": 6476,
+      "repeatable": true
+    },
+    {
+      "cycle": 3,
+      "target": "qlora-workspace",
+      "run": {
+        "id": "163942506c53d90b99f8943a1df593fd",
+        "session": "e5f6fc77e72415cfcc8ee08caf39fcd0",
+        "bot": "qlora-workspace",
+        "version": "0.1.0",
+        "base_model": "qwen3-1.7b-q8",
+        "adapter": "A:\\projects\\bots-clone\\.local\\worktrees\\phase2-completion\\.local\\phase2\\artifacts\\manifests\\qlora-workspace-0.1.0-36b1aa4cfd9d65965397557d392980dae6523355034915db256b387325ad43ed.json",
+        "status": "completed",
+        "termination_reason": "stop",
+        "output": "Hello!",
+        "usage": {
+          "prompt_tokens": 441,
+          "completion_tokens": 3,
+          "total_tokens": 444
+        },
+        "started": "2026-10-18T22:59:03.9951872+05:00",
+        "duration_ms": 6950
+      },
+      "switch_and_run_ms": 6957,
+      "acquire_ms": 6743,
+      "repeatable": true
+    },
+    {
+      "cycle": 3,
+      "target": "base",
+      "run": {
+        "id": "de2890447777d770343188d05d2f4d35",
+        "session": "d73af9c08eb6566673d1de42ae464578",
+        "bot": "qlora-extract",
+        "version": "0.1.0",
+        "base_model": "qwen3-1.7b-q8",
+        "status": "completed",
+        "termination_reason": "stop",
+        "output": "Hello! How can I assist you today?",
+        "usage": {
+          "prompt_tokens": 27,
+          "completion_tokens": 10,
+          "total_tokens": 37
+        },
+        "started": "2026-10-18T22:59:10.9527907+05:00",
+        "duration_ms": 2268
+      },
+      "switch_and_run_ms": 2273,
+      "acquire_ms": 2068,
+      "repeatable": true
+    }
+  ],
+  "error": "",
+  "process_starts": 1
+}

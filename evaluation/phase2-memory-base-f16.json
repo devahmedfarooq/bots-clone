@@ -1,0 +1,101 @@
+{
+  "at": "2026-10-18T17:57:15.0241366Z",
+  "hardware": {
+    "os": "windows",
+    "arch": "amd64",
+    "go_version": "go1.27.2",
+    "cpu_threads": 16,
+    "gpu": "NVIDIA GeForce RTX 5050 Laptop GPU, 8151 MiB, 3713 MiB, 610.74",
+    "memory": {
+      "available_bytes": 5161148416,
+      "total_bytes": 16873545728
+    },
+    "disks": {
+      "workspace_available_bytes": 129558675456,
+      "workspace_total_bytes": 510980517888
+    },
+    "dependencies": {
+      "go": "C:\\Program Files\\Go\\bin\\go.exe",
+      "llama-server": "missing from PATH"
+    }
+  },
+  "cases": [
+    {
+      "bot": "memory-base-extract",
+      "fixture": "complete-invoice",
+      "context_size": 4096,
+      "passed": true,
+      "run": {
+        "id": "31995e6691d4924b1af7cf202e5ce5be",
+        "session": "991ceb7bea88342bd91642cd6d9db8a0",
+        "bot": "memory-base-extract",
+        "version": "0.1.0",
+        "base_model": "qwen3-1.7b-q8",
+        "status": "completed",
+        "termination_reason": "stop",
+        "output": "{\n  \"vendor\": \"Cedar Supplies\",\n  \"invoice_number\": \"INV-104\",\n  \"currency\": \"USD\",\n  \"total\": 149.50\n}",
+        "usage": {
+          "prompt_tokens": 107,
+          "completion_tokens": 43,
+          "total_tokens": 150
+        },
+        "started": "2026-10-18T22:57:15.1704822+05:00",
+        "duration_ms": 6807
+      }
+    }
+  ],
+  "pass_rate": 1,
+  "memory_samples": [
+    {
+      "at": "2026-10-18T17:57:15.1002405Z",
+      "device_vram_mib": 3713,
+      "system_used_ram_bytes": 11712397312
+    },
+    {
+      "at": "2026-10-18T17:57:16.1690632Z",
+      "device_vram_mib": 3710,
+      "system_used_ram_bytes": 11708014592
+    },
+    {
+      "at": "2026-10-18T17:57:17.1687399Z",
+      "device_vram_mib": 3702,
+      "system_used_ram_bytes": 11701596160
+    },
+    {
+      "at": "2026-10-18T17:57:18.169114Z",
+      "device_vram_mib": 3705,
+      "system_used_ram_bytes": 12168871936
+    },
+    {
+      "at": "2026-10-18T17:57:19.1707983Z",
+      "device_vram_mib": 3715,
+      "system_used_ram_bytes": 12044972032
+    },
+    {
+      "at": "2026-10-18T17:57:20.3309877Z",
+      "device_vram_mib": 4732,
+      "system_used_ram_bytes": 13619593216
+    },
+    {
+      "at": "2026-10-18T17:57:21.1734182Z",
+      "device_vram_mib": 6140,
+      "system_used_ram_bytes": 14039392256
+    },
+    {
+      "at": "2026-10-18T17:57:21.9813122Z",
+      "device_vram_mib": 6211,
+      "system_used_ram_bytes": 14000631808
+    }
+  ],
+  "peak_device_vram_mib": 6211,
+  "peak_system_used_ram_bytes": 14039392256,
+  "notes": "Memory is sampled device-wide VRAM and system-wide used RAM, including other applications; not isolated model allocations. First case at each context size includes cold load; later cases at that size reuse weights. Synthetic fixtures are a baseline, not specialization evidence.",
+  "runtime": {
+    "artifact_lock": "artifacts/baseline.lock.json",
+    "device": "Vulkan0",
+    "engine_binary": "A:\\projects\\bots-clone\\.local\\worktrees\\phase2-completion\\runtime\\llama\\llama-server.exe",
+    "model_id": "qwen3-1.7b-q8",
+    "model_path": "A:\\projects\\bots-clone\\.local\\worktrees\\phase2-completion\\models\\Qwen3-1.7B-phase2-Q8_0.gguf",
+    "process_starts": 1
+  }
+}

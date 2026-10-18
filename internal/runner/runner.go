@@ -8,9 +8,11 @@ import (
 	"time"
 
 	"bots/internal/config"
+	"bots/internal/contextsource"
 	"bots/internal/provider"
 	"bots/internal/state"
 	"bots/internal/tools"
+	"slices"
 )
 
 type Runner struct {
@@ -101,8 +103,12 @@ func (r *Runner) Run(parent context.Context, b config.Bot, input string, o Optio
 	if e = r.Store.Event(run.ID, map[string]any{"kind": "run_start", "base_model": b.BaseModel, "adapter": b.Adapter, "bot_version": b.Version, "effective_settings": settings}); e != nil {
 		return run, e
 	}
-	release, e = r.Models.Acquire(ctx, provider.Model{ID: b.BaseModel, ContextSize: settings.ContextSize})
+	acquireStarted := time.Now()
+	release, e = r.Models.Acquire(ctx, provider.Model{ID: b.BaseModel, ContextSize: settings.ContextSize, Adapter: b.Adapter})
 	if e != nil {
+		return run, e
+	}
+	if e = r.Store.Event(run.ID, map[string]any{"kind": "model_ready", "acquire_ms": time.Since(acquireStarted).Milliseconds()}); e != nil {
 		return run, e
 	}
 	_, history, e = r.Store.Session(session, b.ID, b.Version)
@@ -115,8 +121,18 @@ func (r *Runner) Run(parent context.Context, b config.Bot, input string, o Optio
 		messages = append(messages, m)
 		return r.Store.Message(run.ID, session, m)
 	}
+	current := len(messages)
 	if e = add(provider.Message{Role: "user", Content: input}); e != nil {
 		return run, e
+	}
+	excerpts, e := (contextsource.Files{Roots: b.ContextSources, Sources: b.Retrieval, Allowed: slices.Contains(b.Tools, "file-read")}).Retrieve(ctx, input, min(16384, settings.ContextSize*2))
+	if e != nil {
+		return run, e
+	}
+	if len(excerpts) > 0 {
+		if e = add(provider.Message{Role: "user", Content: contextsource.Envelope(excerpts)}); e != nil {
+			return run, e
+		}
 	}
 	toolCount := 0
 	for {
@@ -124,8 +140,9 @@ func (r *Runner) Run(parent context.Context, b config.Bot, input string, o Optio
 			return run, e
 		}
 		request := provider.Request{Model: b.BaseModel, Messages: messages, Tools: definitions, Settings: settings}
-		prompt, e := r.Models.Provider.Count(ctx, request)
+		request, prompt, e := fit(ctx, r.Models.Provider, request, current)
 		if e != nil {
+			run.Reason = "context_budget"
 			return run, e
 		}
 		remaining := b.Budgets.Tokens - run.Usage.Total - prompt

@@ -33,3 +33,32 @@ func TestRetentionProtectsRunningAndRequested(t *testing.T) {
 		}
 	}
 }
+
+func TestRetentionPreservesAutonomousDispatchEvidence(t *testing.T) {
+	s, err := Open(filepath.Join(t.TempDir(), "db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer s.Close()
+	r := Run{ID: "task-run", Status: "completed", Started: time.Now().Add(-48 * time.Hour)}
+	if err = s.Save(r); err != nil {
+		t.Fatal(err)
+	}
+	if err = s.Checkpoint("job", "task-job", map[string]any{"id": "task-job", "dispatch_key": "durable-key", "status": "completed", "run": r}); err != nil {
+		t.Fatal(err)
+	}
+	ids, err := s.RetentionPlan(time.Now(), nil)
+	if err != nil || len(ids) != 0 {
+		t.Fatal("dispatch admitted for cleanup", ids, err)
+	}
+	if err = s.DeleteRuns([]string{r.ID}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = s.Get(r.ID); err != nil {
+		t.Fatal("dispatch trace deleted", err)
+	}
+	jobs, err := s.Checkpoints("job")
+	if err != nil || len(jobs) != 1 {
+		t.Fatal("dispatch deduplication lost", err)
+	}
+}

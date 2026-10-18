@@ -1,0 +1,17 @@
+﻿{
+    "output":  "{\"Project Cedar is an offline document index for local laptops.\r\nProject owner: Maya Chen.\r\nBackend language: Go.\r\nMetadata database: SQLite.\r\nRelease codename: Juniper.\"}",
+    "test_root":  "A:\\projects\\bots-clone\\.local\\autonomy-test-78e40a23e26d47e2a21bc8d89e64710c",
+    "tokens":  5577,
+    "runs":  3,
+    "checks":  [
+                   "real manager plan",
+                   "worker approval",
+                   "persistent instruction chat",
+                   "real worker file evidence",
+                   "real manager verification",
+                   "result approval",
+                   "goal completion",
+                   "browser board rendering",
+                   "restart persistence without replay"
+               ]
+}

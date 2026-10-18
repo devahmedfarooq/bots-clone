@@ -1,0 +1,23 @@
+{
+  "base_manifest": "../artifacts/phase2-base.json",
+  "source_lock": "../models/qwen3-source/source.lock.json",
+  "source_dir": "../models/qwen3-source",
+  "data_dir": "../.local/training-data/extract",
+  "output": "../models/adapters/extract",
+  "seed": 42,
+  "sequence_length": 512,
+  "rank": 8,
+  "alpha": 16,
+  "dropout": 0,
+  "target_modules": [
+    "q_proj",
+    "k_proj",
+    "v_proj",
+    "o_proj",
+    "gate_proj",
+    "up_proj",
+    "down_proj"
+  ],
+  "learning_rate": 0.0002,
+  "steps": 32
+}

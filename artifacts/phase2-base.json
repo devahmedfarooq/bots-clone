@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "repository": "Qwen/Qwen3-1.7B",
+  "revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+  "architecture": "qwen3",
+  "tokenizer_repository": "Qwen/Qwen3-1.7B",
+  "tokenizer_revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+  "tokenizer_sha256": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+  "sha256": "b35e9b40201c34dbe4c6606052b4f5637c06d9ad8044456525dcd8fb56de03d1",
+  "quantization": "Q8_0"
+}

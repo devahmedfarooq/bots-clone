@@ -1,0 +1,468 @@
+{
+  "date": "2026-10-18",
+  "base": {
+    "schema_version": 1,
+    "repository": "Qwen/Qwen3-1.7B",
+    "revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+    "architecture": "qwen3",
+    "tokenizer_repository": "Qwen/Qwen3-1.7B",
+    "tokenizer_revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+    "tokenizer_sha256": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+    "sha256": "b35e9b40201c34dbe4c6606052b4f5637c06d9ad8044456525dcd8fb56de03d1",
+    "quantization": "Q8_0"
+  },
+  "engine": {
+    "name": "llama.cpp",
+    "tag": "b11669",
+    "commit": "620d2225cc436ab0b001e3200e590e3b286ef9ab",
+    "binary_sha256": "6a4635aeb35656153d4bfeeddf761d24ed84aada9c9108d580737cbed465141b"
+  },
+  "adapters": {
+    "extract": {
+      "version": "0.1.0",
+      "gguf_sha256": "dfba51c515a9141e81cf95632144e0bafdf4d0a80ebe9e052617911a3901e4fa",
+      "gguf_bytes": 17459776,
+      "peft_sha256": "f607e89c281597916a77866a178a53a6e6226b7b20ef2a53cb54e4a6ed674cf5",
+      "license": "Apache-2.0",
+      "training": {
+        "config": {
+          "base_manifest": "../artifacts/phase2-base.json",
+          "source_lock": "../models/qwen3-source/source.lock.json",
+          "source_dir": "../models/qwen3-source",
+          "data_dir": "../.local/training-data/extract",
+          "output": "../models/adapters/extract",
+          "seed": 42,
+          "sequence_length": 512,
+          "rank": 8,
+          "alpha": 16,
+          "dropout": 0,
+          "target_modules": [
+            "q_proj",
+            "k_proj",
+            "v_proj",
+            "o_proj",
+            "gate_proj",
+            "up_proj",
+            "down_proj"
+          ],
+          "learning_rate": 0.0002,
+          "steps": 32
+        },
+        "base": {
+          "schema_version": 1,
+          "repository": "Qwen/Qwen3-1.7B",
+          "revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+          "architecture": "qwen3",
+          "tokenizer_repository": "Qwen/Qwen3-1.7B",
+          "tokenizer_revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+          "tokenizer_sha256": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+          "sha256": "b35e9b40201c34dbe4c6606052b4f5637c06d9ad8044456525dcd8fb56de03d1",
+          "quantization": "Q8_0"
+        },
+        "data_lock": {
+          "split_sha256": {
+            "test": "7fabe2982abb9600fd52703fb91226b0cfdac085d298f2406f5d50cf8339809d",
+            "train": "66d6abf5a3739391cf7479eed65f310028f376833feedcf86f1f5d67763ae8ac",
+            "validation": "e69bc1c1eeada61b8d83f9e4b6375575de571575d34ccee5a6e5d9ce5c3b47bc"
+          },
+          "validation": {
+            "accepted": 80,
+            "rejected": [],
+            "sha256": "8d386ed7e730deccaea9bc5e79f0c48767d8da425d50f31d2e5a2f4c620a2daf"
+          }
+        },
+        "source_revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+        "losses": [
+          2.4092936515808105,
+          1.3709847927093506,
+          0.9244983196258545,
+          0.4973524808883667,
+          0.10863891988992691,
+          0.004947581794112921,
+          0.007169812917709351,
+          0.005957878194749355,
+          0.003910556901246309,
+          0.0034575550816953182,
+          0.0020448588766157627,
+          0.0012897750129923224,
+          0.0007314523099921644,
+          0.0003096735163126141,
+          0.0004928815178573132,
+          0.0002210583770647645,
+          0.00014500960242003202,
+          0.0003392334911040962,
+          5.822643652209081e-05,
+          0.00011026673018932343,
+          0.0005385869299061596,
+          7.340503361774608e-05,
+          8.14963859738782e-05,
+          5.257011071080342e-05,
+          4.36738773714751e-05,
+          3.6488232581177726e-05,
+          3.61124039045535e-05,
+          3.57447424903512e-05,
+          1.846228951762896e-05,
+          2.8510115953395143e-05,
+          2.2693835489917547e-05,
+          2.2532767616212368e-05
+        ],
+        "validation_loss": 2.6910305109595356e-05,
+        "seconds": 42.8962242603302,
+        "peak_cuda_allocated_bytes": 2595710464,
+        "peak_cuda_reserved_bytes": 3852468224,
+        "python": "3.11.9",
+        "platform": "Windows-10-10.0.26200-SP0",
+        "cuda": "12.8",
+        "gpu": "NVIDIA GeForce RTX 5050 Laptop GPU",
+        "packages": {
+          "torch": "2.9.0+cu128",
+          "transformers": "4.57.6",
+          "peft": "0.17.1",
+          "accelerate": "1.10.1",
+          "bitsandbytes": "0.48.1"
+        },
+        "environment": [
+          "Jinja2==3.1.6",
+          "MarkupSafe==3.0.4",
+          "PyYAML==6.0.3",
+          "accelerate==1.10.1",
+          "bitsandbytes==0.48.1",
+          "certifi==2026.7.22",
+          "charset-normalizer==3.5.2",
+          "colorama==0.4.6",
+          "filelock==4.2.2",
+          "fsspec==2026.9.0",
+          "huggingface-hub==0.36.0",
+          "idna==3.20",
+          "mpmath==1.3.0",
+          "networkx==3.6.1",
+          "numpy==2.2.6",
+          "packaging==26.3",
+          "peft==0.17.1",
+          "pip==26.2.1",
+          "protobuf==4.25.8",
+          "psutil==7.2.2",
+          "regex==2026.9.29",
+          "requests==2.34.2",
+          "safetensors==0.6.2",
+          "sentencepiece==0.2.1",
+          "setuptools==84.0.0",
+          "sympy==1.14.0",
+          "tokenizers==0.22.1",
+          "torch==2.9.0+cu128",
+          "tqdm==4.70.1",
+          "transformers==4.57.6",
+          "typing_extensions==4.16.0",
+          "urllib3==2.8.0",
+          "wheel==0.48.0"
+        ]
+      }
+    },
+    "workspace": {
+      "version": "0.1.0",
+      "gguf_sha256": "36b1aa4cfd9d65965397557d392980dae6523355034915db256b387325ad43ed",
+      "gguf_bytes": 17459776,
+      "peft_sha256": "f6bf5a28d38d5aa9d2ccd18358fbac2b518d364e66e64da8426a150ff4d5c253",
+      "license": "Apache-2.0",
+      "training": {
+        "config": {
+          "base_manifest": "../artifacts/phase2-base.json",
+          "source_lock": "../models/qwen3-source/source.lock.json",
+          "source_dir": "../models/qwen3-source",
+          "data_dir": "../.local/training-data/workspace",
+          "output": "../models/adapters/workspace",
+          "seed": 42,
+          "sequence_length": 512,
+          "rank": 8,
+          "alpha": 16,
+          "dropout": 0,
+          "target_modules": [
+            "q_proj",
+            "k_proj",
+            "v_proj",
+            "o_proj",
+            "gate_proj",
+            "up_proj",
+            "down_proj"
+          ],
+          "learning_rate": 0.0002,
+          "steps": 32
+        },
+        "base": {
+          "schema_version": 1,
+          "repository": "Qwen/Qwen3-1.7B",
+          "revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+          "architecture": "qwen3",
+          "tokenizer_repository": "Qwen/Qwen3-1.7B",
+          "tokenizer_revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+          "tokenizer_sha256": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+          "sha256": "b35e9b40201c34dbe4c6606052b4f5637c06d9ad8044456525dcd8fb56de03d1",
+          "quantization": "Q8_0"
+        },
+        "data_lock": {
+          "split_sha256": {
+            "test": "c2b6d8768c7e3837fab7fba9cafa969843b356213ce50c181ae6c78531ec8a09",
+            "train": "071f9c215916ea09a34bc0784aada9becfa9e9edeec1a2dfd3f9b503797baacc",
+            "validation": "1ace5f2d8ec3a25dcd8cdd0169d5a878ead69420557d3f8a389f2e141b9ec746"
+          },
+          "validation": {
+            "accepted": 80,
+            "rejected": [],
+            "sha256": "933b88db2ff02ba5c6d842186c9132050ab9d632dbf480051c1b76680a81581d"
+          }
+        },
+        "source_revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+        "losses": [
+          1.7464145421981812,
+          1.5976483821868896,
+          0.8652675747871399,
+          0.3042200803756714,
+          0.06706564873456955,
+          0.011038641445338726,
+          0.0006526651559397578,
+          0.0009417894179932773,
+          0.0025185802951455116,
+          0.0005033570341765881,
+          0.00047225889284163713,
+          0.001116143655963242,
+          0.0011209563817828894,
+          0.0001273220987059176,
+          0.00010800205927807838,
+          2.407854663033504e-05,
+          1.898693517432548e-05,
+          1.6971871446003206e-05,
+          1.1312544302199967e-05,
+          9.220631909556687e-06,
+          9.787440831132699e-06,
+          9.189641787088476e-06,
+          7.889268999861088e-06,
+          4.95562835567398e-06,
+          4.315325440984452e-06,
+          4.359600097814109e-06,
+          4.00765839003725e-06,
+          3.3378316857124446e-06,
+          2.5601423203625018e-06,
+          3.922513315046672e-06,
+          3.885097612510435e-06,
+          4.61657782580005e-06
+        ],
+        "validation_loss": 2.875346723385519e-06,
+        "seconds": 39.96622395515442,
+        "peak_cuda_allocated_bytes": 2595710464,
+        "peak_cuda_reserved_bytes": 3852468224,
+        "python": "3.11.9",
+        "platform": "Windows-10-10.0.26200-SP0",
+        "cuda": "12.8",
+        "gpu": "NVIDIA GeForce RTX 5050 Laptop GPU",
+        "packages": {
+          "torch": "2.9.0+cu128",
+          "transformers": "4.57.6",
+          "peft": "0.17.1",
+          "accelerate": "1.10.1",
+          "bitsandbytes": "0.48.1"
+        },
+        "environment": [
+          "Jinja2==3.1.6",
+          "MarkupSafe==3.0.4",
+          "PyYAML==6.0.3",
+          "accelerate==1.10.1",
+          "bitsandbytes==0.48.1",
+          "certifi==2026.7.22",
+          "charset-normalizer==3.5.2",
+          "colorama==0.4.6",
+          "filelock==4.2.2",
+          "fsspec==2026.9.0",
+          "huggingface-hub==0.36.0",
+          "idna==3.20",
+          "mpmath==1.3.0",
+          "networkx==3.6.1",
+          "numpy==2.2.6",
+          "packaging==26.3",
+          "peft==0.17.1",
+          "pip==26.2.1",
+          "protobuf==4.25.8",
+          "psutil==7.2.2",
+          "regex==2026.9.29",
+          "requests==2.34.2",
+          "safetensors==0.6.2",
+          "sentencepiece==0.2.1",
+          "setuptools==84.0.0",
+          "sympy==1.14.0",
+          "tokenizers==0.22.1",
+          "torch==2.9.0+cu128",
+          "tqdm==4.70.1",
+          "transformers==4.57.6",
+          "typing_extensions==4.16.0",
+          "urllib3==2.8.0",
+          "wheel==0.48.0"
+        ]
+      }
+    }
+  },
+  "datasets": {
+    "extract": {
+      "splits": {
+        "train": 64,
+        "validation": 8,
+        "test": 8
+      },
+      "comparison_fixtures": 10,
+      "train_evaluation_overlap": 0,
+      "shared_synthetic_templates": true
+    },
+    "workspace": {
+      "splits": {
+        "train": 64,
+        "validation": 8,
+        "test": 8
+      },
+      "comparison_fixtures": 12,
+      "train_evaluation_overlap": 0,
+      "shared_synthetic_templates": true
+    }
+  },
+  "quality": {
+    "adapter-plus-role": {
+      "passed": 19,
+      "cases": 22,
+      "mean_ms": 7385,
+      "median_ms": 7045,
+      "tokens": 9989,
+      "peak_device_vram_mib": 6084,
+      "bots": {
+        "qlora-extract": {
+          "passed": 10,
+          "cases": 10
+        },
+        "qlora-workspace": {
+          "passed": 9,
+          "cases": 12
+        }
+      },
+      "failed": [
+        "search-and-read",
+        "heldout-search-release",
+        "heldout-search-retention"
+      ]
+    },
+    "base-only": {
+      "passed": 2,
+      "cases": 22,
+      "mean_ms": 4367,
+      "median_ms": 3194,
+      "tokens": 12426,
+      "peak_device_vram_mib": 6059,
+      "bots": {
+        "qlora-extract": {
+          "passed": 0,
+          "cases": 10
+        },
+        "qlora-workspace": {
+          "passed": 2,
+          "cases": 12
+        }
+      },
+      "failed": [
+        "complete-invoice",
+        "missing-values",
+        "extract-80",
+        "extract-81",
+        "extract-82",
+        "extract-83",
+        "extract-84",
+        "extract-85",
+        "extract-86",
+        "extract-87",
+        "search-and-read",
+        "workspace-80",
+        "workspace-81",
+        "workspace-82",
+        "workspace-83",
+        "workspace-84",
+        "workspace-85",
+        "workspace-86",
+        "workspace-87",
+        "heldout-search-retention"
+      ]
+    },
+    "role-prompted-base": {
+      "passed": 3,
+      "cases": 22,
+      "mean_ms": 3439,
+      "median_ms": 3301,
+      "tokens": 10060,
+      "peak_device_vram_mib": 6109,
+      "bots": {
+        "qlora-extract": {
+          "passed": 2,
+          "cases": 10
+        },
+        "qlora-workspace": {
+          "passed": 1,
+          "cases": 12
+        }
+      },
+      "failed": [
+        "extract-80",
+        "extract-81",
+        "extract-82",
+        "extract-83",
+        "extract-84",
+        "extract-85",
+        "extract-86",
+        "extract-87",
+        "search-and-read",
+        "workspace-80",
+        "workspace-81",
+        "workspace-82",
+        "workspace-83",
+        "workspace-84",
+        "workspace-85",
+        "workspace-86",
+        "workspace-87",
+        "heldout-search-release",
+        "heldout-search-retention"
+      ]
+    }
+  },
+  "reference_extraction": {
+    "passed": 8,
+    "cases": 10,
+    "fixtures_sha256": "f7238f32cd24bc49368def2122627b2eeaf7cb23f3bd127f539051b784dd3812",
+    "reference_quantization": "NF4 double",
+    "deployed_quantization": "Q8_0"
+  },
+  "switching": {
+    "passed": 9,
+    "cases": 9,
+    "process_starts": 1,
+    "warm_median_acquire_ms": {
+      "qlora-workspace": 6374,
+      "qlora-extract": 6198,
+      "base": 2006
+    }
+  },
+  "memory": {
+    "base_f16": {
+      "context": 4096,
+      "passed": 1,
+      "cases": 1,
+      "peak_device_vram_mib": 6211,
+      "peak_system_used_ram_bytes": 14039392256
+    },
+    "adapters_f16": {
+      "context": 4096,
+      "passed": 2,
+      "cases": 2,
+      "peak_device_vram_mib": 6322,
+      "peak_system_used_ram_bytes": 13932666880
+    },
+    "adapters_q8": {
+      "context": 4096,
+      "passed": 2,
+      "cases": 2,
+      "peak_device_vram_mib": 6080,
+      "peak_system_used_ram_bytes": 13903814656
+    }
+  }
+}

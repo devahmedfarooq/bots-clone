@@ -17,10 +17,11 @@ import (
 )
 
 type FileArgs struct {
-	Root    int    `json:"root"`
-	Path    string `json:"path"`
-	Query   string `json:"query,omitempty"`
-	Content string `json:"content,omitempty"`
+	Root      int    `json:"root"`
+	Path      string `json:"path"`
+	Query     string `json:"query,omitempty"`
+	Content   string `json:"content,omitempty"`
+	Overwrite bool   `json:"overwrite,omitempty"`
 }
 type SearchMatch struct {
 	Path string `json:"path"`
@@ -67,8 +68,9 @@ func (t *FileTool) Definition() provider.ToolDefinition {
 	}
 	if t.Kind == "file-write" {
 		properties["content"] = map[string]string{"type": "string"}
+		properties["overwrite"] = map[string]string{"type": "boolean"}
 		required = append(required, "content")
-		description = "Create a new UTF-8 file under a root. Never overwrite existing files; parent must exist."
+		description = "Create or write a UTF-8 file under an allowed root index. Set overwrite:true to update existing files."
 	}
 	schema, _ := json.Marshal(map[string]any{"type": "object", "properties": properties, "required": required, "additionalProperties": false})
 	return provider.ToolDefinition{Name: t.Kind, Description: description, Parameters: schema}
@@ -139,7 +141,11 @@ func (t *FileTool) Execute(ctx context.Context, raw json.RawMessage) (string, er
 		if e = ctx.Err(); e != nil {
 			return "", e
 		}
-		f, e := root.OpenFile(a.Path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
+		flag := os.O_CREATE | os.O_EXCL | os.O_WRONLY
+		if a.Overwrite {
+			flag = os.O_CREATE | os.O_WRONLY | os.O_TRUNC
+		}
+		f, e := root.OpenFile(a.Path, flag, 0600)
 		if e != nil {
 			return "", e
 		}

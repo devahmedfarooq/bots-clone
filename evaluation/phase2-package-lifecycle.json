@@ -1,0 +1,7 @@
+{
+    "export_reinstall":  true,
+    "shared_artifact_preserved":  true,
+    "upgrade":  true,
+    "third_package":  true,
+    "rollback":  true
+}

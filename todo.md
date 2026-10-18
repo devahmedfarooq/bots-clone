@@ -61,27 +61,29 @@ Deliverable: a CLI runs multiple prompt-configured bots through the same local m
 
 Deliverable: installing a compatible adapter-backed package creates a new specialized bot; switching bots safely switches adapters without changing the base model or leaking state.
 
-- [ ] **P2-01 — Specify adapter compatibility.** Implement the adapter manifest contract. Done when compatibility uses exact base/tokenizer/runtime requirements rather than parameter count or model family alone.
-- [ ] **P2-02 — Prove the deployment path.** Depends on P1-06. Test one compatible adapter against the chosen quantized base and engine, including conversion if needed. Done when reference and deployed outputs are evaluated on the same fixtures.
-- [ ] **P2-03 — Implement adapter provider operations.** Add validate, load, activate, deactivate, and unload behind the provider interface. Done when unsupported formats/features produce actionable errors.
-- [ ] **P2-04 — Add artifact storage.** Store versioned model/adapter metadata, checksums, and provenance without committing weights. Done when missing, corrupted, and mismatched artifacts are rejected before activation.
-- [ ] **P2-05 — Implement atomic adapter switching.** Drain active generation, change the adapter, and clear or segregate incompatible caches. Done when switching A → B → base produces isolated, repeatable runs.
-- [ ] **P2-06 — Implement switch recovery.** Roll back to a known usable state after failed activation or insufficient memory. Done when an invalid adapter cannot leave the service using the wrong bot weights.
-- [ ] **P2-07 — Define portable bot packages.** Bundle definition, adapter manifest, artifact references, prompt templates, context configuration, and evaluation fixtures. Done when packages have a documented versioned layout.
-- [ ] **P2-08 — Implement package lifecycle.** Add local install, validate, upgrade, rollback, export, and uninstall. Done when a third bot can be added through a package alone and removing it preserves shared artifacts still in use.
-- [ ] **P2-09 — Implement context source interface.** Support explicit files/directories and relevant text retrieval within granted roots. Done when input size is bounded and sources remain attributable.
-- [ ] **P2-10 — Add context budgeting.** Reserve space for instructions, tool results, and output; retrieve or compact the remainder. Done when long tasks stay within the model's configured context limit.
-- [ ] **P2-11 — Harden untrusted inputs.** Keep retrieved documents/tool outputs separate from authority and enforce permissions outside the model. Done when adversarial fixtures cannot grant tools or widen filesystem access.
-- [ ] **P2-12 — Define specialization datasets.** Document role/task scope, example schema, source/license tracking, train/validation/test splits, and deduplication. Done when evaluation fixtures are excluded from training.
-- [ ] **P2-13 — Build dataset validation.** Check formatting, expected schemas, duplicates, source metadata, and sensitive data. Done when rejected records include reasons and clean records can be exported for training.
-- [ ] **P2-14 — Add reproducible QLoRA training configuration.** Keep Python-based ML training tools separate from the Go backend. Record exact base/tokenizer revisions, seed, data version, 4-bit training quantization, LoRA settings, and environment. Done when a small training smoke run produces a loadable artifact and manifest consumable by the inference provider; use external GPU hardware only if authorized and needed.
-- [ ] **P2-15 — Train or acquire the first QLoRA-trained task adapter.** Use verified task data or a compatible licensed artifact. Done when provenance is recorded and the adapter passes P2-02 through the normal package path.
-- [ ] **P2-16 — Compare specialization fairly.** Compare base-only, role-prompted base, and adapter plus role prompt with matching task/context/tool budgets. Include the deferred Phase 1 search-to-read fixture and held-out variants. Done when held-out quality, latency, and memory results show gains, regressions, or no improvement explicitly.
-- [ ] **P2-17 — Validate a second specialization.** Add a materially different adapter-backed bot using the same base and contracts. Done when it requires no framework code changes and passes compatibility and switching checks.
-- [ ] **P2-18 — Optimize laptop memory.** Measure context limits, cache precision, adapter memory, and switch overhead. Done when a stable configuration fits measured available VRAM and documents any CPU offload.
-- [ ] **P2-19 — Document bot authoring.** Provide a minimal package template and steps for prompt-only and trained-adapter bots. Done when the template installs and its example evaluation runs end to end.
+- [x] **P2-01 — Specify adapter compatibility.** Implement the adapter manifest contract. Done when compatibility uses exact base/tokenizer/runtime requirements rather than parameter count or model family alone.
+- [x] **P2-02 — Prove the deployment path.** Depends on P1-06. Test one compatible adapter against the chosen quantized base and engine, including conversion if needed. Done when reference and deployed outputs are evaluated on the same fixtures.
+- [x] **P2-03 — Implement adapter provider operations.** Add validate, load, activate, deactivate, and unload behind the provider interface. Done when unsupported formats/features produce actionable errors.
+- [x] **P2-04 — Add artifact storage.** Store versioned model/adapter metadata, checksums, and provenance without committing weights. Done when missing, corrupted, and mismatched artifacts are rejected before activation.
+- [x] **P2-05 — Implement atomic adapter switching.** Drain active generation, change the adapter, and clear or segregate incompatible caches. Done when switching A → B → base produces isolated, repeatable runs.
+- [x] **P2-06 — Implement switch recovery.** Roll back to a known usable state after failed activation or insufficient memory. Done when an invalid adapter cannot leave the service using the wrong bot weights.
+- [x] **P2-07 — Define portable bot packages.** Bundle definition, adapter manifest, artifact references, prompt templates, context configuration, and evaluation fixtures. Done when packages have a documented versioned layout.
+- [x] **P2-08 — Implement package lifecycle.** Add local install, validate, upgrade, rollback, export, and uninstall. Done when a third bot can be added through a package alone and removing it preserves shared artifacts still in use.
+- [x] **P2-09 — Implement context source interface.** Support explicit files/directories and relevant text retrieval within granted roots. Done when input size is bounded and sources remain attributable.
+- [x] **P2-10 — Add context budgeting.** Reserve space for instructions, tool results, and output; retrieve or compact the remainder. Done when long tasks stay within the model's configured context limit.
+- [x] **P2-11 — Harden untrusted inputs.** Keep retrieved documents/tool outputs separate from authority and enforce permissions outside the model. Done when adversarial fixtures cannot grant tools or widen filesystem access.
+- [x] **P2-12 — Define specialization datasets.** Document role/task scope, example schema, source/license tracking, train/validation/test splits, and deduplication. Done when evaluation fixtures are excluded from training.
+- [x] **P2-13 — Build dataset validation.** Check formatting, expected schemas, duplicates, source metadata, and sensitive data. Done when rejected records include reasons and clean records can be exported for training.
+- [x] **P2-14 — Add reproducible QLoRA training configuration.** Keep Python-based ML training tools separate from the Go backend. Record exact base/tokenizer revisions, seed, data version, 4-bit training quantization, LoRA settings, and environment. Done when a small training smoke run produces a loadable artifact and manifest consumable by the inference provider; use external GPU hardware only if authorized and needed.
+- [x] **P2-15 — Train or acquire the first QLoRA-trained task adapter.** Use verified task data or a compatible licensed artifact. Done when provenance is recorded and the adapter passes P2-02 through the normal package path.
+- [x] **P2-16 — Compare specialization fairly.** Compare base-only, role-prompted base, and adapter plus role prompt with matching task/context/tool budgets. Include the deferred Phase 1 search-to-read fixture and held-out variants. Done when held-out quality, latency, and memory results show gains, regressions, or no improvement explicitly.
+- [x] **P2-17 — Validate a second specialization.** Add a materially different adapter-backed bot using the same base and contracts. Done when it requires no framework code changes and passes compatibility and switching checks.
+- [x] **P2-18 — Optimize laptop memory.** Measure context limits, cache precision, adapter memory, and switch overhead. Done when a stable configuration fits measured available VRAM and documents any CPU offload.
+- [x] **P2-19 — Document bot authoring.** Provide a minimal package template and steps for prompt-only and trained-adapter bots. Done when the template installs and its example evaluation runs end to end.
 
 **Phase exit:** two adapter-backed specializations install and switch through the public package interface, compatibility failures are safe, and held-out comparisons are published. An adapter that offers no measured benefit remains experimental.
+
+**Phase 2 completed (2026-10-18).** All 19 tickets have implementation and acceptance evidence: [report](evaluation/phase2.md), [machine-readable summary](evaluation/phase2-summary.json). Two locally trained adapters install and switch (9/9; one process). Matched synthetic comparison: base 2/22, role prompt 3/22, adapter + role 19/22. Both adapters remain experimental; three search-to-read cases still fail. Real GPU OOM was not forced; P3-15 remains pending. Work is isolated on `feature/p2-completion`.
 
 ## Phase 3: Reliable workflows and usable local product
 
@@ -120,10 +122,36 @@ User requested Phase 3 before Phase 2. Each Phase 3 ticket has a feature branch;
 - **P3-10 pending:** arbitrary shell/code tools remain disabled; trusted plugins have host permissions. No claim of verified filesystem/network sandboxing.
 - **P3-11 pending:** pattern redaction is implemented. Automatic approval review rejected environment credential forwarding because sensitive sources/recipient plugins were not explicitly authorized. Credential forwarding remains disabled.
 - **P3-13 partial:** inspectable run retention protects active/requested/workflow records. All artifacts are preserved; reference-aware unused-weight deletion requires Phase 2 storage/lifecycle.
-- **P3-15 partial:** queue, cancellation, restart, corrupt baseline archives and fake OOM recovery pass. Real GPU OOM recovery and adapter switching/corruption checks remain unverified and depend on Phase 2.
+- **P3-15 partial:** queue, cancellation, restart, corrupt baseline archives and fake OOM recovery pass. Phase 2 verifies live adapter switching and corruption rejection; real GPU OOM recovery remains unverified.
 - **P3-19 pending:** prompt-only product evidence exists; trained adapter demo and final adapter release evidence require Phase 2.
 - P3-17/P3-18 describe the verified local development release and supported baseline extensions. Full trained package upgrade/rollback/export remains Phase 2.
 
 ## Deferred scope
 
 These are not prerequisites for the three phases: a custom inference engine, training a base model from scratch, simultaneous GPU workers, a public bot marketplace, arbitrary cross-base adapter loading, reinforcement learning, or claims of general autonomous intelligence.
+## Autonomous bot operation and interface
+
+- [x] Provide a Kanban dashboard and chat interface for instructions to the manager bot.
+- [x] Let users set goals, priorities, budget limits, and approval rules.
+- [x] Use Inbox -> Ready -> In Progress -> Review -> Done, plus Blocked and Needs Your Approval states.
+- [x] Have the manager bot break goals into tasks, assign worker bots, track progress, verify results, and confirm completion.
+- [x] Have worker bots pick up assigned cards and communicate progress, questions, blockers, and results through the board.
+- [x] Store requirements, ownership, decisions, history, and outputs on each task card.
+- [x] Let the manager approve routine work automatically and request user approval according to configured rules.
+- [x] Support 24/7 background operation with persistent storage, queued jobs, automatic restarts, and recovery after interruptions.
+- [x] Support the local RTX 5050 laptop; document that continuous operation requires the host to remain powered on and awake.
+- [x] Write the module pseudocode spec before implementing this workflow on a dedicated feature branch.
+
+## Human usability (planned)
+
+Implementation order and acceptance: [human-usability plan](docs/human-usability-plan.md).
+Module pseudocode: [human-usability spec](specs/human-usability.spec.md).
+
+- [x] HU-01: Readable worker results with copy/download and visible review status.
+- [ ] HU-02: Persist and present one verified final deliverable per goal.
+- [ ] HU-03: Minimal realistic plans with valid workers and complete delivery.
+- [ ] HU-04: Clear connection recovery and simple goal creation.
+- [ ] HU-05: Meaningful progress, linked job details and actionable failures.
+- [ ] HU-06: Contextual approvals, answers and tracked revisions.
+- [ ] HU-07: Shared navigation, responsive layouts and accessibility.
+- [ ] HU-08: Real-model/browser acceptance for the full goal-to-result journey.

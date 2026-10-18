@@ -33,11 +33,11 @@
     {{template "button" (dict "ID" "refresh" "Label" "Refresh" "Secondary" true "Get" "/ui/jobs" "Target" "#jobs")}}
   </div>
   <p class="muted mt-4 mb-4">Tasks share one execution slot. Cancelling a task does not undo completed tool actions.</p>
-  <div id="jobs" hx-get="/ui/jobs" hx-trigger="load, every 2s, jobsChanged from:body"></div>
+  <div id="jobs" hx-get="/ui/jobs" hx-trigger="load, every 2s, jobsChanged from:body" hx-sync="this:replace"></div>
 </section>
 <section class="panel">
   <h2>Saved runs</h2>
-  <div id="runs" hx-get="/ui/runs" hx-trigger="load, every 2s, jobsChanged from:body"></div>
+  <div id="runs" hx-get="/ui/runs" hx-trigger="load, every 2s, jobsChanged from:body" hx-sync="this:replace"></div>
 </section>
 {{end}}
 

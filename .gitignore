@@ -10,3 +10,6 @@ runtime/
 *.log
 *.exe
 *.zip
+
+__pycache__/
+.venv/

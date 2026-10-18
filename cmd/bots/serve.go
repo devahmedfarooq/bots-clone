@@ -36,6 +36,9 @@ func serve(ctx context.Context, c appConfig, catalog application.Catalog, args [
 	if !ln.Addr().(*net.TCPAddr).IP.IsLoopback() {
 		return errors.New("service currently supports loopback addresses only")
 	}
+	if err = os.MkdirAll(c.Home, 0700); err != nil {
+		return err
+	}
 	unlock, err := lock.Acquire(filepath.Join(c.Home, "inference.lock"))
 	if err != nil {
 		return err
@@ -46,7 +49,16 @@ func serve(ctx context.Context, c appConfig, catalog application.Catalog, args [
 		return err
 	}
 	defer store.Close()
-	p := &provider.Llama{Binary: c.Engine.Binary, ModelPath: c.Engine.ModelPath, ModelID: c.Engine.ModelID, Capacity: c.Engine.Context, GPU: c.Engine.GPU, Device: c.Engine.Device, LogPath: filepath.Join(c.Home, "engine.log")}
+	p := &provider.Llama{Binary: c.Engine.Binary, ModelPath: c.Engine.ModelPath, ModelID: c.Engine.ModelID, BaseManifest: c.Engine.BaseManifest, RuntimeRevision: c.Engine.RuntimeRevision, CacheType: c.Engine.CacheType, Capacity: c.Engine.Context, GPU: c.Engine.GPU, Device: c.Engine.Device, LogPath: filepath.Join(c.Home, "engine.log")}
+	installed, err := catalog.Registry.List()
+	if err != nil {
+		return err
+	}
+	for _, bot := range installed {
+		if bot.Adapter != "" {
+			p.AdapterPaths = append(p.AdapterPaths, bot.Adapter)
+		}
+	}
 	manager := provider.NewManager(p)
 	defer func() {
 		shutdown, cancel := context.WithTimeout(context.Background(), 15*time.Second)
@@ -63,7 +75,12 @@ func serve(ctx context.Context, c appConfig, catalog application.Catalog, args [
 		return err
 	}
 	defer flows.Close()
-	s := &service.Server{Catalog: catalog, Queue: q, Store: store, Workflows: flows}
+	autonomy, err := service.NewAutonomy(q)
+	if err != nil {
+		return err
+	}
+	defer autonomy.Close()
+	s := &service.Server{Catalog: catalog, Queue: q, Store: store, Workflows: flows, Autonomy: autonomy}
 	token := state.ID() + state.ID()
 	server := &http.Server{Handler: service.Secure(s.Handler(), ln.Addr().String(), token), ReadHeaderTimeout: 5 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
 	done := make(chan struct{})

@@ -1,0 +1,74 @@
+[
+  {
+    "name": "workspace-80",
+    "input": "Source docs/release-80.txt: Orchid-80 launches on November 25.\nQuestion: When does Orchid-80 launch?",
+    "contains": [
+      "Orchid-80",
+      "November 25",
+      "docs/release-80.txt"
+    ]
+  },
+  {
+    "name": "workspace-81",
+    "input": "Source docs/release-81.txt: Spruce-81 launches on November 26.\nQuestion: When does Spruce-81 launch?",
+    "contains": [
+      "Spruce-81",
+      "November 26",
+      "docs/release-81.txt"
+    ]
+  },
+  {
+    "name": "workspace-82",
+    "input": "Source docs/release-82.txt: Cobalt-82 launches on November 27.\nQuestion: When does Cobalt-82 launch?",
+    "contains": [
+      "Cobalt-82",
+      "November 27",
+      "docs/release-82.txt"
+    ]
+  },
+  {
+    "name": "workspace-83",
+    "input": "Source docs/release-83.txt: Amber-83 launches on November 28.\nQuestion: When does Amber-83 launch?",
+    "contains": [
+      "Amber-83",
+      "November 28",
+      "docs/release-83.txt"
+    ]
+  },
+  {
+    "name": "workspace-84",
+    "input": "Source docs/release-84.txt: Orchid-84 launches on November 1.\nQuestion: When does Orchid-84 launch?",
+    "contains": [
+      "Orchid-84",
+      "November 1",
+      "docs/release-84.txt"
+    ]
+  },
+  {
+    "name": "workspace-85",
+    "input": "Source docs/release-85.txt: Spruce-85 launches on November 2.\nQuestion: When does Spruce-85 launch?",
+    "contains": [
+      "Spruce-85",
+      "November 2",
+      "docs/release-85.txt"
+    ]
+  },
+  {
+    "name": "workspace-86",
+    "input": "Source docs/release-86.txt: Cobalt-86 launches on November 3.\nQuestion: When does Cobalt-86 launch?",
+    "contains": [
+      "Cobalt-86",
+      "November 3",
+      "docs/release-86.txt"
+    ]
+  },
+  {
+    "name": "workspace-87",
+    "input": "Source docs/release-87.txt: Amber-87 launches on November 4.\nQuestion: When does Amber-87 launch?",
+    "contains": [
+      "Amber-87",
+      "November 4",
+      "docs/release-87.txt"
+    ]
+  }
+]

@@ -18,6 +18,7 @@ type Server struct {
 	Queue       *Queue
 	Store       *state.Store
 	Workflows   *Workflows
+	Autonomy    *Autonomy
 	PackageHome string
 }
 
@@ -50,6 +51,7 @@ func body(w http.ResponseWriter, r *http.Request, v any) error {
 func (s *Server) Handler() http.Handler {
 	m := http.NewServeMux()
 	s.dashboardRoutes(m)
+	s.autonomyRoutes(m)
 	m.HandleFunc("POST /api/route", func(w http.ResponseWriter, r *http.Request) {
 		var req struct {
 			Input string `json:"input"`
