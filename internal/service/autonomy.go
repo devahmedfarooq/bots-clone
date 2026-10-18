@@ -466,6 +466,7 @@ func (a *Autonomy) advance(b Board, i int) error {
 			err = decodeBotOutput(output, &plan.Tasks)
 		}
 		if err != nil || len(plan.Tasks) < 1 || len(plan.Tasks) > 12 {
+			c.Output = output
 			block(c, "Manager returned an invalid plan (expected JSON with 1..12 tasks). Output: "+output)
 			return a.save(b)
 		}
@@ -497,6 +498,7 @@ func (a *Autonomy) advance(b Board, i int) error {
 			Message string `json:"message"`
 		}
 		if err := decodeBotOutput(output, &result); err != nil {
+			c.Output = output
 			block(c, "Worker returned invalid JSON. Output: "+output)
 			return a.save(b)
 		}

@@ -139,3 +139,17 @@ These are not prerequisites for the three phases: a custom inference engine, tra
 - [x] Support 24/7 background operation with persistent storage, queued jobs, automatic restarts, and recovery after interruptions.
 - [x] Support the local RTX 5050 laptop; document that continuous operation requires the host to remain powered on and awake.
 - [x] Write the module pseudocode spec before implementing this workflow on a dedicated feature branch.
+
+## Human usability (planned)
+
+Implementation order and acceptance: [human-usability plan](docs/human-usability-plan.md).
+Module pseudocode: [human-usability spec](specs/human-usability.spec.md).
+
+- [x] HU-01: Readable worker results with copy/download and visible review status.
+- [ ] HU-02: Persist and present one verified final deliverable per goal.
+- [ ] HU-03: Minimal realistic plans with valid workers and complete delivery.
+- [ ] HU-04: Clear connection recovery and simple goal creation.
+- [ ] HU-05: Meaningful progress, linked job details and actionable failures.
+- [ ] HU-06: Contextual approvals, answers and tracked revisions.
+- [ ] HU-07: Shared navigation, responsive layouts and accessibility.
+- [ ] HU-08: Real-model/browser acceptance for the full goal-to-result journey.

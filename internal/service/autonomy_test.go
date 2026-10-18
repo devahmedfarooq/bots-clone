@@ -392,3 +392,41 @@ func TestBoardAPIAuthenticationAndValidation(t *testing.T) {
 		}
 	}
 }
+
+func TestCardOutputPreservedOnMalformedWorkerOutput(t *testing.T) {
+	a, e := testAutonomy(t)
+	e.workerStatus = "invalid" // causes invalid JSON or non-standard format
+	if _, err := a.Create(goalRequest()); err != nil {
+		t.Fatal(err)
+	}
+	b := driveBoard(t, a, func(b Board) bool {
+		return len(b.Cards) >= 2 && b.Cards[1].Status == Blocked
+	})
+	if b.Cards[1].Output == "" {
+		t.Fatal("expected malformed worker output to be preserved in c.Output")
+	}
+}
+
+func TestBoardReaderAssets(t *testing.T) {
+	htmlBytes, err := os.ReadFile("web/board.html")
+	if err != nil {
+		t.Fatal(err)
+	}
+	html := string(htmlBytes)
+	for _, required := range []string{"reader-drawer", "reader-formatted", "reader-raw", "reader-copy", "reader-download", "reader-toggle-raw", "reader-close"} {
+		if !strings.Contains(html, required) {
+			t.Fatalf("missing %s in board.html", required)
+		}
+	}
+	jsBytes, err := os.ReadFile("web/board.js")
+	if err != nil {
+		t.Fatal(err)
+	}
+	js := string(jsBytes)
+	for _, required := range []string{"openReader", "closeReader", "extractResult", "formatContent", "statusBadge", "reader-copy", "reader-download"} {
+		if !strings.Contains(js, required) {
+			t.Fatalf("missing %s in board.js", required)
+		}
+	}
+}
+
