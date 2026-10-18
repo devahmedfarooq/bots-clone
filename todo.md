@@ -87,27 +87,42 @@ Deliverable: installing a compatible adapter-backed package creates a new specia
 
 Deliverable: a dependable local service and dashboard for installing bots, running individual tasks or explicit workflows, inspecting results, and reproducing behavior.
 
-- [ ] **P3-01 — Add the service API.** Expose bot/package inspection, runs, cancellation, and streamed events using existing application services. Done when CLI and API share the same validation, permissions, and execution paths.
-- [ ] **P3-02 — Secure local service boundaries.** Bind locally by default, restrict origins, and authenticate any explicitly enabled remote access. Done when unauthorized requests cannot run tools or install packages.
-- [ ] **P3-03 — Build a minimal dashboard.** Show installed bots, compatibility, effective settings, active/queued runs, outputs, and failures. Done when a user can install a local package, choose a bot, run a task, and cancel it.
-- [ ] **P3-04 — Add resource-aware scheduling.** Keep a single GPU execution slot with queue limits and cancellation. Done when multiple API/UI requests cannot accidentally create concurrent model copies or cross-wire outputs.
-- [ ] **P3-05 — Add explicit workflow definitions.** Define ordered/dependent bot steps with typed inputs/outputs. Done when a workflow validates before execution and routes step results without sharing unrelated histories.
-- [ ] **P3-06 — Implement workflow execution.** Schedule ready steps, checkpoint transitions, and stop or retry under declared rules. Done when a two-bot workflow completes and a failed dependency blocks dependent steps correctly.
-- [ ] **P3-07 — Add resumable runs.** Restore checkpoints after restart and distinguish completed from uncertain tool actions. Done when recovery does not blindly repeat writes or external side effects.
-- [ ] **P3-08 — Add optional task routing.** Start with explicit selection and deterministic matching; permit a small router later if evaluation justifies it. Done when ambiguity requests a choice and routing cannot override tool grants.
-- [ ] **P3-09 — Complete the tool plugin SDK.** Use a versioned subprocess protocol for external tool plugins, with a Go SDK and validated plugin metadata. Treat plugin executables as trusted code. Done when a sample plugin registers without core edits and model use still requires grants.
+- [x] **P3-01 — Add the service API.** Expose bot/package inspection, runs, cancellation, and streamed events using existing application services. Done when CLI and API share the same validation, permissions, and execution paths.
+- [x] **P3-02 — Secure local service boundaries.** Bind locally by default, restrict origins, and authenticate any explicitly enabled remote access. Done when unauthorized requests cannot run tools or install packages.
+- [x] **P3-03 — Build a minimal dashboard.** Show installed bots, compatibility, effective settings, active/queued runs, outputs, and failures. Done when a user can install a local package, choose a bot, run a task, and cancel it.
+- [x] **P3-04 — Add resource-aware scheduling.** Keep a single GPU execution slot with queue limits and cancellation. Done when multiple API/UI requests cannot accidentally create concurrent model copies or cross-wire outputs.
+- [x] **P3-05 — Add explicit workflow definitions.** Define ordered/dependent bot steps with typed inputs/outputs. Done when a workflow validates before execution and routes step results without sharing unrelated histories.
+- [x] **P3-06 — Implement workflow execution.** Schedule ready steps, checkpoint transitions, and stop or retry under declared rules. Done when a two-bot workflow completes and a failed dependency blocks dependent steps correctly.
+- [x] **P3-07 — Add resumable runs.** Restore checkpoints after restart and distinguish completed from uncertain tool actions. Done when recovery does not blindly repeat writes or external side effects.
+- [x] **P3-08 — Add optional task routing.** Start with explicit selection and deterministic matching; permit a small router later if evaluation justifies it. Done when ambiguity requests a choice and routing cannot override tool grants.
+- [x] **P3-09 — Complete the tool plugin SDK.** Use a versioned subprocess protocol for external tool plugins, with a Go SDK and validated plugin metadata. Treat plugin executables as trusted code. Done when a sample plugin registers without core edits and model use still requires grants.
 - [ ] **P3-10 — Isolate executable tools.** If shell/code tools are enabled, run them in a constrained subprocess/container with bounded resources and explicit mounts. Done when timeout, network, and filesystem restrictions are verified before exposing those tools to bots.
 - [ ] **P3-11 — Handle credentials securely.** Resolve opt-in external-tool credentials outside model context and redact sensitive event fields. Done when prompts, logs, exports, and package manifests contain no fixture secrets.
-- [ ] **P3-12 — Add observability.** Record run status, durations, tool failures, model/adapter versions, memory, and termination reasons. Done when a failed run can be diagnosed from its local trace without logging secrets.
+- [x] **P3-12 — Add observability.** Record run status, durations, tool failures, model/adapter versions, memory, and termination reasons. Done when a failed run can be diagnosed from its local trace without logging secrets.
 - [ ] **P3-13 — Add retention and cleanup.** Configure run-history retention and remove unused artifacts with reference checks and an inspectable deletion plan. Done when cleanup preserves active packages, shared weights, and requested run records.
-- [ ] **P3-14 — Harden package imports.** Validate archive paths, checksums, size limits, and manifests; never execute package install hooks automatically. Done when malicious or oversized package fixtures fail safely.
+- [x] **P3-14 — Harden package imports.** Validate archive paths, checksums, size limits, and manifests; never execute package install hooks automatically. Done when malicious or oversized package fixtures fail safely.
 - [ ] **P3-15 — Run reliability evaluation.** Cover repeated switching, queue pressure, cancellation, corrupt artifacts, out-of-memory recovery, and service restart. Done when there are no unresolved state leaks or silent wrong-adapter runs.
-- [ ] **P3-16 — Run end-to-end acceptance.** Exercise CLI, API, dashboard, package installation, individual bots, and workflows. Done when documented examples produce expected outputs on the target laptop.
-- [ ] **P3-17 — Package the local release.** Provide repeatable installation/startup, dependency checks, upgrade notes, and metadata migrations with backups. Done when a fresh install and an upgrade both pass smoke checks.
-- [ ] **P3-18 — Publish operating documentation.** Explain extension authoring, adapter compatibility, limitations, hardware measurements, recovery, and evaluation. Done when another developer can add a bot without modifying the framework.
+- [x] **P3-16 — Run end-to-end acceptance.** Exercise CLI, API, dashboard, package installation, individual bots, and workflows. Done when documented examples produce expected outputs on the target laptop.
+- [x] **P3-17 — Package the local release.** Provide repeatable installation/startup, dependency checks, upgrade notes, and metadata migrations with backups. Done when a fresh install and an upgrade both pass smoke checks.
+- [x] **P3-18 — Publish operating documentation.** Explain extension authoring, adapter compatibility, limitations, hardware measurements, recovery, and evaluation. Done when another developer can add a bot without modifying the framework.
 - [ ] **P3-19 — Prepare the final demo and release evidence.** Demonstrate prompt-only bots, adapter-backed bots, safe switching, and a multi-bot workflow. Done when the release includes exact versions, benchmark results, known limitations, and reproducible commands.
 
 **Phase exit:** a fresh installation can add and run a new compatible bot package through CLI/UI without framework edits; workflows recover predictably, permissions hold, and laptop performance is documented.
+
+
+**Phase 3 development status (2026-10-18): 14/19 tickets complete; Phase 3 is not fully complete.**
+
+User requested Phase 3 before Phase 2. Each Phase 3 ticket has a feature branch; tested changes are integrated into `development`. `main` remains the Phase 1 baseline.
+
+- API/dashboard share Catalog validation, Runner permissions, SQLite state and one model manager. Loopback only, exact Host/origin checks, per-start bearer authentication, bounded queue and cancellation.
+- Typed DAG workflows validate before execution, isolate step sessions, block failed dependencies and resume completed/pending checkpoints without replaying uncertain effects. Trusted subprocess SDK, run/tool lifecycle traces and checksummed baseline ZIP imports are implemented.
+- Tests, race detection and vet pass. Offline setup passes. Real Qwen invoice extraction, SSE, cancellation, two-bot workflow and browser installation/run/trace/cancel/mobile checks passed: [API evidence](evaluation/phase3-acceptance.json), [browser evidence](evaluation/dashboard-acceptance.json). Fresh and prior-schema metadata tests verify backups and preserved records.
+- **P3-10 pending:** arbitrary shell/code tools remain disabled; trusted plugins have host permissions. No claim of verified filesystem/network sandboxing.
+- **P3-11 pending:** pattern redaction is implemented. Automatic approval review rejected environment credential forwarding because sensitive sources/recipient plugins were not explicitly authorized. Credential forwarding remains disabled.
+- **P3-13 partial:** inspectable run retention protects active/requested/workflow records. All artifacts are preserved; reference-aware unused-weight deletion requires Phase 2 storage/lifecycle.
+- **P3-15 partial:** queue, cancellation, restart, corrupt baseline archives and fake OOM recovery pass. Real GPU OOM recovery and adapter switching/corruption checks remain unverified and depend on Phase 2.
+- **P3-19 pending:** prompt-only product evidence exists; trained adapter demo and final adapter release evidence require Phase 2.
+- P3-17/P3-18 describe the verified local development release and supported baseline extensions. Full trained package upgrade/rollback/export remains Phase 2.
 
 ## Deferred scope
 

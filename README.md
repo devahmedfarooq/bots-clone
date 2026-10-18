@@ -1,6 +1,6 @@
 # Local Adapter Bot Framework
 
-Phase 1 is a Go CLI for declarative prompt bots sharing one local llama.cpp model. Phase 2 adds trained adapters and portable packages; Phase 3 adds a service, dashboard and workflows. See [todo.md](todo.md) for acceptance status and [specs](specs/project.spec.md) for module pseudocode.
+The Go CLI and local service run declarative prompt bots through one resident llama.cpp model. The `development` branch includes the dashboard, workflows, recovery and bounded baseline package imports. Trained adapters and their lifecycle remain Phase 2 work. See [todo.md](todo.md) for acceptance status and [specs](specs/project.spec.md) for module pseudocode.
 
 Prompt-only bots are temporary baseline fixtures. The intended specialized bots use QLoRA-trained adapters; JSON remains their configuration and metadata. The recorded baseline is **9/12**, with the search-to-read quality failure explicitly deferred to adapter evaluation. `eval` currently exits 1 for that known failure; expectations have not been weakened.
 
@@ -42,9 +42,19 @@ Put global `-config path` before the command and run flags after the bot ID. Run
 
 Copy a sample directory, set a new lowercase ID and version, and edit its instructions, grants, generation settings, budgets, context roots and fixture suite. Run `bot validate DIRECTORY`, then `bot register DIRECTORY`. The definition is strict JSON schema version 1; unknown fields and broken references fail. The base alias must match `framework.json`. No framework edits are needed.
 
-Available tool implementations: `file-read`, `file-search`, `file-write`. Only declared grants are exposed and every call is independently checked. Arguments use an explicit root index and relative path. Canonical root handles block traversal and symlink/junction escapes. Writes create new files only, never overwrite. Read/write data is limited to 64 KiB, search/output to 16 KiB, and search visits at most 2000 entries. Tool timeouts default to five seconds. New trusted Go tools implement the interface in `internal/tools`; external executable plugins are deferred to Phase 3.
+Available file tools: `file-read`, `file-search`, `file-write`. Only declared grants are exposed and every call is independently checked. Arguments use an explicit root index and relative path. Canonical root handles block traversal and symlink/junction escapes. Writes create new files only, never overwrite. Read/write data is limited to 64 KiB, search/output to 16 KiB, and search visits at most 2000 entries. Tool timeouts default to five seconds. Trusted external Go tools can use the [plugin SDK](docs/local-service.md); arbitrary shell/code tools remain disabled.
 
 Run budgets count prompt plus completion tokens across all turns, tool calls and total seconds (including queue/load). Each generation also reserves its context/output limits. Length truncation is a failed run. Inference gets at most one retry before any streamed text; tools are never retried automatically. Failed messages remain in the audit database but do not reenter resumed conversation history.
+
+## Dashboard and workflows
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start.ps1
+```
+
+Open the link printed by the service. It includes a per-start access token; the dashboard removes it from the address bar. Install a trusted local directory or checksummed ZIP, choose a bot, submit a task, inspect output/trace, or cancel it. One bounded queue shares the GPU. The service listens only on loopback and runs offline after setup. Ctrl+C stops it.
+
+Workflows use explicit text/JSON dependencies, checkpoint each transition, and keep bot histories separate. Safe completed/pending checkpoints can resume; uncertain tool actions cannot be replayed automatically. API examples, package format, extension authoring, retention and recovery: [local operating guide](docs/local-service.md). Live laptop and browser evidence: [Phase 3 acceptance](evaluation/phase3-acceptance.json), [dashboard checks](evaluation/dashboard-acceptance.json).
 
 ## Offline operation
 

@@ -109,7 +109,7 @@ func execute(ctx context.Context, args []string) error {
 	}
 	args = root.Args()
 	if len(args) == 0 {
-		return errors.New("usage: bots [-config file] diagnostics | bot register/list/inspect/validate/remove | settings | run | eval | serve")
+		return errors.New("usage: bots [-config file] diagnostics | bot register/import/list/inspect/validate/remove | settings | run | eval | serve | route | cleanup")
 	}
 	if args[0] == "diagnostics" {
 		if len(args) != 1 {
@@ -164,7 +164,7 @@ func execute(ctx context.Context, args []string) error {
 	}
 	if args[0] == "bot" {
 		if len(args) < 2 {
-			return errors.New("bot requires register/list/inspect/validate/remove")
+			return errors.New("bot requires register/import/list/inspect/validate/remove")
 		}
 		if args[1] == "list" {
 			if len(args) != 2 {

@@ -104,7 +104,7 @@ func (b Bot) Validate() error {
 	case b.Description == "" || b.Instructions == "" || b.BaseModel == "":
 		return errors.New("description, instructions and base_model are required")
 	case b.Adapter != "":
-		return errors.New("adapters are not supported in phase 1")
+		return errors.New("adapters require the unfinished Phase 2 compatibility and provider operations")
 	case b.Budgets.Tokens < 1 || b.Budgets.Tokens > 131072 || b.Budgets.ToolCalls < 0 || b.Budgets.ToolCalls > 100 || b.Budgets.Seconds < 1 || b.Budgets.Seconds > 3600:
 		return errors.New("budgets: tokens 1..131072, tool_calls 0..100, seconds 1..3600 required")
 	}
