@@ -25,6 +25,7 @@ type Runner struct {
 }
 type Options struct {
 	AdaptiveContext bool
+	Schema          json.RawMessage
 	Workspace       string
 	Session         string
 	Settings        config.Settings
@@ -150,7 +151,7 @@ func (r *Runner) Run(parent context.Context, b config.Bot, input string, o Optio
 		if e = ctx.Err(); e != nil {
 			return run, e
 		}
-		request := provider.Request{Model: b.BaseModel, Messages: messages, Tools: definitions, Settings: settings}
+		request := provider.Request{Model: b.BaseModel, Messages: messages, Tools: definitions, Settings: settings, Schema: o.Schema}
 		request, prompt, e := fit(ctx, r.Models.Provider, request, current)
 		if errors.Is(e, ErrContextBudget) && o.AdaptiveContext {
 			limit := min(r.ContextLimit, b.Budgets.Tokens-run.Usage.Total)

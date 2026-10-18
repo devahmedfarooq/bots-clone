@@ -41,6 +41,7 @@ type Request struct {
 	Messages []Message
 	Tools    []Tool
 	Settings config.Settings
+	Schema   json.RawMessage
 }
 type Response struct {
 	Message Message

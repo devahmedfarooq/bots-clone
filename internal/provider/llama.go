@@ -200,6 +200,9 @@ func payload(r Request) map[string]any {
 		b["tools"] = r.Tools
 		b["parallel_tool_calls"] = false
 	}
+	if len(r.Schema) > 0 && len(r.Tools) == 0 {
+		b["response_format"] = map[string]any{"type": "json_schema", "json_schema": map[string]any{"name": "reply", "strict": true, "schema": r.Schema}}
+	}
 	return b
 }
 func (p *Llama) Count(ctx context.Context, r Request) (int, error) {

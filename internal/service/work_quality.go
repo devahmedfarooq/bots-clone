@@ -1,6 +1,8 @@
 package service
 
 import (
+	"encoding/json"
+	"fmt"
 	"strings"
 )
 
@@ -45,10 +47,25 @@ func (a *Autonomy) rework(b Board, i int, output string) error {
 	return a.save(b)
 }
 
-// citesOutput reports whether the reviewer's evidence is a phrase actually present in the output.
-func citesOutput(evidence, output string) bool {
-	e, o := squash(evidence), squash(output)
-	return e != "" && len(e) >= min(8, len(o)) && strings.Contains(o, e)
+// mergeSameOwner joins consecutive tasks for one worker: separate runs of the same worker only repeat work.
+func mergeSameOwner(tasks []TaskPlan) []TaskPlan {
+	var merged []TaskPlan
+	var steps []int
+	for _, t := range tasks {
+		last := len(merged) - 1
+		if last < 0 || merged[last].Owner != t.Owner {
+			merged, steps = append(merged, t), append(steps, 1)
+			continue
+		}
+		steps[last]++
+		if steps[last] == 2 {
+			merged[last].Requirements = "1. " + merged[last].Requirements
+			merged[last].Acceptance = "1. " + merged[last].Acceptance
+		}
+		merged[last].Requirements += fmt.Sprintf("\n%d. %s", steps[last], t.Requirements)
+		merged[last].Acceptance += fmt.Sprintf("\n%d. %s", steps[last], t.Acceptance)
+	}
+	return merged
 }
 
 // workerList describes each allowed worker so the planner can match tasks to specialists.
@@ -62,4 +79,33 @@ func (a *Autonomy) workerList(g Goal) string {
 		lines = append(lines, "- "+w.Owner+": "+description)
 	}
 	return strings.Join(lines, "\n")
+}
+
+// outputSchema constrains the manager's decoding: valid JSON, bounded fields, owners limited to real workers.
+func outputSchema(c Card, g Goal) json.RawMessage {
+	if g.Direct {
+		return nil
+	}
+	text := func(limit int) map[string]any { return map[string]any{"type": "string", "maxLength": limit} }
+	var schema map[string]any
+	switch c.Phase {
+	case "plan":
+		task := map[string]any{
+			"type": "object", "additionalProperties": false, "required": []string{"title", "requirements", "acceptance", "owner"},
+			"properties": map[string]any{"title": text(200), "requirements": text(2000), "acceptance": text(600), "owner": map[string]any{"type": "string", "enum": g.Workers}},
+		}
+		schema = map[string]any{
+			"type": "object", "additionalProperties": false, "required": []string{"tasks"},
+			"properties": map[string]any{"tasks": map[string]any{"type": "array", "minItems": 1, "maxItems": 12, "items": task}},
+		}
+	case "verify":
+		schema = map[string]any{
+			"type": "object", "additionalProperties": false, "required": []string{"approved", "reason"},
+			"properties": map[string]any{"approved": map[string]any{"type": "boolean"}, "reason": text(400)},
+		}
+	default:
+		return nil
+	}
+	data, _ := json.Marshal(schema)
+	return data
 }

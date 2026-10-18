@@ -24,7 +24,6 @@ type boardEngine struct {
 	fixOnRetry   bool
 	bigReview    bool
 	alwaysBig    bool
-	noEvidence   bool
 	echoFirst    bool
 	arrayPlan    bool
 	workerStatus string
@@ -48,12 +47,7 @@ func (e *boardEngine) Generate(_ context.Context, r provider.Request, _ func(str
 			output = strings.TrimSuffix(strings.TrimPrefix(output, `{"tasks":`), `}`)
 		}
 	} else if strings.Contains(prompt, "Verify the card") {
-		evidence := ""
-		if _, rest, found := strings.Cut(prompt, `"output":"`); found && !e.noEvidence {
-			evidence = rest[:min(strings.IndexAny(rest+`"`, `\"`), 12)]
-		}
-		data, _ := json.Marshal(map[string]any{"approved": true, "reason": "Output contains the required answer 42.", "evidence": evidence})
-		output = string(data)
+		output = `{"approved":true,"reason":"Output contains the required answer 42."}`
 		if e.reject {
 			output = `{"approved":false,"reason":"Missing evidence."}`
 		}
@@ -658,21 +652,6 @@ func TestRestatesTask(t *testing.T) {
 	}
 }
 
-func TestCitesOutput(t *testing.T) {
-	out := "Roses are red,\nviolets are blue."
-	for _, test := range []struct {
-		evidence string
-		want     bool
-	}{{"Roses are red", true}, {"ROSES  are\nred,", true}, {"", false}, {"violets are green", false}, {"x", false}} {
-		if got := citesOutput(test.evidence, out); got != test.want {
-			t.Errorf("citesOutput(%q) = %v", test.evidence, got)
-		}
-	}
-	if !citesOutput("x = 3", "x = 3") {
-		t.Error("short outputs may be cited whole")
-	}
-}
-
 func TestWorkerRepeatingItsTaskIsRetriedOnceThenBlocked(t *testing.T) {
 	a, e := testAutonomy(t)
 	e.plain = "Answer equals 42"
@@ -698,33 +677,6 @@ func TestWorkerRepeatingOnceThenDoingTheTaskSucceeds(t *testing.T) {
 	}
 }
 
-func TestApprovalWithoutEvidenceNeedsUserSignOff(t *testing.T) {
-	a, e := testAutonomy(t)
-	e.noEvidence = true
-	if _, err := a.Create(goalRequest()); err != nil {
-		t.Fatal(err)
-	}
-	b := driveBoard(t, a, func(b Board) bool { return len(b.Cards) == 2 && b.Cards[1].Status == Approval })
-	c := b.Cards[1]
-	if !c.Manual || c.Gate != "done" || b.Goals[0].Runs != 4 {
-		t.Fatalf("bad state: manual=%v gate=%q runs=%d", c.Manual, c.Gate, b.Goals[0].Runs)
-	}
-	for i := 0; i < 5; i++ {
-		a.mu.Lock()
-		_ = a.tick()
-		a.mu.Unlock()
-	}
-	if after, _ := a.Snapshot(); after.Cards[1].Status != Approval {
-		t.Fatal("unverified approval was auto-accepted")
-	}
-	if err := a.Action(c.ID, "approve", "looks right"); err != nil {
-		t.Fatal(err)
-	}
-	if done, _ := a.Snapshot(); done.Cards[1].Status != Done {
-		t.Fatal("user sign-off ignored")
-	}
-}
-
 func TestPlanPromptDescribesWorkersAndForbidsManagerOwner(t *testing.T) {
 	a, _ := testAutonomy(t)
 	if _, err := a.Create(goalRequest()); err != nil {
@@ -736,5 +688,52 @@ func TestPlanPromptDescribesWorkersAndForbidsManagerOwner(t *testing.T) {
 		if !strings.Contains(prompt, want) {
 			t.Errorf("plan prompt missing %q", want)
 		}
+	}
+}
+
+func TestMergeSameOwnerJoinsRepeatedWorkerSteps(t *testing.T) {
+	got := mergeSameOwner([]TaskPlan{
+		{Title: "Design", Requirements: "design it", Acceptance: "designed", Owner: "landing-page"},
+		{Title: "Code", Requirements: "code it", Acceptance: "coded", Owner: "landing-page"},
+		{Title: "Announce", Requirements: "write post", Acceptance: "post exists", Owner: "writer"},
+		{Title: "Edit", Requirements: "polish", Acceptance: "polished", Owner: "writer"},
+		{Title: "Review", Requirements: "check", Acceptance: "checked", Owner: "qa-assistant"},
+	})
+	if len(got) != 3 || got[0].Title != "Design" || got[0].Requirements != "1. design it\n2. code it" || got[1].Acceptance != "1. post exists\n2. polished" || got[2].Requirements != "check" {
+		t.Fatalf("bad merge: %+v", got)
+	}
+	if again := mergeSameOwner(got); len(again) != 3 {
+		t.Fatal("different owners must stay separate")
+	}
+}
+
+func TestManagerOutputIsSchemaConstrainedAndWorkersAreNot(t *testing.T) {
+	a, e := testAutonomy(t)
+	if _, err := a.Create(goalRequest()); err != nil {
+		t.Fatal(err)
+	}
+	driveBoard(t, a, func(b Board) bool { return b.Goals[0].Status == Done })
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	if len(e.requests) != 3 {
+		t.Fatalf("expected plan, work, verify requests, got %d", len(e.requests))
+	}
+	var plan, verdict struct {
+		Properties map[string]json.RawMessage `json:"properties"`
+	}
+	if len(e.requests[0].Schema) == 0 || json.Unmarshal(e.requests[0].Schema, &plan) != nil || plan.Properties["tasks"] == nil || !strings.Contains(string(e.requests[0].Schema), `"enum":["echo"]`) {
+		t.Fatalf("plan schema missing or does not restrict owners: %s", e.requests[0].Schema)
+	}
+	if len(e.requests[1].Schema) != 0 {
+		t.Fatal("worker replies must stay free text")
+	}
+	if json.Unmarshal(e.requests[2].Schema, &verdict) != nil || verdict.Properties["approved"] == nil || !strings.Contains(string(e.requests[2].Schema), `"maxLength"`) {
+		t.Fatalf("verdict schema missing or unbounded: %s", e.requests[2].Schema)
+	}
+}
+
+func TestDirectGoalsAreNotSchemaConstrained(t *testing.T) {
+	if outputSchema(Card{Phase: "plan"}, Goal{GoalRequest: GoalRequest{Direct: true}}) != nil {
+		t.Fatal("direct goals have no manager output")
 	}
 }

@@ -17,6 +17,7 @@ import (
 type Request struct {
 	AdaptiveContext bool            `json:"adaptive_context,omitempty"`
 	Workspace       string          `json:"-"`
+	Schema          json.RawMessage `json:"-"`
 	Bot             string          `json:"bot"`
 	Input           string          `json:"input"`
 	Settings        config.Settings `json:"settings,omitempty"`
@@ -177,7 +178,7 @@ func (q *Queue) work() {
 			}
 			q.jobs[j.ID] = j
 			q.mu.Unlock()
-			run, err := q.runner.Run(task.ctx, task.bot, task.request.Input, runner.Options{AdaptiveContext: task.request.AdaptiveContext, Workspace: task.request.Workspace, Settings: task.request.Settings, Started: func(r state.Run) error {
+			run, err := q.runner.Run(task.ctx, task.bot, task.request.Input, runner.Options{AdaptiveContext: task.request.AdaptiveContext, Workspace: task.request.Workspace, Schema: task.request.Schema, Settings: task.request.Settings, Started: func(r state.Run) error {
 				q.mu.Lock()
 				defer q.mu.Unlock()
 				current := q.jobs[task.id]

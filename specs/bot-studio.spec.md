@@ -103,7 +103,11 @@ WORKER_QUALITY:
     feedback is cleared when a phase succeeds
   PLAN_MATCHING: plan prompt lists every allowed worker as "- id: description"; choose the fitting one, writer when unsure,
     never manager; question/idea/suggestion/write-up = ONE task restating the goal; no "make a plan" task unless asked
-  REVIEW_EVIDENCE: approval JSON = {approved, reason, evidence}; evidence must be a phrase present in the output
-    (case/space-insensitive, >= min(8, output length) chars); rejection needs none
-    missing/invalid evidence -> one retry with feedback; still invalid -> Needs your OK (manual_signoff), never auto-accepted
-  reason: a 1.7B reviewer approved an output that was only the acceptance text; evidence makes that detectable
+  MERGE_SAME_OWNER: consecutive plan tasks for one worker become one numbered task (a worker re-run only repeats work)
+  CONSTRAINED_OUTPUT: manager plan/verify requests carry a JSON schema (llama.cpp response_format json_schema, strict)
+    plan: tasks 1..12, owner enum = the workers of this goal, bounded string lengths (title 200, requirements 2000, acceptance 600)
+    verify: {approved, reason up to 400 chars}
+    never combined with tool calls; workers and direct goals stay free text; schema is server-built (Request.Schema json:"-")
+    effect: always valid JSON, no invented owners, no runaway fields (verdict about 64 tokens, about 1s)
+  REJECTED_IDEA: requiring the reviewer to quote evidence from the output; a 1.7B model pastes the whole output or describes
+    it instead of quoting (measured), so it was removed

@@ -95,7 +95,6 @@ type Card struct {
 	Gate     string         `json:"gate,omitempty"`
 	Feedback string         `json:"feedback,omitempty"`
 	Shrink   int            `json:"review_shrink,omitempty"`
-	Manual   bool           `json:"manual_signoff,omitempty"`
 }
 
 type Board struct {
@@ -380,7 +379,7 @@ func (a *Autonomy) tick() error {
 				c.Status = Ready
 				return a.save(b)
 			}
-			if c.Gate == "done" && !g.Rules.BeforeDone && c.Shrink == 0 && !c.Manual {
+			if c.Gate == "done" && !g.Rules.BeforeDone && c.Shrink == 0 {
 				c.Status = Done
 				record(c, "manager", "Approved under updated rules.")
 				return a.save(b)
@@ -448,7 +447,7 @@ func (a *Autonomy) advance(b Board, i int) error {
 			owner = g.Manager
 		}
 		var err error
-		job, err = a.q.submitOnce(Request{AdaptiveContext: true, Workspace: g.Workspace, Bot: owner, Version: g.Versions[owner], Input: a.prompt(b, *g, *c), ReadOnly: c.Phase != "work", Budgets: &config.Budgets{Tokens: c.Reserved, ToolCalls: g.ToolCalls, Seconds: g.Seconds}}, c.Key)
+		job, err = a.q.submitOnce(Request{AdaptiveContext: true, Workspace: g.Workspace, Schema: outputSchema(*c, *g), Bot: owner, Version: g.Versions[owner], Input: a.prompt(b, *g, *c), ReadOnly: c.Phase != "work", Budgets: &config.Budgets{Tokens: c.Reserved, ToolCalls: g.ToolCalls, Seconds: g.Seconds}}, c.Key)
 		if errors.Is(err, ErrQueueFull) {
 			return nil
 		}
@@ -521,7 +520,7 @@ func (a *Autonomy) advance(b Board, i int) error {
 		c.Output = output
 		c.Status = Done
 		record(c, "manager", "Plan validated. Tasks assigned to workers.")
-		for _, t := range tasks {
+		for _, t := range mergeSameOwner(tasks) {
 			task := Card{ID: state.ID(), Goal: goalID, TaskPlan: t, Kind: "task", Status: Inbox, Phase: "work"}
 			record(&task, "manager", "Assigned to "+t.Owner+"; acceptance: "+t.Acceptance)
 			b.Cards = append(b.Cards, task)
@@ -578,24 +577,12 @@ func (a *Autonomy) advance(b Board, i int) error {
 		var result struct {
 			Approved bool   `json:"approved"`
 			Reason   string `json:"reason"`
-			Evidence string `json:"evidence"`
 		}
 		if err := decodeBotOutput(output, &result); err != nil || strings.TrimSpace(result.Reason) == "" {
 			block(c, "Manager returned invalid verification. Output: "+output)
 			return a.save(b)
 		}
 		record(c, "manager", "Verification: "+result.Reason)
-		if result.Approved && !citesOutput(result.Evidence, c.Output) {
-			if c.Feedback == "" {
-				c.Feedback, c.Status, c.Key, c.Job = "An approval must quote a phrase copied exactly from the output as evidence.", Ready, "", ""
-				record(c, "manager", "Approval had no verifiable evidence. Asking the manager once more.")
-				return a.save(b)
-			}
-			c.Status, c.Gate, c.Manual = Approval, "done", true
-			record(c, "manager", "The manager could not cite evidence from the result. Please read it and sign off.")
-			return a.save(b)
-		}
-		c.Feedback = ""
 		if !result.Approved {
 			block(c, "Verification failed. Retry review with an instruction, or create a corrected goal.")
 		} else if g.Rules.BeforeDone || c.Shrink > 0 {
@@ -678,10 +665,7 @@ func (a *Autonomy) prompt(b Board, g Goal, c Card) string {
 			base += "\nYour previous plan was rejected: " + c.Feedback + ". Return a corrected plan."
 		}
 	case "verify":
-		base += `Verify the card output against ALL requirements and acceptance criteria. Reject unsupported claims and missing evidence. Reject output that only names or describes a deliverable (for example a file name or a summary) instead of containing it. Reject output that only repeats the task description or acceptance criteria. Schema: {"approved":true,"reason":"why","evidence":"a short phrase copied exactly from the output that proves it"}.`
-		if c.Feedback != "" {
-			base += "\nYour previous answer was rejected: " + c.Feedback
-		}
+		base += `Verify the card output against ALL requirements and acceptance criteria. Reject unsupported claims and missing evidence. Reject output that only names or describes a deliverable (for example a file name or a summary) instead of containing it. Reject output that only repeats the task description or acceptance criteria. Schema: {"approved":true,"reason":"one or two sentences naming what in the output meets or misses the requirements"}.`
 		if c.Shrink > 0 {
 			base += fmt.Sprintf("\nNOTE: the output is %d characters; only its beginning and end are shown. Judge only what is shown and do not confirm claims about omitted parts.", len(c.Output))
 		}

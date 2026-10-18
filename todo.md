@@ -193,3 +193,5 @@ CTX-16K (2026-10-19): engine.context_size raised 8192 -> 16384 after measuring V
 REVIEW-FALLBACK (2026-10-19): oversized reviews no longer block. They retry on an excerpt (up to 3 shrink levels) and then require the user's sign-off; the complete output is never truncated. Verified with real runner/queue code and a simulated oversized prompt (3 tests); not yet exercised with a naturally oversized live review.
 
 WQ (2026-10-19): worker quality guards after a goal "suggest a complicated task" returned its own acceptance text and was approved: echo guard, worker matching in plan prompt, ONE-task rule for simple requests, review evidence with user sign-off fallback. 6 new tests.
+
+WQ-2 (2026-10-19): live testing showed the proposed "reviewer must quote evidence" rule fails on a 1.7B model (it pasted the whole 4 KB HTML as evidence, causing generation-limit failures). Replaced by schema-constrained manager output (valid JSON, owner enum, bounded fields) and merging of repeated same-worker plan steps.

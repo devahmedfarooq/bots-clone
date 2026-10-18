@@ -3,6 +3,7 @@ package provider
 import (
 	"bots/internal/config"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -102,5 +103,20 @@ func TestInvalidLoadAndTruncatedStream(t *testing.T) {
 	p.URL = server.URL
 	if _, e := p.Generate(context.Background(), Request{}, func(string) {}); e == nil {
 		t.Fatal("truncated stream accepted")
+	}
+}
+
+func TestPayloadRequestsSchemaOnlyWithoutTools(t *testing.T) {
+	schema := json.RawMessage(`{"type":"object"}`)
+	with := payload(Request{Model: "m", Schema: schema})
+	format, ok := with["response_format"].(map[string]any)
+	if !ok || format["type"] != "json_schema" {
+		t.Fatalf("schema not sent: %v", with["response_format"])
+	}
+	if _, has := payload(Request{Model: "m"})["response_format"]; has {
+		t.Fatal("no schema, no constraint")
+	}
+	if _, has := payload(Request{Model: "m", Schema: schema, Tools: []Tool{{}}})["response_format"]; has {
+		t.Fatal("schema must not combine with tool calls")
 	}
 }
