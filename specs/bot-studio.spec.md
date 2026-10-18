@@ -72,3 +72,9 @@ ACCESS:
   no login/token: server listens on loopback only
   kept checks: exact Host, same-origin Origin, reject Sec-Fetch-Site cross-site, JSON/form content type on POST
   consequence: any local process or user on this machine can use the API
+
+WORKER_PROMPT (delegated and direct):
+  plain-language task + requirements + acceptance + goal + prior results + user follow-ups; no JSON context dump
+  reply = the deliverable itself; plain text accepted as result; JSON {"status":"question|blocked"} for genuine blockers
+  files: if saving, overwrite:true and still include full content in reply
+UI_DEFAULT_BUDGETS: tokens per run 24000 (bots allow 24000), total 120000; reservations are serial and refunded

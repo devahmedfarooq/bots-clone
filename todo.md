@@ -169,7 +169,10 @@ Problem: studio needs a manager plan + per-task review by a 1.7B model before an
 
 Goal: user states one goal; the manager bot splits it into subtasks, assigns the small bots and reviews them. No manual bot picking. Branch `feature/manager-delegation`. Spec: [bot-studio spec](specs/bot-studio.spec.md) MANAGER_DELEGATION.
 
-- [ ] BS-05a: Studio defaults to "Manager decides" with all workers; picking one bot (direct) stays as an override.
-- [ ] BS-05b: Reliable plans: fewest tasks, exact worker IDs in the prompt, specific rejection reason, one bounded correction attempt.
-- [ ] BS-05c: Final result tab combining reviewed subtask outputs; visible "N of M subtasks done".
-- [ ] BS-05d: Verify with the real local model (poem + multi-part goal); record failures honestly.
+- [x] BS-05a: Studio defaults to "Manager decides" with all workers; picking one bot (direct) stays as an override.
+- [x] BS-05b: Reliable plans: fewest tasks, exact worker IDs in the prompt, specific rejection reason, one bounded correction attempt.
+- [x] BS-05c: Final result tab combining reviewed subtask outputs; visible "N of M subtasks done".
+- [x] BS-05d: Verify with the real local model (poem + multi-part goal); record failures honestly.
+
+BS-05 live evidence (real Qwen3-1.7B, 2026-10-19): poem -> 1 task, writer, reviewed, Done. Coffee shop landing page + announcement -> 2 tasks (landing-page, writer), both reviewed, Done in 5 runs / ~15k tokens.
+Known limits: the 1.7B reviewer is lenient (approved a one-paragraph "3-stanza" poem; writer output can include chatty preamble). Delegated planning needed a worked example, structured-field tolerance and a one-shot correction to be reliable. Not tested: approvals, restart mid-goal, UI in a real browser against live data.

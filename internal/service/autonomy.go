@@ -591,7 +591,7 @@ func (a *Autonomy) finishDirect(b Board, i int, output string) error {
 }
 
 func directPrompt(g Goal) string {
-	text := "Complete this task and reply with the finished deliverable only: no JSON, no preamble.\n" + g.Requirements
+	text := "Complete this task and reply with the finished deliverable only: no JSON, no preamble. If you also save a file, set overwrite:true (an earlier version may exist) and still include the full content in your reply.\n" + g.Requirements
 	for _, m := range g.Chat[1:] {
 		if m.Actor == "user" {
 			text += "\nUser instruction: " + m.Text
@@ -651,7 +651,7 @@ func (a *Autonomy) prompt(b Board, g Goal, c Card) string {
 			}
 		}
 	default:
-		base += `Execute the assigned task within your grants. Reply with the complete deliverable itself (full text or code), never only a file name, summary or plan to do it later. Only if you truly cannot proceed, reply with JSON {"status":"question|blocked","message":"what you need"}.`
+		base += `Execute the assigned task within your grants. Reply with the complete deliverable itself (full text or code), never only a file name, summary or plan to do it later. If you also save a file, set overwrite:true (an earlier version may exist) and still include the full content in your reply. Only if you truly cannot proceed, reply with JSON {"status":"question|blocked","message":"what you need"}.`
 		for _, other := range b.Cards {
 			if other.Goal == g.ID && other.Status == Done && other.Kind == "task" {
 				base += "\nPrior task " + other.Title + ": " + other.Output
