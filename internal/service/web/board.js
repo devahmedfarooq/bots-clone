@@ -377,7 +377,14 @@ $('goal-form').addEventListener('submit',event=>{
 
 $('goal').addEventListener('change',draw);
 $('settings-form').addEventListener('submit',event=>{event.preventDefault();mutation(event.submitter,async()=>{await api(`goals/${$('goal').value}/settings`,settings(event.currentTarget));editing='';});});
-$('chat-form').addEventListener('submit',event=>{event.preventDefault();mutation(event.submitter,async()=>{await api(`goals/${$('goal').value}/chat`,{text:new FormData(form).get('text')});form.reset();});});
+$('chat-form').addEventListener('submit',event=>{
+  event.preventDefault();
+  const form=event.currentTarget;
+  mutation(event.submitter,async()=>{
+    await api(`goals/${$('goal').value}/chat`,{text:new FormData(form).get('text')});
+    form.reset();
+  });
+});
 
 $('board').addEventListener('click',event=>{
   const viewBtn = event.target.closest('button[data-view-result]');
