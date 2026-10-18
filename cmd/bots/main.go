@@ -15,6 +15,7 @@ import (
 	"strings"
 	"time"
 
+	"bots/internal/application"
 	"bots/internal/config"
 	"bots/internal/diagnostics"
 	"bots/internal/evaluation"
@@ -23,7 +24,6 @@ import (
 	"bots/internal/registry"
 	"bots/internal/runner"
 	"bots/internal/state"
-	"bots/internal/tools"
 )
 
 type appConfig struct {
@@ -102,7 +102,7 @@ func execute(ctx context.Context, args []string) error {
 	}
 	args = root.Args()
 	if len(args) == 0 {
-		return errors.New("usage: bots [-config file] diagnostics | bot register/list/inspect/validate/remove | settings | run | eval")
+		return errors.New("usage: bots [-config file] diagnostics | bot register/list/inspect/validate/remove | settings | run | eval | serve")
 	}
 	if args[0] == "diagnostics" {
 		if len(args) != 1 {
@@ -128,6 +128,10 @@ func execute(ctx context.Context, args []string) error {
 		return e
 	}
 	reg := registry.Registry{Dir: filepath.Join(c.Home, "bots")}
+	catalog := application.Catalog{Registry: reg, Model: c.Engine.ModelID}
+	if args[0] == "serve" {
+		return serve(ctx, c, catalog, args[1:])
+	}
 	if args[0] == "bot" {
 		if len(args) < 2 {
 			return errors.New("bot requires register/list/inspect/validate/remove")
@@ -147,23 +151,12 @@ func execute(ctx context.Context, args []string) error {
 		}
 		switch args[1] {
 		case "register", "validate":
-			b, e := config.Load(filepath.Join(args[2], "bot.json"))
+			b, e := catalog.Validate(args[2])
 			if e != nil {
 				return e
-			}
-			r, close, e := tools.Files(b.ContextSources)
-			if e != nil {
-				return e
-			}
-			defer close()
-			if _, e = r.Definitions(b.Tools); e != nil {
-				return e
-			}
-			if b.BaseModel != c.Engine.ModelID {
-				return errors.New("base_model does not match configured engine")
 			}
 			if args[1] == "register" {
-				b, e = reg.Register(args[2])
+				b, e = catalog.Install(args[2])
 				if e != nil {
 					return e
 				}
