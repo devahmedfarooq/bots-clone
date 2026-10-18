@@ -5,7 +5,30 @@ const $ = id => document.getElementById(id);
 const escape = text => String(text ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const states = ['Inbox', 'Ready', 'In Progress', 'Review', 'Done', 'Blocked', 'Needs Your Approval'];
 let board = {goals:[], cards:[]}, rendered = '', editing = '', refreshing = false;
-let activeCardId = null, showingRaw = false, lastReaderSig = '';
+let activeCardId = null, showingRaw = false, showingPreview = false, lastReaderSig = '';
+
+const assistantHints = {
+  'landing-page': {
+    hint: 'Describe your landing page or web component:',
+    placeholder: 'e.g. Build a modern landing page for a coffee roastery with hero banner, product cards, testimonials, and clean dark aesthetic.'
+  },
+  'code-writer': {
+    hint: 'Describe the script, program, or feature to code:',
+    placeholder: 'e.g. Write a Python script to fetch stock prices from an API, calculate moving averages, and save a CSV report.'
+  },
+  'math-solver': {
+    hint: 'Enter your math, algebra, or calculus problem:',
+    placeholder: 'e.g. Solve the system of equations 2x + 3y = 12 and 5x - y = 13 step-by-step and verify the solution.'
+  },
+  'qa-assistant': {
+    hint: 'Describe the code or feature to review and test:',
+    placeholder: 'e.g. Review this user registration workflow for security edge cases, race conditions, and write a full test suite.'
+  },
+  'writer': {
+    hint: 'Describe the article, guide, or copy to write:',
+    placeholder: 'e.g. Write a high-converting announcement post for a new developer tool, highlighting local privacy and speed.'
+  }
+};
 
 function settingsFields() {
   const fields = [['priority','Priority (5 highest)',3,1,5],['token_limit','Total token budget',60000,1,10000000],['run_limit','Total runs (including planning/review)',30,1,1000],['run_tokens','Tokens per run',6000,1,131072],['seconds','Seconds per run',180,1,3600],['tool_calls','Tool calls per run',6,0,100]];
@@ -107,20 +130,39 @@ function formatContent(text) {
 function updateReader() {
   const card = board.cards.find(c => c.id === activeCardId);
   if (!card) { $('reader-title').textContent = 'Task Not Found'; return; }
-  $('reader-title').textContent = card.title || 'Task Result';
+  $('reader-title').textContent = card.title || 'Deliverable Result';
   const lastAt = card.history.length ? new Date(card.history[card.history.length-1].at).toLocaleTimeString() : '';
   $('reader-meta').innerHTML = `<span><strong>${escape(card.owner)}</strong></span>${statusBadge(card)}<span>Updated ${escape(lastAt)}</span><span>Job ${escape(card.job || (card.jobs && card.jobs.slice(-1)[0]) || 'none')}</span>`;
   const res = extractResult(card);
-  if (showingRaw) {
+
+  // Check if content has HTML
+  const hasHtml = /<!DOCTYPE html|<html[\s>]|<body[\s>]|<div[\s>]|<head[\s>]/i.test(res.text) || (card.owner === 'landing-page' && res.text.includes('<') && res.text.includes('>'));
+  $('reader-preview').hidden = !hasHtml;
+
+  if (showingPreview && hasHtml) {
+    $('reader-iframe').hidden = false;
+    $('reader-raw').hidden = true;
+    $('reader-formatted').hidden = true;
+    $('reader-preview').textContent = '📝 Show Code';
+    // Extract raw html if inside markdown code blocks
+    let htmlCode = res.text;
+    const match = /```(?:html)?\n([\s\S]*?)```/i.exec(res.text);
+    if (match) htmlCode = match[1];
+    $('reader-iframe').srcdoc = htmlCode;
+  } else if (showingRaw) {
+    $('reader-iframe').hidden = true;
     $('reader-raw').hidden = false;
     $('reader-formatted').hidden = true;
+    $('reader-preview').textContent = '🌐 Live Preview';
     $('reader-raw').textContent = res.raw || 'No raw output recorded.';
   } else {
+    $('reader-iframe').hidden = true;
     $('reader-raw').hidden = true;
     $('reader-formatted').hidden = false;
+    $('reader-preview').textContent = '🌐 Live Preview';
     if (!res.text) {
       let emptyMsg = 'Waiting for worker output.';
-      if (card.status === 'In Progress') emptyMsg = 'Worker is currently running…';
+      if (card.status === 'In Progress') emptyMsg = 'Assistant is currently working on this task…';
       else if (card.status === 'Blocked') emptyMsg = 'Task is blocked. No completed output available.';
       else if (card.status === 'Needs Your Approval') emptyMsg = 'Task awaiting approval before dispatch.';
       $('reader-formatted').innerHTML = `<div class="empty-result">${escape(emptyMsg)}</div>`;
@@ -133,7 +175,9 @@ function updateReader() {
 function openReader(cardId) {
   activeCardId = cardId;
   showingRaw = false;
-  $('reader-toggle-raw').textContent = 'Raw';
+  showingPreview = false;
+  $('reader-toggle-raw').textContent = 'Diagnostics';
+  $('reader-preview').textContent = '🌐 Live Preview';
   $('reader-drawer').hidden = false;
   lastReaderSig = '';
   updateReader();
@@ -148,9 +192,19 @@ function closeReader() {
 $('reader-close').addEventListener('click', closeReader);
 $('reader-backdrop').addEventListener('click', closeReader);
 window.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('reader-drawer').hidden) closeReader(); });
+
 $('reader-toggle-raw').addEventListener('click', () => {
   showingRaw = !showingRaw;
-  $('reader-toggle-raw').textContent = showingRaw ? 'Formatted' : 'Raw';
+  showingPreview = false;
+  $('reader-toggle-raw').textContent = showingRaw ? 'Formatted' : 'Diagnostics';
+  lastReaderSig = '';
+  updateReader();
+});
+
+$('reader-preview').addEventListener('click', () => {
+  showingPreview = !showingPreview;
+  showingRaw = false;
+  $('reader-toggle-raw').textContent = 'Diagnostics';
   lastReaderSig = '';
   updateReader();
 });
@@ -159,7 +213,9 @@ $('reader-copy').addEventListener('click', async () => {
   const card = board.cards.find(c => c.id === activeCardId);
   if (!card) return;
   const res = extractResult(card);
-  const content = showingRaw ? (res.raw || res.text) : (res.text || res.raw);
+  let content = showingRaw ? (res.raw || res.text) : (res.text || res.raw);
+  const match = /```(?:html|python|go|javascript|ts)?\n([\s\S]*?)```/i.exec(content);
+  if (match) content = match[1];
   const btn = $('reader-copy');
   try {
     await navigator.clipboard.writeText(content);
@@ -181,13 +237,24 @@ $('reader-download').addEventListener('click', () => {
   const card = board.cards.find(c => c.id === activeCardId);
   if (!card) return;
   const res = extractResult(card);
-  const content = showingRaw ? (res.raw || res.text) : (res.text || res.raw);
+  let content = showingRaw ? (res.raw || res.text) : (res.text || res.raw);
+  let ext = 'txt';
+  if (card.owner === 'landing-page' || /<!DOCTYPE html|<html[\s>]/i.test(content)) ext = 'html';
+  else if (card.owner === 'code-writer') {
+    if (/import (?:sys|os|json|requests)|def |print\(/i.test(content)) ext = 'py';
+    else if (/package |func main\(/i.test(content)) ext = 'go';
+    else if (/function |const |let |console\.log/i.test(content)) ext = 'js';
+  } else if (card.owner === 'writer') ext = 'md';
+
+  const match = new RegExp('```(?:' + ext + ')?\n([\\s\\S]*?)```', 'i').exec(content);
+  if (match) content = match[1];
+
   const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  const titleSlug = (card.title || 'task-result').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'task-result';
+  const titleSlug = (card.title || 'deliverable').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'deliverable';
   a.href = url;
-  a.download = `${titleSlug}.txt`;
+  a.download = `${titleSlug}.${ext}`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -205,13 +272,12 @@ function cardMarkup(card) {
       <h3 style="margin:0">${escape(card.title)}</h3>
       ${statusBadge(card)}
     </div>
-    <p>${escape(card.owner)} · ${escape(card.phase)} · ${escape(card.id.slice(0,8))}</p>
-    <button type="button" class="btn-view-result" data-view-result="${card.id}">View result</button>
+    <p>Assistant: <strong>${escape(card.owner)}</strong> · ${escape(card.phase)}</p>
+    <button type="button" class="btn-view-result" data-view-result="${card.id}">👁️ View Deliverable</button>
     <details id="card-${card.id}">
-      <summary>Requirements, output & history</summary>
+      <summary>Requirements &amp; History</summary>
       <p>Requirements</p><pre>${escape(card.requirements)}</pre>
       <p>Acceptance</p><pre>${escape(card.acceptance)}</pre>
-      <p>Output</p><pre>${escape(card.output || 'Waiting for output.')}</pre>
       <p>Jobs: ${escape((card.jobs || []).join(', ') || card.job || 'Waiting')}</p>
       <div class="history">${history}</div>
     </details>${actions}
@@ -225,7 +291,7 @@ function draw() {
     if (!$('reader-drawer').hidden && activeCardId) {
       const card = board.cards.find(c => c.id === activeCardId);
       if (card) {
-        const sig = card.id + '|' + (card.output || '') + '|' + card.status + '|' + card.phase + '|' + showingRaw;
+        const sig = card.id + '|' + (card.output || '') + '|' + card.status + '|' + card.phase + '|' + showingRaw + '|' + showingPreview;
         if (sig !== lastReaderSig) { lastReaderSig = sig; updateReader(); }
       }
     }
@@ -233,14 +299,14 @@ function draw() {
   }
   rendered=signature;
   const open=new Set([...document.querySelectorAll('#board details[open]')].map(d=>d.id));
-  $('goal').innerHTML='<option value="">All goals</option>'+board.goals.map(g=>`<option value="${g.id}">${escape(g.requirements.slice(0,90))}</option>`).join('');$('goal').value=selected;
+  $('goal').innerHTML='<option value="">All projects</option>'+board.goals.map(g=>`<option value="${g.id}">${escape(g.requirements.slice(0,90))}</option>`).join('');$('goal').value=selected;
   $('board').innerHTML=states.map(status=>{
     const cards=board.cards.filter(c=>c.status===status && (!selected||c.goal===selected));
-    return `<section class="column"><h2>${status} · ${cards.length}</h2>${cards.map(cardMarkup).join('') || '<p>No tasks</p>'}</section>`;
+    return `<section class="column"><h2>${status} · ${cards.length}</h2>${cards.map(cardMarkup).join('') || '<p style="color:#5c6f84;font-size:0.85rem">No tasks</p>'}</section>`;
   }).join('');
   for(const id of open) if($(id)) $(id).open=true;
   $('goal-panel').hidden=!goal;
-  $('usage').textContent=goal?`${goal.status} · Priority ${goal.priority} · Tokens used/reserved ${goal.tokens}/${goal.token_limit} · Runs ${goal.runs}/${goal.run_limit}`:'Select a goal to view its chat, budgets and approval rules.';
+  $('usage').textContent=goal?`${goal.status} · Priority ${goal.priority} · Tokens ${goal.tokens}/${goal.token_limit} · Runs ${goal.runs}/${goal.run_limit}`:'Select a project to inspect history and chat.';
   if(goal) {
     if(editing!==goal.id) {
       const form=$('settings-form');for(const name of ['priority','token_limit','run_limit','run_tokens','seconds','tool_calls']) form.elements[name].value=goal[name];
@@ -253,7 +319,7 @@ function draw() {
   if (!$('reader-drawer').hidden && activeCardId) {
     const card = board.cards.find(c => c.id === activeCardId);
     if (card) {
-      const sig = card.id + '|' + (card.output || '') + '|' + card.status + '|' + card.phase + '|' + showingRaw;
+      const sig = card.id + '|' + (card.output || '') + '|' + card.status + '|' + card.phase + '|' + showingRaw + '|' + showingPreview;
       if (sig !== lastReaderSig) { lastReaderSig = sig; updateReader(); }
     }
   }
@@ -261,12 +327,26 @@ function draw() {
 
 async function refresh() {
   if(refreshing)return;refreshing=true;
-  try {const result=await api('board');board=result.board;draw();$('connection').textContent=result.error?'Storage error: '+result.error:'Connected · Updates every 2 seconds';}
+  try {const result=await api('board');board=result.board;draw();$('connection').textContent=result.error?'Storage error: '+result.error:'Connected · Ready';}
   catch(error){$('connection').textContent='Disconnected';$('notice').textContent=error.message;}finally{refreshing=false;}
 }
 
 async function mutation(button,run) {button.disabled=true;try{$('notice').textContent='';await run();await refresh();}catch(error){$('notice').textContent=error.message;}finally{button.disabled=false;}}
-$('goal-form').addEventListener('submit',event=>{event.preventDefault();const form=event.currentTarget;mutation(event.submitter,async()=>{const data=new FormData(form);const goal=await api('goals',{...settings(form),requirements:data.get('requirements'),manager:data.get('manager'),workers:data.getAll('workers')});board.goals.push(goal);rendered='';draw();$('goal').value=goal.id;draw();$('new-goal').open=false;});});
+
+$('goal-form').addEventListener('submit',event=>{
+  event.preventDefault();
+  const form=event.currentTarget;
+  mutation(event.submitter,async()=>{
+    const data=new FormData(form);
+    const goal=await api('goals',{...settings(form),requirements:data.get('requirements'),manager:data.get('manager'),workers:data.getAll('workers')});
+    board.goals.push(goal);
+    rendered='';
+    draw();
+    $('goal').value=goal.id;
+    draw();
+  });
+});
+
 $('goal').addEventListener('change',draw);
 $('settings-form').addEventListener('submit',event=>{event.preventDefault();mutation(event.submitter,async()=>{await api(`goals/${$('goal').value}/settings`,settings(event.currentTarget));editing='';});});
 $('chat-form').addEventListener('submit',event=>{event.preventDefault();mutation(event.submitter,async()=>{await api(`goals/${$('goal').value}/chat`,{text:new FormData(form).get('text')});form.reset();});});
@@ -275,8 +355,47 @@ $('board').addEventListener('click',event=>{
   const viewBtn = event.target.closest('button[data-view-result]');
   if (viewBtn) { openReader(viewBtn.dataset.viewResult); return; }
   const button=event.target.closest('button[data-card]');if(!button)return;
-  const note=prompt(button.dataset.action==='retry'?'Retry can repeat interrupted tool actions. Inspect the card history and job trace first. Add an instruction or reason:':'Decision note (optional):');if(note===null)return;
+  const note=prompt(button.dataset.action==='retry'?'Retry can repeat interrupted tool actions. Inspect the history first. Add an instruction or reason:':'Decision note (optional):');if(note===null)return;
   mutation(button,()=>api(`cards/${button.dataset.card}/${button.dataset.action}`,{note}));
 });
 
-(async()=>{try{const bots=await api('bots');const options=bots.filter(b=>b.compatibility==='compatible (prompt-only)').map(b=>`<option value="${escape(b.bot.id)}">${escape(b.bot.id)} — ${escape(b.bot.description)}</option>`).join('');$('manager').innerHTML=options;$('workers').innerHTML=options;if(bots.some(b=>b.bot.id==='manager'))$('manager').value='manager';if(!options)$('notice').textContent='Install manager and worker bot packages from the Local Bots dashboard first.';await refresh();setInterval(refresh,2000);}catch(error){$('notice').textContent=error.message;}})();
+// Assistant pill click handler
+document.addEventListener('click', event => {
+  const pill = event.target.closest('.assistant-pill');
+  if (!pill) return;
+  document.querySelectorAll('.assistant-pill').forEach(p => p.classList.remove('active'));
+  pill.classList.add('active');
+  const botId = pill.dataset.bot;
+  if ($('workers')) {
+    Array.from($('workers').options).forEach(opt => {
+      opt.selected = (opt.value === botId);
+    });
+  }
+  if (assistantHints[botId]) {
+    $('prompt-hint').textContent = assistantHints[botId].hint;
+    $('prompt-input').placeholder = assistantHints[botId].placeholder;
+  }
+});
+
+(async()=>{
+  try {
+    const bots=await api('bots');
+    const options=bots.filter(b=>b.compatibility==='compatible (prompt-only)').map(b=>`<option value="${escape(b.bot.id)}">${escape(b.bot.id)}</option>`).join('');
+    $('manager').innerHTML=options;
+    $('workers').innerHTML=options;
+    if(bots.some(b=>b.bot.id==='manager')) $('manager').value='manager';
+
+    // Preselect landing-page if available, otherwise first worker
+    if(bots.some(b=>b.bot.id==='landing-page')) {
+      const landingOpt = Array.from($('workers').options).find(o => o.value === 'landing-page');
+      if (landingOpt) landingOpt.selected = true;
+    } else if ($('workers').options.length) {
+      $('workers').options[0].selected = true;
+    }
+
+    await refresh();
+    setInterval(refresh,2000);
+  } catch(error) {
+    $('notice').textContent=error.message;
+  }
+})();

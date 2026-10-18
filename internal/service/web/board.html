@@ -1,44 +1,109 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bot Operations</title><link rel="stylesheet" href="/board.css"><script src="/board.js" defer></script></head>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Local Bot Studio</title>
+  <link rel="stylesheet" href="/board.css">
+  <script src="/board.js" defer></script>
+</head>
 <body>
-<header><a href="/">Local Bots</a><strong>Bot Operations</strong><span id="connection" role="status">Connecting…</span></header>
+<header>
+  <a href="/">Local Bots</a>
+  <strong>AI Studio &amp; Operations</strong>
+  <span id="connection" role="status">Connecting…</span>
+</header>
 <main>
-<h1>Your goals. A working team.</h1><p>Set the direction, follow each task, and approve work when needed.</p>
-<p id="notice" role="alert"></p>
-<details id="new-goal"><summary>Create a goal</summary>
-<form id="goal-form"><label>Requirements and expected outcome<textarea name="requirements" required maxlength="16000" rows="3"></textarea></label>
-<div class="fields"><label>Manager bot<select name="manager" id="manager" required></select></label><label>Worker bots (select one or more)<select name="workers" id="workers" multiple required></select></label></div>
-<div id="create-settings"></div><button>Create goal</button></form></details>
-<label class="goal-picker">Goal<select id="goal"><option value="">All goals</option></select></label>
-<p id="usage"></p>
-<section id="board" aria-label="Task board"></section>
-<section id="goal-panel" hidden>
-<details><summary>Priority, budgets and approvals</summary><form id="settings-form"><div id="edit-settings"></div><button>Save settings</button></form></details>
-<h2>Manager chat</h2><p>Instructions apply at the next dispatch. Retry blocked cards after answering questions.</p><div id="chat" role="log" aria-live="polite"></div>
-<form id="chat-form"><label>Instructions or answers<textarea name="text" required maxlength="8000" rows="2"></textarea></label><button>Send instruction</button></form>
-</section>
-<footer>Local RTX 5050 · One inference at a time · Continuous operation requires the host powered on and awake.</footer>
+  <section class="hero-section">
+    <h1>What do you want to build today?</h1>
+    <p>Create landing pages, write code, solve math, review QA, or draft articles on your local machine.</p>
+  </section>
+
+  <p id="notice" role="alert"></p>
+
+  <section class="creator-card">
+    <div class="assistant-bar" role="group" aria-label="Choose an assistant">
+      <button type="button" class="assistant-pill active" data-bot="landing-page" title="Build responsive HTML/CSS landing pages">🌐 Landing Page</button>
+      <button type="button" class="assistant-pill" data-bot="code-writer" title="Write Python, Go, JS scripts & programs">💻 Code Engineer</button>
+      <button type="button" class="assistant-pill" data-bot="math-solver" title="Solve equations & math step-by-step">📐 Math Solver</button>
+      <button type="button" class="assistant-pill" data-bot="qa-assistant" title="Review code & write test suites">🛡️ QA Assistant</button>
+      <button type="button" class="assistant-pill" data-bot="writer" title="Write articles, copy & technical guides">✍️ Content Writer</button>
+    </div>
+
+    <form id="goal-form">
+      <label class="prompt-label">
+        <span id="prompt-hint">Describe your project or task:</span>
+        <textarea name="requirements" id="prompt-input" required maxlength="16000" rows="3" placeholder="e.g. Build a modern landing page for a coffee roastery with hero section, menu cards, testimonials, and dark aesthetic."></textarea>
+      </label>
+
+      <!-- Worker and manager selections synchronized with assistant pills -->
+      <select name="manager" id="manager" hidden required></select>
+      <select name="workers" id="workers" multiple hidden required></select>
+
+      <details class="advanced-settings">
+        <summary>⚙️ Advanced settings (budgets &amp; approvals)</summary>
+        <div id="create-settings"></div>
+      </details>
+
+      <button type="submit" class="btn-create-goal">🚀 Create &amp; Run Assistant</button>
+    </form>
+  </section>
+
+  <div class="workspace-header">
+    <label class="goal-picker">Current Project / Goal
+      <select id="goal"><option value="">All projects</option></select>
+    </label>
+    <p id="usage" class="usage-status"></p>
+  </div>
+
+  <section id="board" aria-label="Task board"></section>
+
+  <section id="goal-panel" hidden>
+    <details class="goal-settings-panel">
+      <summary>Project Settings &amp; Limits</summary>
+      <form id="settings-form">
+        <div id="edit-settings"></div>
+        <button class="btn-save-settings">Save settings</button>
+      </form>
+    </details>
+    <div class="chat-section">
+      <h2>Manager &amp; Assistant Discussion</h2>
+      <p>Send additional instructions or feedback. Cards will incorporate these on their next dispatch.</p>
+      <div id="chat" role="log" aria-live="polite"></div>
+      <form id="chat-form">
+        <label>Add instruction or feedback
+          <textarea name="text" required maxlength="8000" rows="2" placeholder="e.g. Make the hero banner more vibrant, or add unit tests for edge cases."></textarea>
+        </label>
+        <button class="btn-send-chat">Send instruction</button>
+      </form>
+    </div>
+  </section>
+
+  <footer>Local RTX 5050 · One inference at a time · Continuous operation requires the host powered on and awake.</footer>
 </main>
-<aside id="reader-drawer" class="reader-drawer" hidden aria-label="Worker Result Reader">
+
+<aside id="reader-drawer" class="reader-drawer" hidden aria-label="Deliverable Viewer">
   <div class="reader-backdrop" id="reader-backdrop"></div>
   <div class="reader-panel" role="dialog" aria-modal="true" aria-labelledby="reader-title">
     <div class="reader-header">
       <div class="reader-heading">
-        <h2 id="reader-title">Task Result</h2>
+        <h2 id="reader-title">Deliverable Result</h2>
         <div id="reader-meta" class="reader-meta"></div>
       </div>
       <div class="reader-actions">
-        <button type="button" id="reader-copy" class="action-btn">Copy</button>
-        <button type="button" id="reader-download" class="action-btn">Download</button>
-        <button type="button" id="reader-toggle-raw" class="action-btn">Raw</button>
+        <button type="button" id="reader-preview" class="action-btn preview-btn" hidden title="View live rendered HTML landing page">🌐 Live Preview</button>
+        <button type="button" id="reader-copy" class="action-btn" title="Copy exact output or code">Copy</button>
+        <button type="button" id="reader-download" class="action-btn" title="Download as file">Download File</button>
+        <button type="button" id="reader-toggle-raw" class="action-btn" title="View technical diagnostics or raw output">Diagnostics</button>
         <button type="button" id="reader-close" class="action-btn close-btn" aria-label="Close reader">✕</button>
       </div>
     </div>
     <div class="reader-body">
+      <iframe id="reader-iframe" class="reader-iframe" hidden sandbox="allow-scripts allow-same-origin"></iframe>
       <div id="reader-formatted" class="reader-content"></div>
       <pre id="reader-raw" class="reader-raw" hidden></pre>
     </div>
   </div>
 </aside>
-</body></html>
+</body>
+</html>
