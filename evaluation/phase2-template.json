@@ -1,0 +1,111 @@
+{
+  "at": "2026-10-18T13:23:16.0638881Z",
+  "hardware": {
+    "os": "windows",
+    "arch": "amd64",
+    "go_version": "go1.27.2",
+    "cpu_threads": 16,
+    "gpu": "NVIDIA GeForce RTX 5050 Laptop GPU, 8151 MiB, 1796 MiB, 610.74",
+    "memory": {
+      "available_bytes": 4282241024,
+      "total_bytes": 16873545728
+    },
+    "disks": {
+      "workspace_available_bytes": 144751460352,
+      "workspace_total_bytes": 510980517888
+    },
+    "dependencies": {
+      "go": "C:\\Program Files\\Go\\bin\\go.exe",
+      "llama-server": "missing from PATH"
+    }
+  },
+  "cases": [
+    {
+      "bot": "package-template",
+      "fixture": "minimal-text",
+      "context_size": 2048,
+      "passed": true,
+      "run": {
+        "id": "03e7e5ea74ccd18f0f8d45aa7ae38dd4",
+        "session": "c88aafe6da9b6888e1c5574b3c9fb2b7",
+        "bot": "package-template",
+        "version": "1.0.0",
+        "base_model": "qwen3-1.7b-q8",
+        "status": "completed",
+        "termination_reason": "stop",
+        "output": "READY",
+        "usage": {
+          "prompt_tokens": 40,
+          "completion_tokens": 2,
+          "total_tokens": 42
+        },
+        "started": "2026-10-18T18:23:16.3969123+05:00",
+        "duration_ms": 8111
+      }
+    }
+  ],
+  "pass_rate": 1,
+  "memory_samples": [
+    {
+      "at": "2026-10-18T13:23:16.2292603Z",
+      "device_vram_mib": 1798,
+      "system_used_ram_bytes": 12592025600
+    },
+    {
+      "at": "2026-10-18T13:23:17.3618655Z",
+      "device_vram_mib": 1789,
+      "system_used_ram_bytes": 12614619136
+    },
+    {
+      "at": "2026-10-18T13:23:18.3614853Z",
+      "device_vram_mib": 1790,
+      "system_used_ram_bytes": 12620804096
+    },
+    {
+      "at": "2026-10-18T13:23:19.3610761Z",
+      "device_vram_mib": 1802,
+      "system_used_ram_bytes": 12651810816
+    },
+    {
+      "at": "2026-10-18T13:23:20.3610837Z",
+      "device_vram_mib": 1802,
+      "system_used_ram_bytes": 13087526912
+    },
+    {
+      "at": "2026-10-18T13:23:21.78173Z",
+      "device_vram_mib": 2819,
+      "system_used_ram_bytes": 13704052736
+    },
+    {
+      "at": "2026-10-18T13:23:22.362458Z",
+      "device_vram_mib": 3546,
+      "system_used_ram_bytes": 13777342464
+    },
+    {
+      "at": "2026-10-18T13:23:23.3612707Z",
+      "device_vram_mib": 3546,
+      "system_used_ram_bytes": 14360576000
+    },
+    {
+      "at": "2026-10-18T13:23:24.3616467Z",
+      "device_vram_mib": 3832,
+      "system_used_ram_bytes": 14372855808
+    },
+    {
+      "at": "2026-10-18T13:23:24.5162388Z",
+      "device_vram_mib": 3832,
+      "system_used_ram_bytes": 14393982976
+    }
+  ],
+  "peak_device_vram_mib": 3832,
+  "peak_system_used_ram_bytes": 14393982976,
+  "notes": "Memory is sampled device-wide VRAM and system-wide used RAM, including other applications; not isolated model allocations. First case at each context size includes cold load; later cases at that size reuse weights. Synthetic fixtures are a baseline, not specialization evidence.",
+  "runtime": {
+    "artifact_lock": "artifacts/baseline.lock.json",
+    "device": "Vulkan0",
+    "engine_binary": "A:\\projects\\bots-clone\\runtime\\llama\\llama-server.exe",
+    "model_id": "qwen3-1.7b-q8",
+    "model_path": "A:\\projects\\bots-clone\\models\\Qwen3-1.7B-Q8_0.gguf",
+    "process_starts": 1
+  }
+}

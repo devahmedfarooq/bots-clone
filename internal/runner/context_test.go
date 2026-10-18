@@ -63,3 +63,21 @@ func TestRetrievedInstructionsCannotGrantWrite(t *testing.T) {
 		t.Fatal("missing denial")
 	}
 }
+
+func TestContextEscapedToolResultTerminates(t *testing.T) {
+	p := &counting{}
+	r := provider.Request{Settings: config.Settings{ContextSize: 512, MaxTokens: 100}, Messages: []provider.Message{{Role: "system", Content: "rules"}, {Role: "user", Content: "task"}, {Role: "assistant", ToolCalls: []provider.Call{{ID: "one"}}}, {Role: "tool", ToolCallID: "one", Content: strings.Repeat("\\\"", 4000)}}}
+	got, n, e := fit(context.Background(), p, r, 1)
+	if e != nil || n+100 > 512 || len(got.Messages[3].Content) > len(r.Messages[3].Content) {
+		t.Fatal(n, e)
+	}
+}
+
+func TestContextNeverDropsUserEnvelope(t *testing.T) {
+	p := &counting{}
+	text := `{"kind":"untrusted_context","task":"` + strings.Repeat("x", 1000) + `"}`
+	r := provider.Request{Settings: config.Settings{ContextSize: 512, MaxTokens: 100}, Messages: []provider.Message{{Role: "system", Content: "rules"}, {Role: "user", Content: text}}}
+	if _, _, e := fit(context.Background(), p, r, 1); e == nil {
+		t.Fatal("discarded actual user task as retrieved context")
+	}
+}

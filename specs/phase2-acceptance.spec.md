@@ -12,3 +12,7 @@ COMPARE: same fixtures and budgets for base-only, role prompt, adapter + role pr
 MEMORY: context sweep + supported KV precisions; measure adapter bytes and warm switch cost
   record device/system scope of samples, CPU offload, safe headroom and limitations
 COMPLETE only when real evidence exists; synthetic protocol fixtures never satisfy training/live tickets
+
+ACCEPTED 2026-10-18: evaluation/phase2.md and phase2-summary.json
+  two real adapters; matched comparison 19/22; switching 9/9, one process
+  keep three search failures; synthetic-template limits; actual GPU OOM remains P3 work

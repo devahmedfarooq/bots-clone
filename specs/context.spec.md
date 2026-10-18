@@ -12,3 +12,7 @@ FIT(request):
   compact older tool results into labelled previews; shrink retrieved data
   never truncate instructions or silently widen roots/tools; fail if irreducible
 VERIFY: traversal/injection, attribution, bounds, history/tool-pair preservation
+
+COMPACT: require each replacement to shrink encoded content; otherwise use a fixed marker
+  honor cancellation; drop only framework-added retrieval immediately after current input
+  never infer retrieval authority from user-authored JSON

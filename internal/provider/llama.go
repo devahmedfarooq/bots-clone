@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"bots/internal/artifacts"
 	"bufio"
 	"bytes"
 	"context"
@@ -56,6 +57,15 @@ func (p *Llama) Load(ctx context.Context, model Model) error {
 	if model.ContextSize < 512 || model.ContextSize > p.Capacity {
 		return errors.New("requested context exceeds configured engine capacity")
 	}
+	if p.BaseManifest != "" {
+		base, e := artifacts.LoadBase(p.BaseManifest)
+		if e != nil {
+			return e
+		}
+		if e = artifacts.Verify(p.ModelPath, base.SHA256); e != nil {
+			return fmt.Errorf("base artifact: %w", e)
+		}
+	}
 	if p.loaded {
 		if e := p.Health(ctx); e == nil && p.loadedContext == model.ContextSize {
 			return nil
@@ -78,7 +88,8 @@ func (p *Llama) Load(ctx context.Context, model Model) error {
 	port := listener.Addr().(*net.TCPAddr).Port
 	listener.Close()
 	p.URL = "http://127.0.0.1:" + strconv.Itoa(port)
-	if err = os.MkdirAll(filepath.Dir(p.LogPath), 0700); err != nil {
+	slotPath := filepath.Join(filepath.Dir(p.LogPath), "slots")
+	if err = os.MkdirAll(slotPath, 0700); err != nil {
 		return err
 	}
 	p.log, err = os.OpenFile(p.LogPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
@@ -94,11 +105,18 @@ func (p *Llama) Load(ctx context.Context, model Model) error {
 	if p.Device != "" {
 		p.cmd.Args = append(p.cmd.Args, "--device", p.Device, "--split-mode", "none")
 	}
+	adapterFiles := make([]string, 0, len(p.adapters))
 	for _, a := range p.adapters {
-		p.cmd.Args = append(p.cmd.Args, "--lora", a.manifest.Artifact)
+		if strings.Contains(a.manifest.Artifact, ",") {
+			return errors.New("llama.cpp adapter paths cannot contain commas; use a comma-free artifact store path")
+		}
+		adapterFiles = append(adapterFiles, a.manifest.Artifact)
+	}
+	if len(adapterFiles) > 0 {
+		p.cmd.Args = append(p.cmd.Args, "--lora", strings.Join(adapterFiles, ","))
 	}
 	if len(p.adapters) > 0 {
-		p.cmd.Args = append(p.cmd.Args, "--lora-init-without-apply")
+		p.cmd.Args = append(p.cmd.Args, "--lora-init-without-apply", "--slot-save-path", slotPath)
 	}
 	p.active = ""
 	p.cmd.Stdout = p.log

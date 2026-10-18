@@ -42,7 +42,8 @@ func TestAdapterPackageLifecycle(t *testing.T) {
 	os.Mkdir(source, 0700)
 	a := artifacts.Adapter{Schema: 1, ID: "special", Version: "1.0.0", Base: base, Runtime: "llama.cpp", RuntimeSHA256: hash, RuntimeRevision: "b11669", Format: "gguf-lora", Conversion: "llama.cpp/b11669/convert_lora_to_gguf.py", Source: "local:test", License: "CC0-1.0", SHA256: hash, Artifact: "sha256:" + hash, TargetModules: []string{"q_proj"}, TrainingMethod: "qlora"}
 	saveJSON(t, filepath.Join(source, "adapter.json"), a)
-	b := config.Bot{Schema: 1, ID: "third", Version: "1.0.0", Description: "test", Instructions: "test", BaseModel: "base", Adapter: "adapter.json", Budgets: config.Budgets{Tokens: 1000, Seconds: 10}}
+	b := config.Bot{Schema: 1, ID: "third", Version: "1.0.0", Description: "test", Instructions: "test", BaseModel: "base", Adapter: "adapter.json", Evaluation: "fixtures.json", Budgets: config.Budgets{Tokens: 1000, Seconds: 10}}
+	saveJSON(t, filepath.Join(source, "fixtures.json"), []any{})
 	saveJSON(t, filepath.Join(source, "bot.json"), b)
 	installed, e := c.Install(source)
 	if e != nil {
@@ -77,6 +78,11 @@ func TestAdapterPackageLifecycle(t *testing.T) {
 	imported, e := c.Import(archive, filepath.Join(home, "imports"))
 	if e != nil || imported.ID != "third" {
 		t.Fatal(imported, e)
+	}
+	b.Version = "1.2.0"
+	saveJSON(t, filepath.Join(source, "bot.json"), b)
+	if _, e = c.Upgrade(source); e != nil {
+		t.Fatal("upgrade after portable reinstall", e)
 	}
 	wrong := base
 	wrong.Revision = strings.Repeat("b", 40)

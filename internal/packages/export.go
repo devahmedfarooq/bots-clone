@@ -35,9 +35,7 @@ func Export(b config.Bot, target string) error {
 	}
 	for i, root := range b.ContextSources {
 		name := filepath.ToSlash(filepath.Join("context", string(rune('a'+i))))
-		if e := add(name+"/.keep", nil); e != nil {
-			return e
-		}
+		before := len(files)
 		r, e := os.OpenRoot(root)
 		if e != nil {
 			return e
@@ -71,6 +69,11 @@ func Export(b config.Bot, target string) error {
 		r.Close()
 		if e != nil {
 			return e
+		}
+		if len(files) == before {
+			if e := add(name+"/.keep", nil); e != nil {
+				return e
+			}
 		}
 		b.ContextSources[i] = name
 	}

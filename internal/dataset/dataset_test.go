@@ -38,6 +38,9 @@ func TestDatasetRejections(t *testing.T) {
 			t.Fatal(report, e)
 		}
 	}
+	if validate(record("a", "train", `{"password":"sensitive-fixture-value"}`)) == nil {
+		t.Fatal("JSON credentials accepted")
+	}
 	if validate(record("a", "invalid", "x")) == nil {
 		t.Fatal("bad split accepted")
 	}

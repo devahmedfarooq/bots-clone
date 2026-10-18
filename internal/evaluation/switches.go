@@ -5,6 +5,7 @@ import (
 	"bots/internal/runner"
 	"bots/internal/state"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -15,6 +16,7 @@ type SwitchCase struct {
 	Target         string    `json:"target"`
 	Run            state.Run `json:"run"`
 	SwitchAndRunMS int64     `json:"switch_and_run_ms"`
+	AcquireMS      int64     `json:"acquire_ms"`
 	Repeatable     bool      `json:"repeatable"`
 }
 
@@ -49,7 +51,21 @@ func Switches(ctx context.Context, r *runner.Runner, bots []config.Bot, cycles i
 				same = same && old == run.Output
 			}
 			prior[key] = run.Output
-			out = append(out, SwitchCase{cycle + 1, key, run, time.Since(started).Milliseconds(), same})
+			var acquireMS int64
+			events, traceErr := r.Store.Trace(run.ID)
+			if traceErr != nil {
+				return out, traceErr
+			}
+			for _, raw := range events {
+				var event struct {
+					Kind string `json:"kind"`
+					MS   int64  `json:"acquire_ms"`
+				}
+				if json.Unmarshal(raw, &event) == nil && event.Kind == "model_ready" {
+					acquireMS = event.MS
+				}
+			}
+			out = append(out, SwitchCase{cycle + 1, key, run, time.Since(started).Milliseconds(), acquireMS, same})
 			if !same {
 				failed = true
 			}

@@ -1,0 +1,101 @@
+{
+  "cases": [
+    {
+      "fixture": "complete-invoice",
+      "passed": true,
+      "output": "{\"vendor\":\"Cedar Supplies\",\"invoice_number\":\"INV-104\",\"currency\":\"USD\",\"total\":149.5}",
+      "seconds": 12.718225717544556,
+      "prompt_tokens": 107,
+      "completion_tokens": 29
+    },
+    {
+      "fixture": "missing-values",
+      "passed": true,
+      "output": "{\"vendor\":\"Northwind\",\"invoice_number\":null,\"currency\":\"EUR\",\"total\":20}",
+      "seconds": 6.677546262741089,
+      "prompt_tokens": 100,
+      "completion_tokens": 21
+    },
+    {
+      "fixture": "extract-80",
+      "passed": true,
+      "output": "{\"vendor\":\"Birch Supplies 80\",\"invoice_number\":\"DOC-580\",\"currency\":\"USD\",\"total\":592.5}",
+      "seconds": 14.29535460472107,
+      "prompt_tokens": 109,
+      "completion_tokens": 33
+    },
+    {
+      "fixture": "extract-81",
+      "passed": true,
+      "output": "{\"vendor\":\"Maple Supplies 81\",\"invoice_number\":\"DOC-581\",\"currency\":\"EUR\",\"total\":599.75}",
+      "seconds": 18.332940578460693,
+      "prompt_tokens": 109,
+      "completion_tokens": 33
+    },
+    {
+      "fixture": "extract-82",
+      "passed": false,
+      "output": "{\"vendor\":\"Willow Supplies 82\",\"invoice_number\":\"DOC-582\",\"currency\":\"PKR\"}",
+      "seconds": 10.3381187915802,
+      "prompt_tokens": 110,
+      "completion_tokens": 25
+    },
+    {
+      "fixture": "extract-83",
+      "passed": true,
+      "output": "{\"vendor\":\"Aspen Supplies 83\",\"invoice_number\":\"DOC-583\",\"currency\":\"GBP\",\"total\":614.25}",
+      "seconds": 5.350525617599487,
+      "prompt_tokens": 109,
+      "completion_tokens": 33
+    },
+    {
+      "fixture": "extract-84",
+      "passed": true,
+      "output": "{\"vendor\":\"Birch Supplies 84\",\"invoice_number\":\"DOC-584\",\"currency\":\"USD\",\"total\":621.5}",
+      "seconds": 4.989434719085693,
+      "prompt_tokens": 109,
+      "completion_tokens": 33
+    },
+    {
+      "fixture": "extract-85",
+      "passed": true,
+      "output": "{\"vendor\":\"Maple Supplies 85\",\"invoice_number\":\"DOC-585\",\"currency\":\"EUR\",\"total\":628.75}",
+      "seconds": 11.276612520217896,
+      "prompt_tokens": 109,
+      "completion_tokens": 33
+    },
+    {
+      "fixture": "extract-86",
+      "passed": false,
+      "output": "{\"vendor\":\"Willow Supplies 86\",\"invoice_number\":\"DOC-586\",\"currency\":\"PKR\"}",
+      "seconds": 10.070470809936523,
+      "prompt_tokens": 110,
+      "completion_tokens": 25
+    },
+    {
+      "fixture": "extract-87",
+      "passed": true,
+      "output": "{\"vendor\":\"Aspen Supplies 87\",\"invoice_number\":\"DOC-587\",\"currency\":\"GBP\",\"total\":643.25}",
+      "seconds": 13.328009128570557,
+      "prompt_tokens": 109,
+      "completion_tokens": 33
+    }
+  ],
+  "pass_rate": 0.8,
+  "fixtures_sha256": "f7238f32cd24bc49368def2122627b2eeaf7cb23f3bd127f539051b784dd3812",
+  "adapter_sha256": "f607e89c281597916a77866a178a53a6e6226b7b20ef2a53cb54e4a6ed674cf5",
+  "base": {
+    "schema_version": 1,
+    "repository": "Qwen/Qwen3-1.7B",
+    "revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+    "architecture": "qwen3",
+    "tokenizer_repository": "Qwen/Qwen3-1.7B",
+    "tokenizer_revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+    "tokenizer_sha256": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+    "sha256": "b35e9b40201c34dbe4c6606052b4f5637c06d9ad8044456525dcd8fb56de03d1",
+    "quantization": "Q8_0"
+  },
+  "reference_quantization": "NF4 double",
+  "deployed_quantization": "Q8_0",
+  "note": "Compare task correctness and outputs; numerical identity is not expected across quantizations."
+}

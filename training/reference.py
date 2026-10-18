@@ -37,7 +37,7 @@ def main():
             enable_thinking=False, return_tensors="pt").to("cuda")
         started = time.time()
         with torch.no_grad():
-            generated = model.generate(inputs, do_sample=False,
+            generated = model.generate(inputs, attention_mask=torch.ones_like(inputs), do_sample=False,
                 max_new_tokens=bot["generation"]["max_tokens"], pad_token_id=tokenizer.eos_token_id)
         output = tokenizer.decode(generated[0, inputs.shape[1]:], skip_special_tokens=True).strip()
         passed = all(term.lower() in output.lower() for term in fixture.get("contains", []))

@@ -1,0 +1,69 @@
+{
+  "id": "Qwen/Qwen3-1.7B",
+  "sha": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "52373fe24473b1aa44333d318f578ae6bf04b49b"
+    },
+    {
+      "rfilename": "LICENSE",
+      "blobId": "6634c8cc3133b3848ec74b9f275acaaa1ea618ab"
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "88aaef81cfe31bcdfe47203649a69ff12042826a"
+    },
+    {
+      "rfilename": "config.json",
+      "blobId": "044a86ecf7cb32238f3fae4184e55d354787edec"
+    },
+    {
+      "rfilename": "generation_config.json",
+      "blobId": "20a8a9156fc8c3f25295ca067f61fdf120d517c5"
+    },
+    {
+      "rfilename": "merges.txt",
+      "blobId": "31349551d90c7606f325fe0f11bbb8bd5fa0d7c7"
+    },
+    {
+      "rfilename": "model-00001-of-00002.safetensors",
+      "blobId": "1414f1bda72e17b63551d847c05c68e3396ba717",
+      "lfs": {
+        "sha256": "169ad53ec313c3a34b06c0809216e4fc072cce444a5d4ff2b59690d064130ed5",
+        "size": 3441185608,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "model-00002-of-00002.safetensors",
+      "blobId": "4aab3b30a4b8c6c1d0437a2576e0bea08507f12c",
+      "lfs": {
+        "sha256": "912becff8d60672aa8628ef08c05898d9adf17c2ad4ae3caf99b065622fdeff9",
+        "size": 622329984,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "model.safetensors.index.json",
+      "blobId": "986d7db875b47d21f68530f6baac038f1b297b39"
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "blobId": "cd71f61a15a522601badb3dc960d800d9cb3766c",
+      "lfs": {
+        "sha256": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+        "size": 11422654,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "blobId": "417d038a63fa3de29cfde265caedae14d1a58d92"
+    },
+    {
+      "rfilename": "vocab.json",
+      "blobId": "4783fe10ac3adce15ac8f358ef5462739852c569"
+    }
+  ]
+}

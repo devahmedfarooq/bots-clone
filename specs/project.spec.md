@@ -9,3 +9,7 @@ User-requested order (2026-10-18): implement Phase 3 on development before Phase
 Each ticket starts a feature branch from the preceding ticket. Module specifications describe the implemented contracts; todo.md records acceptance evidence.
 
 User-approved deferral: prompt-only search -> read quality remains 0/3 in the three-context baseline (overall 9/12). Preserve that fixture for adapter evaluation; do not keep optimizing role prompts or assume training fixes it.
+
+Phase 2 accepted: two local QLoRA adapters, exact artifacts, package lifecycle and live switching.
+  Evidence: evaluation/phase2.md; search/read quality remains unresolved.
+  Grouped feature branches: p2-adapter-runtime-and-packages, p2-qlora-training, p2-completion.

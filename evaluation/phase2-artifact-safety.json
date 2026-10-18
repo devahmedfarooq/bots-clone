@@ -1,0 +1,6 @@
+{
+  "corrupt_error": "artifact checksum mismatch",
+  "corrupt_artifact_rejected": true,
+  "tokenizer_mismatch_rejected": true,
+  "mismatch_error": "adapter exact base/tokenizer/quantization identity mismatch"
+}

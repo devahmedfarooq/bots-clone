@@ -9,7 +9,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -45,13 +44,16 @@ func compareCommand(ctx context.Context, c appConfig, r *runner.Runner, args []s
 		}
 		contexts = append(contexts, n)
 	}
+	if e := os.MkdirAll(filepath.Dir(*output), 0700); e != nil {
+		return e
+	}
 	if *cycles > 0 {
 		cases, e := evaluation.Switches(ctx, r, bots, *cycles)
 		starts := 0
 		if p, ok := r.Models.Provider.(*provider.Llama); ok {
 			starts = p.Starts
 		}
-		data, _ := json.MarshalIndent(map[string]any{"cases": cases, "process_starts": starts, "error": fmt.Sprint(e)}, "", "  ")
+		data, _ := json.MarshalIndent(map[string]any{"cases": cases, "process_starts": starts, "error": errorText(e)}, "", "  ")
 		if save := os.WriteFile(*output, data, 0600); save != nil {
 			return save
 		}
@@ -72,4 +74,11 @@ func compareCommand(ctx context.Context, c appConfig, r *runner.Runner, args []s
 		return e
 	}
 	return write(map[string]string{"report": *output, "status": "experimental; inspect all three arms"})
+}
+
+func errorText(e error) string {
+	if e == nil {
+		return ""
+	}
+	return e.Error()
 }

@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "id": "qlora-workspace",
+  "version": "0.1.0",
+  "files": {
+    "adapter.json": "c1fe94da8b837a3ad4d7f458c85066b2e38d96d90223be7ad0acedfa8e85e8e0",
+    "bot.json": "593dd8f79ecdbbf5cd2c6b8a3ff8640a363ce0bd5c978d914566406c452e4178",
+    "fixtures.json": "355325bc7d28d4db8890620f7d2af1e6e306a874511464aa5bdf0c7656ac77a5",
+    "LICENSE": "832dd9e00a68dd83b3c3fb9f5588dad7dcf337a0db50f7d9483f310cd292e92e",
+    "reference-fixtures.json": "cf8c639b30c348c5f340163b19a3627c70b1c7934fcfa754d420b4696c9d7c3c",
+    "training.json": "37abda236cd0a75d6150d5f002077951f4689c12d83d53cdd67ab4d5bc22f80c",
+    "context/0/deployment.txt": "c398aac21b24c51096e72d958a730d8b12802eda73554e39a0f4f654fcd84189",
+    "context/0/operations.txt": "95ebc01115a6bd86faef4c9de0366c87c5f7962175b72cacbce5265555535d13",
+    "context/0/project.txt": "d808fa8f85d05a45fccf8e92fc4120106610b016e5e597e0a33cebaf858919b8",
+    "context/0/snapshots.txt": "ea86879fd30117899cf6e49bdf69fc483afae7a0c6dac61206c8ac776ad74de3"
+  }
+}

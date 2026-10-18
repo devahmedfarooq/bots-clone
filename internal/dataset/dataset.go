@@ -67,6 +67,9 @@ func validate(r Record) error {
 		return errors.New("messages must contain 2..32 text turns")
 	}
 	for i, m := range r.Messages {
+		if secret.MatchString(m.Content) || state.Redact(m.Content) != m.Content {
+			return errors.New("potential sensitive data; remove secrets before export")
+		}
 		if m.Content == "" || len(m.Content) > 65536 || len(m.ToolCalls) > 0 || m.ToolCallID != "" {
 			return errors.New("nonempty bounded text messages required")
 		}

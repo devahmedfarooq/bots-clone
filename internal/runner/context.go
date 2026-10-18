@@ -13,6 +13,9 @@ func fit(ctx context.Context, p provider.Provider, request provider.Request, cur
 	messages := append([]provider.Message{}, request.Messages...)
 	request.Messages = messages
 	for {
+		if e := ctx.Err(); e != nil {
+			return request, 0, e
+		}
 		prompt, e := p.Count(ctx, request)
 		if e != nil {
 			return request, 0, e
@@ -41,16 +44,19 @@ func fit(ctx context.Context, p provider.Provider, request provider.Request, cur
 		for i := 1; i < len(messages); i++ {
 			m := &messages[i]
 			if m.Role == "tool" && len(m.Content) > 256 {
-				preview := m.Content[:len(m.Content)/2]
+				preview := m.Content[:len(m.Content)/4]
 				for !utf8.ValidString(preview) {
 					preview = preview[:len(preview)-1]
 				}
 				data, _ := json.Marshal(map[string]any{"truncated": true, "untrusted_tool_preview": preview})
+				if len(data) >= len(m.Content) {
+					data = []byte(`{"truncated":true,"notice":"Tool result omitted to fit context; full result retained in trace."}`)
+				}
 				m.Content = string(data)
 				changed = true
 				break
 			}
-			if m.Role == "user" && strings.HasPrefix(m.Content, "{\"kind\":\"untrusted_context\"") && len(m.Content) > 256 {
+			if m.Role == "user" && i == current+1 && strings.HasPrefix(m.Content, "{\"kind\":\"untrusted_context\"") && len(m.Content) > 256 {
 				m.Content = `{"kind":"untrusted_context","truncated":true,"sources":[]}`
 				changed = true
 				break

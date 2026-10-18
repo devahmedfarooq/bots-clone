@@ -1,0 +1,228 @@
+{
+  "cases": [
+    {
+      "cycle": 1,
+      "target": "qlora-extract",
+      "run": {
+        "id": "40753015c56ec0a1ee7ada3beb89616f",
+        "session": "ed19fad5236fe5249ab3ca5f7d479b6f",
+        "bot": "qlora-extract",
+        "version": "0.1.0",
+        "base_model": "qwen3-1.7b-q8",
+        "adapter": "A:\\projects\\bots-clone\\.local\\worktrees\\phase2-completion\\.local\\phase2\\artifacts\\manifests\\qlora-extract-0.1.0-dfba51c515a9141e81cf95632144e0bafdf4d0a80ebe9e052617911a3901e4fa.json",
+        "status": "failed",
+        "termination_reason": "failure",
+        "error": "inference /slots/0?action=erase: HTTP 501\nadapter recovery: inference /slots/0?action=erase: HTTP 501",
+        "output": "",
+        "usage": {
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0
+        },
+        "started": "2026-10-18T22:42:07.4587366+05:00",
+        "duration_ms": 17558
+      },
+      "switch_and_run_ms": 17567,
+      "repeatable": false
+    },
+    {
+      "cycle": 1,
+      "target": "qlora-workspace",
+      "run": {
+        "id": "cf529d5cce5bb69497859e185f3a899e",
+        "session": "8ae6736080b7497bc116d3f51b6a73ff",
+        "bot": "qlora-workspace",
+        "version": "0.1.0",
+        "base_model": "qwen3-1.7b-q8",
+        "adapter": "A:\\projects\\bots-clone\\.local\\worktrees\\phase2-completion\\.local\\phase2\\artifacts\\manifests\\qlora-workspace-0.1.0-36b1aa4cfd9d65965397557d392980dae6523355034915db256b387325ad43ed.json",
+        "status": "failed",
+        "termination_reason": "failure",
+        "error": "inference /slots/0?action=erase: HTTP 501\nadapter recovery: inference /slots/0?action=erase: HTTP 501",
+        "output": "",
+        "usage": {
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0
+        },
+        "started": "2026-10-18T22:42:25.0255004+05:00",
+        "duration_ms": 13906
+      },
+      "switch_and_run_ms": 13913,
+      "repeatable": false
+    },
+    {
+      "cycle": 1,
+      "target": "base",
+      "run": {
+        "id": "d44558a309c2ca8906b0114a3fed2eb7",
+        "session": "2a526d3ad50399df5c55739eb8f68849",
+        "bot": "qlora-extract",
+        "version": "0.1.0",
+        "base_model": "qwen3-1.7b-q8",
+        "status": "failed",
+        "termination_reason": "failure",
+        "error": "inference /slots/0?action=erase: HTTP 501\nadapter recovery: inference /slots/0?action=erase: HTTP 501",
+        "output": "",
+        "usage": {
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0
+        },
+        "started": "2026-10-18T22:42:38.9386833+05:00",
+        "duration_ms": 9717
+      },
+      "switch_and_run_ms": 9739,
+      "repeatable": false
+    },
+    {
+      "cycle": 2,
+      "target": "qlora-extract",
+      "run": {
+        "id": "94c2166c2ac035ad126208ffdef67be8",
+        "session": "4fa71e1c1ffd467d0780df681de085f2",
+        "bot": "qlora-extract",
+        "version": "0.1.0",
+        "base_model": "qwen3-1.7b-q8",
+        "adapter": "A:\\projects\\bots-clone\\.local\\worktrees\\phase2-completion\\.local\\phase2\\artifacts\\manifests\\qlora-extract-0.1.0-dfba51c515a9141e81cf95632144e0bafdf4d0a80ebe9e052617911a3901e4fa.json",
+        "status": "failed",
+        "termination_reason": "failure",
+        "error": "inference /slots/0?action=erase: HTTP 501\nadapter recovery: inference /slots/0?action=erase: HTTP 501",
+        "output": "",
+        "usage": {
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0
+        },
+        "started": "2026-10-18T22:42:48.6786198+05:00",
+        "duration_ms": 13930
+      },
+      "switch_and_run_ms": 13949,
+      "repeatable": false
+    },
+    {
+      "cycle": 2,
+      "target": "qlora-workspace",
+      "run": {
+        "id": "7fe52d57046be5918f60ebbdb855932d",
+        "session": "beae776d361b8101b9a365b48f587de7",
+        "bot": "qlora-workspace",
+        "version": "0.1.0",
+        "base_model": "qwen3-1.7b-q8",
+        "adapter": "A:\\projects\\bots-clone\\.local\\worktrees\\phase2-completion\\.local\\phase2\\artifacts\\manifests\\qlora-workspace-0.1.0-36b1aa4cfd9d65965397557d392980dae6523355034915db256b387325ad43ed.json",
+        "status": "failed",
+        "termination_reason": "failure",
+        "error": "inference /slots/0?action=erase: HTTP 501\nadapter recovery: inference /slots/0?action=erase: HTTP 501",
+        "output": "",
+        "usage": {
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0
+        },
+        "started": "2026-10-18T22:43:02.6280294+05:00",
+        "duration_ms": 13789
+      },
+      "switch_and_run_ms": 13830,
+      "repeatable": false
+    },
+    {
+      "cycle": 2,
+      "target": "base",
+      "run": {
+        "id": "759149b2e56fff743716b6ba3df4d5a7",
+        "session": "180814e526cff8dfdf3b4ab74a895e7b",
+        "bot": "qlora-extract",
+        "version": "0.1.0",
+        "base_model": "qwen3-1.7b-q8",
+        "status": "failed",
+        "termination_reason": "failure",
+        "error": "inference /slots/0?action=erase: HTTP 501\nadapter recovery: inference /slots/0?action=erase: HTTP 501",
+        "output": "",
+        "usage": {
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0
+        },
+        "started": "2026-10-18T22:43:16.4580248+05:00",
+        "duration_ms": 9841
+      },
+      "switch_and_run_ms": 9848,
+      "repeatable": false
+    },
+    {
+      "cycle": 3,
+      "target": "qlora-extract",
+      "run": {
+        "id": "ebb0f77eda783d3a37e2ead7e86aecfc",
+        "session": "682d5ba452eaaf5707acfa95ff0d83d7",
+        "bot": "qlora-extract",
+        "version": "0.1.0",
+        "base_model": "qwen3-1.7b-q8",
+        "adapter": "A:\\projects\\bots-clone\\.local\\worktrees\\phase2-completion\\.local\\phase2\\artifacts\\manifests\\qlora-extract-0.1.0-dfba51c515a9141e81cf95632144e0bafdf4d0a80ebe9e052617911a3901e4fa.json",
+        "status": "failed",
+        "termination_reason": "failure",
+        "error": "inference /slots/0?action=erase: HTTP 501\nadapter recovery: inference /slots/0?action=erase: HTTP 501",
+        "output": "",
+        "usage": {
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0
+        },
+        "started": "2026-10-18T22:43:26.3060008+05:00",
+        "duration_ms": 13942
+      },
+      "switch_and_run_ms": 13948,
+      "repeatable": false
+    },
+    {
+      "cycle": 3,
+      "target": "qlora-workspace",
+      "run": {
+        "id": "827fda07d1fe90369e52e570dfe5c136",
+        "session": "5e670b1bd9826c2a434fad9fa9a987d9",
+        "bot": "qlora-workspace",
+        "version": "0.1.0",
+        "base_model": "qwen3-1.7b-q8",
+        "adapter": "A:\\projects\\bots-clone\\.local\\worktrees\\phase2-completion\\.local\\phase2\\artifacts\\manifests\\qlora-workspace-0.1.0-36b1aa4cfd9d65965397557d392980dae6523355034915db256b387325ad43ed.json",
+        "status": "failed",
+        "termination_reason": "failure",
+        "error": "inference /slots/0?action=erase: HTTP 501\nadapter recovery: inference /slots/0?action=erase: HTTP 501",
+        "output": "",
+        "usage": {
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0
+        },
+        "started": "2026-10-18T22:43:40.2545028+05:00",
+        "duration_ms": 13671
+      },
+      "switch_and_run_ms": 13678,
+      "repeatable": false
+    },
+    {
+      "cycle": 3,
+      "target": "base",
+      "run": {
+        "id": "56754bb7795841b46f51747de6279f27",
+        "session": "1c33f1721096959e150e3cbd09667a9f",
+        "bot": "qlora-extract",
+        "version": "0.1.0",
+        "base_model": "qwen3-1.7b-q8",
+        "status": "failed",
+        "termination_reason": "failure",
+        "error": "inference /slots/0?action=erase: HTTP 501\nadapter recovery: inference /slots/0?action=erase: HTTP 501",
+        "output": "",
+        "usage": {
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0
+        },
+        "started": "2026-10-18T22:43:53.9336879+05:00",
+        "duration_ms": 9884
+      },
+      "switch_and_run_ms": 9890,
+      "repeatable": false
+    }
+  ],
+  "error": "adapter switching failed or outputs were not repeatable; inspect runs",
+  "process_starts": 9
+}

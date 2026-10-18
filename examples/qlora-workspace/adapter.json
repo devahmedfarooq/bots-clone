@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "id": "qlora-workspace",
+  "version": "0.1.0",
+  "base": {
+    "schema_version": 1,
+    "repository": "Qwen/Qwen3-1.7B",
+    "revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+    "architecture": "qwen3",
+    "tokenizer_repository": "Qwen/Qwen3-1.7B",
+    "tokenizer_revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+    "tokenizer_sha256": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+    "sha256": "b35e9b40201c34dbe4c6606052b4f5637c06d9ad8044456525dcd8fb56de03d1",
+    "quantization": "Q8_0"
+  },
+  "runtime": "llama.cpp",
+  "runtime_revision": "b11669",
+  "runtime_sha256": "6a4635aeb35656153d4bfeeddf761d24ed84aada9c9108d580737cbed465141b",
+  "format": "gguf-lora",
+  "conversion": "llama.cpp/b11669/convert_lora_to_gguf.py",
+  "source": "local:synthetic-phase2-v1/workspace",
+  "license": "Apache-2.0",
+  "sha256": "36b1aa4cfd9d65965397557d392980dae6523355034915db256b387325ad43ed",
+  "artifact": "sha256:36b1aa4cfd9d65965397557d392980dae6523355034915db256b387325ad43ed",
+  "target_modules": [
+    "q_proj",
+    "k_proj",
+    "v_proj",
+    "o_proj",
+    "gate_proj",
+    "up_proj",
+    "down_proj"
+  ],
+  "training_method": "qlora"
+}

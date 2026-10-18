@@ -32,6 +32,8 @@ for task in ["extract", "workspace"]:
             shutil.copytree((original / source).resolve(), dest)
             roots.append("context/" + str(index))
         bot["context_sources"] = roots
+        (out / roots[0] / "deployment.txt").write_text("Helios deployment is approved by Leena. Deployment happens Tuesday at 09:30.\n")
+        (out / roots[0] / "snapshots.txt").write_text("Snapshot backups run Sunday at 07:00 and are retained for six weeks.\n")
     fixture_path = (original / json.loads((original / "bot.json").read_text())["evaluation_suite"]).resolve()
     fixtures = json.loads(fixture_path.read_text()) + json.loads((root / "training/data" / (task + "-fixtures.json")).read_text())
     (out / "bot.json").write_text(json.dumps(bot, indent=2) + "\n")
@@ -43,10 +45,11 @@ for task in ["extract", "workspace"]:
         "runtime": "llama.cpp", "runtime_revision": "b11669",
         "runtime_sha256": sha(root / "runtime/llama/llama-server.exe"), "format": "gguf-lora",
         "conversion": "llama.cpp/b11669/convert_lora_to_gguf.py", "source": "local:synthetic-phase2-v1/" + task,
-        "license": "CC0-1.0", "sha256": sha(artifact), "artifact": "sha256:" + sha(artifact),
+        "license": "Apache-2.0", "sha256": sha(artifact), "artifact": "sha256:" + sha(artifact),
         "target_modules": training["config"]["target_modules"], "training_method": "qlora"}
     (out / "adapter.json").write_text(json.dumps(adapter, indent=2) + "\n")
     (out / "training.json").write_text(json.dumps(training, indent=2) + "\n")
+    shutil.copyfile(root / "models/qwen3-source/LICENSE", out / "LICENSE")
     files = {p.relative_to(out).as_posix(): sha(p) for p in out.rglob("*") if p.is_file() and p.name != "package.json"}
     manifest = {"schema_version": 1, "id": name, "version": "0.1.0", "files": files}
     (out / "package.json").write_text(json.dumps(manifest, indent=2) + "\n")

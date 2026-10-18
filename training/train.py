@@ -119,7 +119,8 @@ def main():
         "peak_cuda_reserved_bytes": torch.cuda.max_memory_reserved(),
         "python": platform.python_version(), "platform": platform.platform(),
         "cuda": torch.version.cuda, "gpu": torch.cuda.get_device_name(),
-        "packages": {p: importlib.metadata.version(p) for p in ["torch", "transformers", "peft", "accelerate", "bitsandbytes"]}}
+        "packages": {p: importlib.metadata.version(p) for p in ["torch", "transformers", "peft", "accelerate", "bitsandbytes"]},
+        "environment": sorted(str(d.metadata["Name"]) + "==" + d.version for d in importlib.metadata.distributions())}
     (out / "training.json").write_text(json.dumps(evidence, indent=2))
     print(json.dumps({"output": str(out), "validation_loss": validation_loss}), flush=True)
 

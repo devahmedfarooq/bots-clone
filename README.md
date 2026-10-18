@@ -1,6 +1,6 @@
 # Local Adapter Bot Framework
 
-The Go CLI and local service run declarative prompt bots through one resident llama.cpp model. The `development` branch includes the dashboard, workflows, recovery and bounded baseline package imports. Trained adapters and their lifecycle remain Phase 2 work. See [todo.md](todo.md) for acceptance status and [specs](specs/project.spec.md) for module pseudocode.
+The Go CLI and local service run declarative prompt bots through one resident llama.cpp model. The `development` branch includes the dashboard, workflows, recovery and bounded baseline package imports. Adapter-backed packages, exact compatibility, safe switching, and a separate QLoRA training path are implemented. The two trained examples remain experimental; see [Phase 2 evidence](evaluation/phase2.md) and [bot authoring](docs/bot-authoring.md). See [todo.md](todo.md) for acceptance status and [specs](specs/project.spec.md) for module pseudocode.
 
 Prompt-only bots are temporary baseline fixtures. The intended specialized bots use QLoRA-trained adapters; JSON remains their configuration and metadata. The recorded baseline is **9/12**, with the search-to-read quality failure explicitly deferred to adapter evaluation. `eval` currently exits 1 for that known failure; expectations have not been weakened.
 
@@ -91,3 +91,7 @@ Tests cover configuration, package registration, SQLite persistence and ownershi
 ## Autonomous operation
 
 Open **Bot Operations** from the local dashboard for Kanban tasks, manager instructions, goals, budgets and approvals. See [setup and continuous operation](docs/autonomous-operation.md) and [module pseudocode](specs/autonomy.spec.md). The laptop must remain powered on and awake.
+
+## Adapter packages
+
+Use `framework.adapters.json` with the source-pinned rebuilt base and the trained packages in `examples/qlora-extract` and `examples/qlora-workspace`. Weights stay local and ignored. Follow [training setup](training/README.md), then use `artifact import`, `package install/upgrade/rollback/export/uninstall` and `compare`. The default `framework.json` keeps the original prompt-only baseline.

@@ -1,0 +1,1 @@
+Snapshot backups run Sunday at 07:00 and are retained for six weeks.

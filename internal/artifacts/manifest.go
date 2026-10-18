@@ -96,7 +96,7 @@ func (a Adapter) Validate() error {
 	if e := a.Base.Validate(); e != nil {
 		return e
 	}
-	if a.Runtime != "llama.cpp" || !digest.MatchString(a.RuntimeSHA256) || a.RuntimeRevision == "" || a.Format != "gguf-lora" || a.Conversion != "llama.cpp/"+a.RuntimeRevision+"/convert_lora_to_gguf.py" {
+	if a.Runtime != "llama.cpp" || !digest.MatchString(a.RuntimeSHA256) || !regexp.MustCompile(`^b[0-9]+$`).MatchString(a.RuntimeRevision) || a.Format != "gguf-lora" || a.Conversion != "llama.cpp/"+a.RuntimeRevision+"/convert_lora_to_gguf.py" {
 		return errors.New("supported deployment: gguf-lora converted with a pinned llama.cpp revision; convert PEFT using convert_lora_to_gguf.py")
 	}
 	if len(a.TargetModules) == 0 {

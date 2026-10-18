@@ -1,0 +1,13 @@
+{
+  "home": ".local/adapter-bots",
+  "engine": {
+    "binary": "runtime/llama/llama-server.exe",
+    "model_path": "models/Qwen3-1.7B-phase2-Q8_0.gguf",
+    "model_id": "qwen3-1.7b-q8",
+    "context_size": 4096,
+    "device": "Vulkan0",
+    "gpu_layers": 99,
+    "base_manifest": "artifacts/phase2-base.json",
+    "runtime_revision": "b11669"
+  }
+}

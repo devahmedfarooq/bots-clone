@@ -103,8 +103,12 @@ func (r *Runner) Run(parent context.Context, b config.Bot, input string, o Optio
 	if e = r.Store.Event(run.ID, map[string]any{"kind": "run_start", "base_model": b.BaseModel, "adapter": b.Adapter, "bot_version": b.Version, "effective_settings": settings}); e != nil {
 		return run, e
 	}
+	acquireStarted := time.Now()
 	release, e = r.Models.Acquire(ctx, provider.Model{ID: b.BaseModel, ContextSize: settings.ContextSize, Adapter: b.Adapter})
 	if e != nil {
+		return run, e
+	}
+	if e = r.Store.Event(run.ID, map[string]any{"kind": "model_ready", "acquire_ms": time.Since(acquireStarted).Milliseconds()}); e != nil {
 		return run, e
 	}
 	_, history, e = r.Store.Session(session, b.ID, b.Version)

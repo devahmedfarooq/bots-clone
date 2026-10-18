@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "id": "qlora-extract",
+  "version": "0.1.0",
+  "files": {
+    "adapter.json": "baccc9215f51510441d2868a25926b075ba634764da31374bc8734e3de705dfe",
+    "bot.json": "ac41ae4d95b1c78a6dc2bd8b8650bce0e8de3bf8ee9babc463394cd4d0a823b1",
+    "fixtures.json": "f7238f32cd24bc49368def2122627b2eeaf7cb23f3bd127f539051b784dd3812",
+    "LICENSE": "832dd9e00a68dd83b3c3fb9f5588dad7dcf337a0db50f7d9483f310cd292e92e",
+    "reference-fixtures.json": "f7238f32cd24bc49368def2122627b2eeaf7cb23f3bd127f539051b784dd3812",
+    "training.json": "627046ab99d42cf69f7ba3c75c41c72d746c48e48af60ff926523a558a4a5d53"
+  }
+}

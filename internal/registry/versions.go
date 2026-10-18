@@ -28,7 +28,7 @@ func (r Registry) Replace(b config.Bot) (config.Bot, error) {
 	if current.Version == b.Version {
 		return b, errors.New("upgrade requires a different version")
 	}
-	for _, v := range []config.Bot{current, b} {
+	for index, v := range []config.Bot{current, b} {
 		dir := filepath.Join(r.Dir, "versions", v.ID)
 		if e = os.MkdirAll(dir, 0700); e != nil {
 			return b, e
@@ -36,7 +36,7 @@ func (r Registry) Replace(b config.Bot) (config.Bot, error) {
 		p := filepath.Join(dir, v.Version+".json")
 		data, _ := json.MarshalIndent(v, "", "  ")
 		if old, e := os.ReadFile(p); e == nil {
-			if string(old) != string(data) {
+			if index == 1 && string(old) != string(data) {
 				return b, errors.New("version already exists with different contents")
 			}
 		} else if !os.IsNotExist(e) {

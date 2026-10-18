@@ -17,3 +17,5 @@ Render chat template then tokenize to reserve exact prompt budget; submit OpenAI
 Manager: context-aware single inference slot -> load/reuse provider -> caller executes whole tool loop -> release slot. Close waits for slot then permanently unloads. One CLI process owns the GPU; CLI lock prevents competing processes.
 
 Adapters extend the provider through AdapterProvider (validate/load/activate/deactivate/unload). Manager selects only while holding its single run slot. Pinned installed pool starts at scale zero; generation always supplies explicit scales. Verify reported engine state and erase slot cache on switches; recover to base or unload on failure. Pool additions/unloads restart serially. See adapters.spec.md.
+
+Pinned b11669 requires one comma-separated --lora argument. Enable an owned --slot-save-path for cache erasure; never save/restore bot caches. Verify engine-reported adapter paths and scales. Native tests retain the initial HTTP 501 failure and corrected 9/9 one-process switching result.

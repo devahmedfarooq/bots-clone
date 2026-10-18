@@ -1,0 +1,206 @@
+{
+  "at": "2026-10-18T17:57:22.6585347Z",
+  "hardware": {
+    "os": "windows",
+    "arch": "amd64",
+    "go_version": "go1.27.2",
+    "cpu_threads": 16,
+    "gpu": "NVIDIA GeForce RTX 5050 Laptop GPU, 8151 MiB, 3950 MiB, 610.74",
+    "memory": {
+      "available_bytes": 4860440576,
+      "total_bytes": 16873545728
+    },
+    "disks": {
+      "workspace_available_bytes": 129558560768,
+      "workspace_total_bytes": 510980517888
+    },
+    "dependencies": {
+      "go": "C:\\Program Files\\Go\\bin\\go.exe",
+      "llama-server": "missing from PATH"
+    }
+  },
+  "cases": [
+    {
+      "bot": "memory-qlora-extract",
+      "fixture": "complete-invoice",
+      "context_size": 4096,
+      "passed": true,
+      "run": {
+        "id": "d2835790122f7f9e05e30b1072c74c6b",
+        "session": "e663826fba31f86d81160d7246499638",
+        "bot": "memory-qlora-extract",
+        "version": "0.1.0",
+        "base_model": "qwen3-1.7b-q8",
+        "adapter": "A:\\projects\\bots-clone\\.local\\worktrees\\phase2-completion\\.local\\phase2-memory\\artifacts\\manifests\\qlora-extract-0.1.0-dfba51c515a9141e81cf95632144e0bafdf4d0a80ebe9e052617911a3901e4fa.json",
+        "status": "completed",
+        "termination_reason": "stop",
+        "output": "{\"vendor\":\"Cedar Supplies\",\"invoice_number\":\"INV-104\",\"currency\":\"USD\",\"total\":149.5}",
+        "usage": {
+          "prompt_tokens": 107,
+          "completion_tokens": 29,
+          "total_tokens": 136
+        },
+        "started": "2026-10-18T22:57:22.88716+05:00",
+        "duration_ms": 14666
+      }
+    },
+    {
+      "bot": "memory-qlora-workspace",
+      "fixture": "read-project",
+      "context_size": 4096,
+      "passed": true,
+      "run": {
+        "id": "485fb744ad29f0675fe09bf52abe136d",
+        "session": "4c7b0881b862e93cea004e01bda65057",
+        "bot": "memory-qlora-workspace",
+        "version": "0.1.0",
+        "base_model": "qwen3-1.7b-q8",
+        "adapter": "A:\\projects\\bots-clone\\.local\\worktrees\\phase2-completion\\.local\\phase2-memory\\artifacts\\manifests\\qlora-workspace-0.1.0-36b1aa4cfd9d65965397557d392980dae6523355034915db256b387325ad43ed.json",
+        "status": "completed",
+        "termination_reason": "stop",
+        "output": "Project Cedar is owned by Maya Chen, uses Go as the backend language, and employs SQLite as the metadata database (as per the content of `project.txt`).",
+        "usage": {
+          "prompt_tokens": 1009,
+          "completion_tokens": 60,
+          "total_tokens": 1069
+        },
+        "started": "2026-10-18T22:57:37.5565742+05:00",
+        "duration_ms": 7480
+      }
+    }
+  ],
+  "pass_rate": 1,
+  "memory_samples": [
+    {
+      "at": "2026-10-18T17:57:22.7937162Z",
+      "device_vram_mib": 3950,
+      "system_used_ram_bytes": 12008173568
+    },
+    {
+      "at": "2026-10-18T17:57:23.8828706Z",
+      "device_vram_mib": 3709,
+      "system_used_ram_bytes": 12006985728
+    },
+    {
+      "at": "2026-10-18T17:57:24.8822662Z",
+      "device_vram_mib": 3929,
+      "system_used_ram_bytes": 12043915264
+    },
+    {
+      "at": "2026-10-18T17:57:25.8823451Z",
+      "device_vram_mib": 3933,
+      "system_used_ram_bytes": 12028948480
+    },
+    {
+      "at": "2026-10-18T17:57:26.8830211Z",
+      "device_vram_mib": 3875,
+      "system_used_ram_bytes": 12033363968
+    },
+    {
+      "at": "2026-10-18T17:57:27.882611Z",
+      "device_vram_mib": 3919,
+      "system_used_ram_bytes": 11706859520
+    },
+    {
+      "at": "2026-10-18T17:57:28.883585Z",
+      "device_vram_mib": 3917,
+      "system_used_ram_bytes": 11696377856
+    },
+    {
+      "at": "2026-10-18T17:57:29.8825983Z",
+      "device_vram_mib": 3932,
+      "system_used_ram_bytes": 11703652352
+    },
+    {
+      "at": "2026-10-18T17:57:30.8825884Z",
+      "device_vram_mib": 3966,
+      "system_used_ram_bytes": 11788525568
+    },
+    {
+      "at": "2026-10-18T17:57:31.8824087Z",
+      "device_vram_mib": 5714,
+      "system_used_ram_bytes": 12785344512
+    },
+    {
+      "at": "2026-10-18T17:57:32.8824165Z",
+      "device_vram_mib": 6193,
+      "system_used_ram_bytes": 13842673664
+    },
+    {
+      "at": "2026-10-18T17:57:33.8823507Z",
+      "device_vram_mib": 6249,
+      "system_used_ram_bytes": 13736906752
+    },
+    {
+      "at": "2026-10-18T17:57:34.8822234Z",
+      "device_vram_mib": 6250,
+      "system_used_ram_bytes": 13812637696
+    },
+    {
+      "at": "2026-10-18T17:57:35.8830881Z",
+      "device_vram_mib": 6273,
+      "system_used_ram_bytes": 13839040512
+    },
+    {
+      "at": "2026-10-18T17:57:36.882236Z",
+      "device_vram_mib": 6250,
+      "system_used_ram_bytes": 13836095488
+    },
+    {
+      "at": "2026-10-18T17:57:37.8844256Z",
+      "device_vram_mib": 6265,
+      "system_used_ram_bytes": 13851275264
+    },
+    {
+      "at": "2026-10-18T17:57:38.8827467Z",
+      "device_vram_mib": 6267,
+      "system_used_ram_bytes": 13856677888
+    },
+    {
+      "at": "2026-10-18T17:57:39.8824032Z",
+      "device_vram_mib": 6264,
+      "system_used_ram_bytes": 13860024320
+    },
+    {
+      "at": "2026-10-18T17:57:40.8824229Z",
+      "device_vram_mib": 6249,
+      "system_used_ram_bytes": 13874667520
+    },
+    {
+      "at": "2026-10-18T17:57:41.8821579Z",
+      "device_vram_mib": 6190,
+      "system_used_ram_bytes": 13862313984
+    },
+    {
+      "at": "2026-10-18T17:57:42.8825737Z",
+      "device_vram_mib": 6262,
+      "system_used_ram_bytes": 13897084928
+    },
+    {
+      "at": "2026-10-18T17:57:43.8827223Z",
+      "device_vram_mib": 6266,
+      "system_used_ram_bytes": 13898264576
+    },
+    {
+      "at": "2026-10-18T17:57:44.8823902Z",
+      "device_vram_mib": 6322,
+      "system_used_ram_bytes": 13924225024
+    },
+    {
+      "at": "2026-10-18T17:57:45.0422767Z",
+      "device_vram_mib": 6318,
+      "system_used_ram_bytes": 13932666880
+    }
+  ],
+  "peak_device_vram_mib": 6322,
+  "peak_system_used_ram_bytes": 13932666880,
+  "notes": "Memory is sampled device-wide VRAM and system-wide used RAM, including other applications; not isolated model allocations. First case at each context size includes cold load; later cases at that size reuse weights. Synthetic fixtures are a baseline, not specialization evidence.",
+  "runtime": {
+    "artifact_lock": "artifacts/baseline.lock.json",
+    "device": "Vulkan0",
+    "engine_binary": "A:\\projects\\bots-clone\\.local\\worktrees\\phase2-completion\\runtime\\llama\\llama-server.exe",
+    "model_id": "qwen3-1.7b-q8",
+    "model_path": "A:\\projects\\bots-clone\\.local\\worktrees\\phase2-completion\\models\\Qwen3-1.7B-phase2-Q8_0.gguf",
+    "process_starts": 1
+  }
+}

@@ -39,6 +39,9 @@ func (c Catalog) Check(b config.Bot) error {
 		return errors.New("base_model does not match configured engine")
 	}
 	if b.Adapter != "" {
+		if c.BaseManifest == "" || c.RuntimeRevision == "" {
+			return errors.New("adapter packages require engine.base_manifest and engine.runtime_revision; see docs/bot-authoring.md")
+		}
 		a, e := c.adapter(b.Adapter)
 		if e != nil {
 			return e

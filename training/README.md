@@ -12,3 +12,7 @@ Python is separate from the Go backend. Install Python 3.11 and the pinned requi
 Training uses NF4 double quantization and assistant-only loss. It rejects changed validated data, tokenizer or source weights. It records seed/config, dependency versions, loss, duration and CUDA memory. A smoke run does not prove improvement. Keep task adapters experimental until held-out measurements establish the outcome.
 
 References: [PEFT quantized training](https://huggingface.co/docs/peft/developer_guides/quantization), [pinned converter](https://github.com/ggml-org/llama.cpp/blob/b11669/convert_lora_to_gguf.py).
+
+Validated laptop run: PyTorch 2.9.0+cu128, Transformers 4.57.6, PEFT 0.17.1, bitsandbytes 0.48.1; 32 steps per task on the RTX 5050. Full resolved package versions and CUDA memory are saved in each training.json. Seed/config are reproducible; SDPA emitted a non-deterministic backward warning, so bit-identical reruns are not asserted. Save new artifact versions for new runs.
+
+After converting the source base, run `python scripts/prepare-phase2.py`, validate/export both datasets, run `python training/train.py training/extract.json` and the workspace config, convert both adapters, then run `python scripts/package-phase2.py` in a fresh output tree. Use the generated `.local/phase2-framework.json` or portable `framework.adapters.json`; see evaluation/phase2.md for measured results.

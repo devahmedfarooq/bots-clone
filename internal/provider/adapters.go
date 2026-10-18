@@ -7,8 +7,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os/exec"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"time"
 
 	"bots/internal/artifacts"
@@ -34,6 +36,9 @@ func (p *Llama) ValidateAdapter(ctx context.Context, path string) error {
 	if e := ctx.Err(); e != nil {
 		return e
 	}
+	if p.BaseManifest == "" || p.RuntimeRevision == "" {
+		return errors.New("configure engine.base_manifest and engine.runtime_revision before loading adapters")
+	}
 	b, e := artifacts.LoadBase(p.BaseManifest)
 	if e != nil {
 		return fmt.Errorf("adapter base identity: %w", e)
@@ -47,6 +52,12 @@ func (p *Llama) ValidateAdapter(ctx context.Context, path string) error {
 	}
 	if e = artifacts.Verify(p.Binary, a.RuntimeSHA256); e != nil {
 		return fmt.Errorf("runtime artifact: %w", e)
+	}
+	probe, cancel := context.WithTimeout(ctx, 10*time.Second)
+	version, probeErr := exec.CommandContext(probe, p.Binary, "--version").CombinedOutput()
+	cancel()
+	if probeErr != nil || !strings.Contains(string(version), "build "+strings.TrimPrefix(a.RuntimeRevision, "b")+",") {
+		return fmt.Errorf("runtime does not report pinned build %s", a.RuntimeRevision)
 	}
 	if e = artifacts.Verify(p.ModelPath, b.SHA256); e != nil {
 		return fmt.Errorf("base artifact: %w", e)
@@ -156,7 +167,10 @@ func (p *Llama) setAdapters(ctx context.Context, path string) error {
 	if res.StatusCode != 200 {
 		return errors.New("cannot verify active adapter")
 	}
-	var got []adapterScale
+	var got []struct {
+		adapterScale
+		Path string `json:"path"`
+	}
 	if e = json.NewDecoder(io.LimitReader(res.Body, 1<<20)).Decode(&got); e != nil {
 		return e
 	}
@@ -168,6 +182,9 @@ func (p *Llama) setAdapters(ctx context.Context, path string) error {
 	for _, a := range got {
 		if a.ID < 0 || a.ID >= len(expected) || seen[a.ID] || a.Scale != expected[a.ID].Scale {
 			return errors.New("engine adapter state mismatch")
+		}
+		if !strings.EqualFold(filepath.Clean(a.Path), filepath.Clean(p.adapters[a.ID].manifest.Artifact)) {
+			return errors.New("engine adapter artifact path mismatch")
 		}
 		seen[a.ID] = true
 	}
