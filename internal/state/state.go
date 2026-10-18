@@ -48,13 +48,34 @@ func Open(path string) (*Store, error) {
 		return nil, e
 	}
 	db.SetMaxOpenConns(1)
+	var schema, tables int
+	if e = db.QueryRow("PRAGMA user_version").Scan(&schema); e != nil {
+		db.Close()
+		return nil, e
+	}
+	if schema > 2 {
+		db.Close()
+		return nil, errors.New("metadata schema is newer than this application; use a compatible release")
+	}
+	if e = db.QueryRow("SELECT count(*) FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").Scan(&tables); e != nil {
+		db.Close()
+		return nil, e
+	}
+	if schema < 2 && tables > 0 {
+		backup := path + ".backup-" + ID() + ".db"
+		if _, e = db.Exec("VACUUM INTO ?", backup); e != nil {
+			db.Close()
+			return nil, errors.New("metadata backup failed; migration refused: " + e.Error())
+		}
+	}
 	_, e = db.Exec(`PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000;
  CREATE TABLE IF NOT EXISTS sessions(id TEXT PRIMARY KEY,bot TEXT NOT NULL,version TEXT NOT NULL);
  CREATE TABLE IF NOT EXISTS runs(id TEXT PRIMARY KEY,session TEXT NOT NULL,record TEXT NOT NULL);
  CREATE TABLE IF NOT EXISTS messages(seq INTEGER PRIMARY KEY AUTOINCREMENT,run TEXT NOT NULL,session TEXT NOT NULL,body TEXT NOT NULL);
  CREATE INDEX IF NOT EXISTS history ON messages(session,seq);
  CREATE TABLE IF NOT EXISTS events(seq INTEGER PRIMARY KEY AUTOINCREMENT,run TEXT NOT NULL,body TEXT NOT NULL);
- CREATE TABLE IF NOT EXISTS checkpoints(kind TEXT NOT NULL,id TEXT NOT NULL,body TEXT NOT NULL,PRIMARY KEY(kind,id));`)
+ CREATE TABLE IF NOT EXISTS checkpoints(kind TEXT NOT NULL,id TEXT NOT NULL,body TEXT NOT NULL,PRIMARY KEY(kind,id));
+ PRAGMA user_version=2;`)
 	if e != nil {
 		db.Close()
 		return nil, e
