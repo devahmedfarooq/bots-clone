@@ -164,3 +164,12 @@ Problem: studio needs a manager plan + per-task review by a 1.7B model before an
 - [x] BS-02: Studio UI rewrite. Pick assistant -> describe -> Run (Ctrl+Enter). "My work" list with plain statuses (Working / Done / Needs you / Failed). Result shown inline with Copy, Download, sandboxed Live Preview. Kanban moved into an optional "Board view". Direct by default; manager planning under Advanced.
 - [x] BS-03: Fix defects: chat form crash, `allow-same-origin` preview sandbox, hidden `required` selects, `alert()`, stuck "Connecting…", token-expired recovery message.
 - [x] BS-04: Update spec, keep `go vet`/`go test ./internal/service` green, JS syntax check.
+
+## Manager delegation (BS-05)
+
+Goal: user states one goal; the manager bot splits it into subtasks, assigns the small bots and reviews them. No manual bot picking. Branch `feature/manager-delegation`. Spec: [bot-studio spec](specs/bot-studio.spec.md) MANAGER_DELEGATION.
+
+- [ ] BS-05a: Studio defaults to "Manager decides" with all workers; picking one bot (direct) stays as an override.
+- [ ] BS-05b: Reliable plans: fewest tasks, exact worker IDs in the prompt, specific rejection reason, one bounded correction attempt.
+- [ ] BS-05c: Final result tab combining reviewed subtask outputs; visible "N of M subtasks done".
+- [ ] BS-05d: Verify with the real local model (poem + multi-part goal); record failures honestly.

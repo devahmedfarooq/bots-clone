@@ -56,3 +56,14 @@ HUMAN_INTERFACE:
   POLLING: re-render only when board signature changes; chat/settings forms are outside re-rendered areas
   TOKEN: sessionStorage + localStorage
   CHAT_SUBMIT: capture submitting form before async mutation; reset only after success
+
+MANAGER_DELEGATION:
+  UI default "Manager decides": goal -> manager plan -> worker subtasks -> manager review -> final result
+  workers = every installed prompt-only bot except manager; user may instead pick one bot (direct mode)
+  PLAN(goal):
+    prompt: fewest tasks (1 for simple writing), owner must be exactly one of allowed worker ids, no research/file task unless needed
+    problem(plan): not JSON | 0 or >12 tasks | owner not allowed (name it, list allowed) | empty/oversized fields
+    first problem -> store feedback, re-plan once with feedback in prompt (normal budgets)
+    second problem -> Blocked with specific reason and original output; never remap owners silently
+  FINAL_RESULT: when >=2 subtasks all Done -> tab "Final result" = outputs in task order under task titles (no model call)
+  PROGRESS: "N of M subtasks done" from card statuses; no invented percentages

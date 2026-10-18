@@ -19,6 +19,7 @@ type boardEngine struct {
 	*engine
 	mu           sync.Mutex
 	invalidPlan  bool
+	fixOnRetry   bool
 	arrayPlan    bool
 	workerStatus string
 	reject       bool
@@ -34,7 +35,7 @@ func (e *boardEngine) Generate(_ context.Context, r provider.Request, _ func(str
 	output := `{"status":"result","output":"Verified answer: 42","message":"Task complete with evidence."}`
 	if strings.Contains(prompt, "Break the goal") {
 		output = `{"tasks":[{"title":"Find answer","requirements":"Calculate answer","acceptance":"Answer equals 42","owner":"echo"}]}`
-		if e.invalidPlan {
+		if e.invalidPlan && !(e.fixOnRetry && strings.Contains(prompt, "previous plan was rejected")) {
 			output = `{"tasks":[{"title":"Unauthorized","requirements":"work","acceptance":"done","owner":"stranger"}]}`
 		}
 		if e.arrayPlan {
@@ -444,5 +445,29 @@ func TestDirectGoalSkipsPlanningAndAcceptsPlainText(t *testing.T) {
 	b := driveBoard(t, a, func(b Board) bool { return b.Goals[0].Status == Done })
 	if len(b.Cards) != 1 || b.Cards[0].Output != "Roses are red" || b.Goals[0].Runs != 1 {
 		t.Fatalf("bad direct result: %+v", b)
+	}
+}
+
+func TestInvalidPlanIsCorrectedOnceWithSpecificFeedback(t *testing.T) {
+	a, e := testAutonomy(t)
+	e.invalidPlan, e.fixOnRetry = true, true
+	if _, err := a.Create(goalRequest()); err != nil {
+		t.Fatal(err)
+	}
+	b := driveBoard(t, a, func(b Board) bool { return b.Goals[0].Status == Done })
+	if b.Cards[0].Feedback == "" || !strings.Contains(b.Cards[0].Feedback, `"stranger" is not allowed; use exactly one of: echo`) {
+		t.Fatalf("missing specific feedback: %q", b.Cards[0].Feedback)
+	}
+}
+
+func TestPlanStillInvalidAfterCorrectionBlocksWithReason(t *testing.T) {
+	a, e := testAutonomy(t)
+	e.invalidPlan = true
+	if _, err := a.Create(goalRequest()); err != nil {
+		t.Fatal(err)
+	}
+	b := driveBoard(t, a, func(b Board) bool { return b.Cards[0].Status == Blocked })
+	if len(b.Cards) != 1 || b.Goals[0].Runs != 2 || !strings.Contains(b.Cards[0].History[len(b.Cards[0].History)-1].Text, "not allowed") {
+		t.Fatalf("bad block: %+v", b)
 	}
 }

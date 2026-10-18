@@ -18,6 +18,7 @@ const statusLabels = {
   'In Progress': ['Working', 'running'], 'Blocked': ['Needs attention', 'blocked'], 'Ready': ['Queued', 'waiting'], 'Inbox': ['Queued', 'waiting']
 };
 const assistants = {
+  'auto': {label: 'Manager decides', about: 'Splits the goal, assigns bots, reviews', hint: 'Describe your goal:', placeholder: 'Write a short poem about the sea. Or: build a landing page for a coffee shop and write its announcement post.'},
   'landing-page': {label: 'Landing page', about: 'Web pages (HTML/CSS)', hint: 'Describe the page you want:', placeholder: 'A landing page for a coffee roastery with a hero banner, product cards and testimonials.'},
   'code-writer': {label: 'Code', about: 'Scripts and programs', hint: 'Describe the program you want:', placeholder: 'A Python script that reads a CSV of prices and writes a moving-average report.'},
   'math-solver': {label: 'Math', about: 'Step-by-step solutions', hint: 'Enter your math problem:', placeholder: 'Solve 2x + 3y = 12 and 5x - y = 13 step by step.'},
@@ -27,7 +28,8 @@ const assistants = {
 const settingFields = [['priority','Priority (5 highest)',3,1,5],['token_limit','Total token budget',60000,1,10000000],['run_limit','Max runs',30,1,1000],['run_tokens','Tokens per run',6000,1,131072],['seconds','Seconds per run',180,1,3600],['tool_calls','Tool calls per run',6,0,100]];
 const settingRules = [['before_work','Ask me before any assistant runs'],['before_done','Ask me to sign off on results'],['tools','Ask me before file/tool use']];
 
-let board = {goals: [], cards: []}, goalId = store.get('studio-goal') || '', cardId = '', botId = store.get('studio-bot') || '';
+let board = {goals: [], cards: []}, goalId = store.get('studio-goal') || '', cardId = '', botId = '';
+let workerIds = [], hasManager = false;
 let rendered = '', editing = '', refreshing = false, botsLoaded = false, view = 'formatted', connectionError = false;
 
 const settingsFields = () => `<div class="fields">${settingFields.map(([name,label,value,min,max]) => `<label>${label}<input type="number" name="${name}" value="${value}" min="${min}" max="${max}" required></label>`).join('')}</div><div class="rules">${settingRules.map(([name,label]) => `<label><input type="checkbox" name="${name}"> ${label}</label>`).join('')}</div>`;
@@ -113,14 +115,22 @@ function deliverable(card, raw) {
 }
 
 const goalTitle = goal => goal.requirements.trim().split('\n')[0].slice(0, 80);
+const goalTasks = goal => board.cards.filter(c => c.goal === goal.id && c.kind === 'task');
+function finalCard(goal, tasks) {
+  if (tasks.length < 2 || !tasks.every(c => c.status === 'Done')) return null;
+  const last = tasks[tasks.length - 1];
+  return {id: 'final', goal: goal.id, title: 'Final result', owner: last.owner, kind: 'final', status: 'Done', phase: 'work', history: last.history,
+    output: tasks.map(c => '## ' + c.title + '\n\n' + extractResult(c).text).join('\n\n')};
+}
 const goalCards = goal => {
-  const all = board.cards.filter(c => c.goal === goal.id), tasks = all.filter(c => c.kind === 'task');
-  return tasks.length ? tasks : all;
+  const tasks = goalTasks(goal), final = finalCard(goal, tasks);
+  if (final) return [final, ...tasks];
+  return tasks.length ? tasks : board.cards.filter(c => c.goal === goal.id);
 };
 const currentGoal = () => board.goals.find(g => g.id === goalId);
 function currentCard(goal) {
   const cards = goalCards(goal);
-  return cards.find(c => c.id === cardId) || [...cards].reverse().find(c => c.output) || cards[0];
+  return cards.find(c => c.id === cardId) || (cards[0].kind === 'final' ? cards[0] : [...cards].reverse().find(c => c.output) || cards[0]);
 }
 
 function emptyMessage(card) {
@@ -152,10 +162,12 @@ function renderResult() {
   $('result-view').hidden = !goal;
   if (!goal) return;
   const cards = goalCards(goal), card = currentCard(goal), res = extractResult(card), file = deliverable(card, view === 'raw');
-  const worker = goal.workers[0], bot = assistants[worker]?.label || worker;
+  const worker = card.owner, bot = assistants[worker]?.label || worker;
   const updated = card.history.length ? new Date(card.history[card.history.length - 1].at).toLocaleString() : '';
-  $('reader-title').textContent = goal.direct ? goalTitle(goal) : card.title || goalTitle(goal);
-  $('reader-meta').innerHTML = `<strong>${escape(bot)}</strong>${statusBadge(card)}<span>Updated ${escape(updated)}</span>`;
+  const tasks = goalTasks(goal), finished = tasks.filter(c => c.status === 'Done').length;
+  const progress = goal.direct ? '' : tasks.length ? `<span>${finished} of ${tasks.length} subtasks done</span>` : '<span>Manager is planning…</span>';
+  $('reader-title').textContent = goalTitle(goal);
+  $('reader-meta').innerHTML = `<strong>${escape(card.kind === 'final' ? 'Manager + team' : bot)}</strong>${statusBadge(card)}${progress}<span>Updated ${escape(updated)}</span>`;
   $('task-tabs').innerHTML = cards.length > 1 ? cards.map(c => `<button type="button" data-tab="${c.id}" aria-current="${c.id === card.id}">${escape(c.title)} ${statusBadge(c)}</button>`).join('') : '';
   const notice = cardNotice(card);
   $('card-alert').hidden = !notice;
@@ -184,7 +196,7 @@ function renderResult() {
 
 function renderList() {
   $('work-list').innerHTML = [...board.goals].reverse().map(g => {
-    const worker = g.workers[0], owner = assistants[worker]?.label || worker;
+    const worker = g.workers[0], owner = g.direct ? assistants[worker]?.label || worker : 'Manager + team';
     return `<button type="button" class="work-item" data-goal="${g.id}" aria-current="${g.id === goalId}"><span>${escape(goalTitle(g))}<small>${escape(owner)}</small></span>${badge(g.status)}</button>`;
   }).join('') || '<p>Nothing yet.</p>';
 }
@@ -242,27 +254,31 @@ async function mutation(button, run) {
 }
 
 function chooseBot(id) {
-  botId = id; store.set('studio-bot', id);
+  botId = id;
   document.querySelectorAll('#assistants button').forEach(b => b.setAttribute('aria-pressed', b.dataset.bot === id));
   $('prompt-hint').textContent = assistants[id]?.hint || 'Describe what you need:';
   $('prompt-input').placeholder = assistants[id]?.placeholder || '';
 }
 
 async function loadAssistants() {
-  const bots = (await api('bots')).filter(b => b.compatibility === 'compatible (prompt-only)' && b.bot.id !== 'manager').map(b => b.bot.id);
+  const all = (await api('bots')).filter(b => b.compatibility === 'compatible (prompt-only)').map(b => b.bot.id);
+  workerIds = all.filter(id => id !== 'manager');
+  hasManager = all.includes('manager');
+  const bots = hasManager ? ['auto', ...workerIds] : workerIds;
   $('assistants').innerHTML = bots.map(id => `<button type="button" data-bot="${escape(id)}" aria-pressed="false">${escape(assistants[id]?.label || id)}<small>${escape(assistants[id]?.about || '')}</small></button>`).join('');
   botsLoaded = true;
-  chooseBot(bots.includes(botId) ? botId : bots[0]);
+  chooseBot(bots[0]);
 }
 
 $('assistants').addEventListener('click', e => { const b = e.target.closest('button[data-bot]'); if (b) chooseBot(b.dataset.bot); });
 
 $('goal-form').addEventListener('submit', event => {
   event.preventDefault();
-  const form = event.currentTarget, plan = $('plan-mode').checked;
+  const form = event.currentTarget, auto = botId === 'auto';
   mutation(event.submitter, async () => {
     if (!botId) throw Error('No assistant is available yet. Install a bot package first.');
-    const goal = await api('goals', {...settings(form), requirements: new FormData(form).get('requirements'), direct: !plan, manager: plan ? 'manager' : '', workers: [botId]});
+    if (!workerIds.length) throw Error('No worker bots are installed.');
+    const goal = await api('goals', {...settings(form), requirements: new FormData(form).get('requirements'), direct: !auto, manager: auto ? 'manager' : '', workers: auto ? workerIds : [botId]});
     $('prompt-input').value = '';
     board.goals.push(goal);
     select(goal.id);

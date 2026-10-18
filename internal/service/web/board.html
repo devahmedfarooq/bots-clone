@@ -19,7 +19,7 @@
     <aside class="side">
       <section class="panel" aria-labelledby="new-title">
         <h2 id="new-title">Assign a task</h2>
-        <p class="field-label" id="assign-label">Assign to</p>
+        <p class="field-label" id="assign-label">Assign to <small>(or let the manager decide)</small></p>
         <div id="assistants" class="assistants" role="group" aria-labelledby="assign-label"></div>
         <form id="goal-form">
           <label><span id="prompt-hint">What do you need?</span>
@@ -27,7 +27,6 @@
           </label>
           <details class="advanced">
             <summary>Advanced</summary>
-            <label class="check"><input type="checkbox" id="plan-mode"> Let the manager plan and review (slower, multi-step)</label>
             <div id="create-settings"></div>
           </details>
           <button type="submit" class="primary">Assign task <small>Ctrl+Enter</small></button>
