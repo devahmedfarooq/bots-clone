@@ -737,3 +737,19 @@ func TestDirectGoalsAreNotSchemaConstrained(t *testing.T) {
 		t.Fatal("direct goals have no manager output")
 	}
 }
+
+func TestPlanPromptDoesNotShowThePlanCardsOwnFields(t *testing.T) {
+	a, _ := testAutonomy(t)
+	if _, err := a.Create(goalRequest()); err != nil {
+		t.Fatal(err)
+	}
+	b, _ := a.Snapshot()
+	prompt := a.prompt(b, b.Goals[0], b.Cards[0])
+	if strings.Contains(prompt, "Plan goal") || strings.Contains(prompt, "Concrete tasks with assigned workers and acceptance criteria") {
+		t.Fatal("the planner is shown its own housekeeping text and copies it into plans")
+	}
+	b.Cards[0].Phase = "verify"
+	if prompt = a.prompt(b, b.Goals[0], b.Cards[0]); !strings.Contains(prompt, `"task":`) {
+		t.Fatal("reviewers still need the task")
+	}
+}

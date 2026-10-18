@@ -637,18 +637,18 @@ func (a *Autonomy) prompt(b Board, g Goal, c Card) string {
 	}
 	context := struct {
 		Goal         string     `json:"goal"`
-		Task         TaskPlan   `json:"task"`
+		Task         *TaskPlan  `json:"task,omitempty"`
 		Output       string     `json:"output,omitempty"`
 		Instructions []string   `json:"user_instructions,omitempty"`
 		Workers      []TaskPlan `json:"worker_capabilities,omitempty"`
-	}{Goal: g.Requirements, Task: c.TaskPlan, Output: c.Output}
+	}{Goal: g.Requirements, Task: &c.TaskPlan, Output: c.Output}
 	for _, m := range g.Chat[1:] {
 		if m.Actor == "user" {
 			context.Instructions = append(context.Instructions, m.Text)
 		}
 	}
 	if c.Phase == "plan" {
-		context.Workers, context.Output = a.capabilities(g), ""
+		context.Workers, context.Output, context.Task = a.capabilities(g), "", nil
 	}
 	if c.Phase == "verify" && c.Shrink > 0 {
 		context.Output = excerpt(c.Output, a.reviewLimit(c.Shrink))
