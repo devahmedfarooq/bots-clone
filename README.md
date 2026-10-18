@@ -48,6 +48,8 @@ Run budgets count prompt plus completion tokens across all turns, tool calls and
 
 ## Dashboard and workflows
 
+The dashboard uses **HTMX + Tailwind CSS** with centralized Go template components. See [dashboard authoring](docs/dashboard.md) for the component structure and asset build commands.
+
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start.ps1
 ```

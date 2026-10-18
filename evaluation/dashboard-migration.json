@@ -1,0 +1,22 @@
+{
+    "branch":  "feature/dashboard-htmx-tailwind",
+    "stack":  {
+                  "tailwind":  "4.3.3",
+                  "components":  "Go html/template",
+                  "htmx":  "2.0.11",
+                  "styles":  "frontend/dashboard.css"
+              },
+    "components":  "internal/service/templates/components.html",
+    "full_suite_limitation":  "Windows Application Control blocked some temporary test executables; system policy was not changed",
+    "passed":  [
+                   "dashboard service contracts",
+                   "go vet ./...",
+                   "npm audit: zero vulnerabilities",
+                   "live JSON API",
+                   "real HTMX install and run",
+                   "selected-bot settings",
+                   "trace preservation",
+                   "cancel request and feedback",
+                   "desktop/mobile rendering"
+               ]
+}

@@ -62,6 +62,8 @@ try {
   await writeFile(path.join(botDirectory, 'bot.json'), JSON.stringify(definition));
   await evaluate(`document.getElementById('directory').value=${JSON.stringify(botDirectory)};document.getElementById('install-form').requestSubmit();`);
   await until(() => evaluate("document.getElementById('bot').options.length === 3"));
+  await until(() => evaluate("!document.querySelector('.htmx-settling, .htmx-swapping, .htmx-request')"));
+  assert.equal(await evaluate("document.querySelectorAll('#bot').length"), 1, 'Picker refresh must target the form rather than the status area');
   await evaluate("document.getElementById('bot').value='ui-extract';document.getElementById('bot').dispatchEvent(new Event('change'));document.getElementById('input').value='Invoice INV-205 from Pine Goods. Total EUR 73.25.';document.getElementById('run-form').requestSubmit();");
   await until(() => evaluate("Array.from(document.querySelectorAll('#jobs .job')).some(card=>card.querySelector('strong')?.textContent==='ui-extract' && card.querySelector('.tag')?.textContent==='completed')"), 240000);
   const output = await evaluate("Array.from(document.querySelectorAll('#jobs .job')).find(card=>card.querySelector('strong')?.textContent==='ui-extract').querySelector('pre').textContent");
@@ -71,15 +73,20 @@ try {
   await until(() => evaluate("Array.from(document.querySelectorAll('#jobs .job')).find(card=>card.querySelector('strong')?.textContent==='ui-extract').querySelectorAll('pre').length===2"));
   await sleep(2500);
   assert(await evaluate("Array.from(document.querySelectorAll('#jobs .job')).find(card=>card.querySelector('strong')?.textContent==='ui-extract').querySelector('details').open"), 'Output must remain open across refresh');
-  await evaluate("document.getElementById('bot').value='workspace-qa';document.getElementById('input').value='Read project.txt and write a long detailed explanation of every fact.';document.getElementById('run-form').requestSubmit();");
-  await until(() => evaluate("Array.from(document.querySelectorAll('#jobs button')).some(button=>button.textContent==='Cancel task')"));
-  await evaluate("Array.from(document.querySelectorAll('#jobs button')).find(button=>button.textContent==='Cancel task').click();");
+  await evaluate("document.getElementById('bot').value='workspace-qa';document.getElementById('bot').dispatchEvent(new Event('change', {bubbles:true}));");
+  await until(() => evaluate("document.getElementById('details').textContent.includes('Answer questions using files')"));
+  await evaluate("document.getElementById('input').value='Read project.txt and write a long detailed explanation of every fact.';document.getElementById('run-form').requestSubmit();");
+  await until(() => evaluate("Array.from(document.querySelectorAll('#jobs button')).some(button=>button.textContent.trim()==='Cancel task')"));
+  await evaluate("Array.from(document.querySelectorAll('#jobs button')).find(button=>button.textContent.trim()==='Cancel task').click();");
   await until(() => evaluate("document.querySelector('#jobs .job .tag')?.textContent==='cancelled'"));
+  await until(() => evaluate("document.getElementById('notice').textContent.includes('Cancellation requested')"));
+  const desktop = await send('Page.captureScreenshot', { format: 'png' }, attached.sessionId);
+  await writeFile('evaluation/dashboard.png', Buffer.from(desktop.data, 'base64'));
   await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true }, attached.sessionId);
   assert(await evaluate('document.documentElement.scrollWidth <= 390'), 'Mobile layout must not overflow');
   const screenshot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false }, attached.sessionId);
   await writeFile('evaluation/dashboard-mobile.png', Buffer.from(screenshot.data, 'base64'));
-  await writeFile('evaluation/dashboard-acceptance.json', JSON.stringify({ checks: ['installed bot through UI', 'real UI task output', 'expanded output and trace survive refresh', 'UI cancellation', 'mobile no horizontal overflow', 'token removed from URL'], invoice }, null, 2));
+  await writeFile('evaluation/dashboard-acceptance.json', JSON.stringify({ stack: {htmx:'2.0.11',tailwind:'4.3.3',components:'Go html/template'}, checks: ['installed bot through UI', 'picker has no duplicate controls', 'selection updates effective settings', 'real UI task output', 'expanded output and trace survive refresh', 'UI cancellation', 'mobile no horizontal overflow', 'token removed from URL'], invoice }, null, 2));
   console.log('Dashboard acceptance passed.');
 } finally {
   if (socket?.readyState === WebSocket.OPEN) { try { await send('Browser.close'); } catch {} socket.close(); }

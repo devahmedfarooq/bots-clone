@@ -1,6 +1,13 @@
 {
+  "stack": {
+    "htmx": "2.0.11",
+    "tailwind": "4.3.3",
+    "components": "Go html/template"
+  },
   "checks": [
     "installed bot through UI",
+    "picker has no duplicate controls",
+    "selection updates effective settings",
     "real UI task output",
     "expanded output and trace survive refresh",
     "UI cancellation",

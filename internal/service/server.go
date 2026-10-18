@@ -5,8 +5,6 @@ import (
 	"errors"
 	"io"
 	"net/http"
-	"path/filepath"
-	"sort"
 	"time"
 
 	"bots/internal/application"
@@ -51,7 +49,7 @@ func body(w http.ResponseWriter, r *http.Request, v any) error {
 
 func (s *Server) Handler() http.Handler {
 	m := http.NewServeMux()
-	m.Handle("GET /", dashboard())
+	s.dashboardRoutes(m)
 	m.HandleFunc("POST /api/route", func(w http.ResponseWriter, r *http.Request) {
 		var req struct {
 			Input string `json:"input"`
@@ -108,51 +106,20 @@ func (s *Server) Handler() http.Handler {
 		})
 	}
 	m.HandleFunc("GET /api/bots", func(w http.ResponseWriter, r *http.Request) {
-		bots, err := s.Catalog.Registry.List()
+		out, err := s.botViews()
 		if err != nil {
 			problem(w, err)
 			return
 		}
-		type view struct {
-			Bot           config.Bot      `json:"bot"`
-			Effective     config.Settings `json:"effective"`
-			Compatibility string          `json:"compatibility"`
-		}
-		out := []view{}
-		for _, b := range bots {
-			settings, _ := config.Resolve(b.Settings, config.Settings{})
-			status := "compatible (prompt-only)"
-			if b.BaseModel != s.Catalog.Model {
-				status = "base model mismatch"
-			}
-			out = append(out, view{b, settings, status})
-		}
 		respond(w, 200, out)
 	})
 	m.HandleFunc("POST /api/packages", func(w http.ResponseWriter, r *http.Request) {
-		var req struct {
-			Directory string `json:"directory"`
-			Archive   string `json:"archive,omitempty"`
-		}
+		var req packageRequest
 		if err := body(w, r, &req); err != nil {
 			problem(w, err)
 			return
 		}
-		if (req.Directory == "") == (req.Archive == "") {
-			http.Error(w, "specify exactly one directory or archive", 400)
-			return
-		}
-		var b config.Bot
-		var err error
-		if req.Archive != "" {
-			home := s.PackageHome
-			if home == "" {
-				home = filepath.Join(filepath.Dir(s.Catalog.Registry.Dir), "packages")
-			}
-			b, err = s.Catalog.Import(req.Archive, home)
-		} else {
-			b, err = s.Catalog.Install(req.Directory)
-		}
+		b, err := s.installPackage(req)
 		if err != nil {
 			problem(w, err)
 			return
@@ -160,9 +127,7 @@ func (s *Server) Handler() http.Handler {
 		respond(w, 201, b)
 	})
 	m.HandleFunc("GET /api/jobs", func(w http.ResponseWriter, r *http.Request) {
-		jobs := s.Queue.List()
-		sort.Slice(jobs, func(i, j int) bool { return jobs[i].Created.After(jobs[j].Created) })
-		respond(w, 200, jobs)
+		respond(w, 200, s.sortedJobs())
 	})
 	m.HandleFunc("POST /api/jobs", func(w http.ResponseWriter, r *http.Request) {
 		var req Request

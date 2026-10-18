@@ -1,0 +1,15 @@
+{
+  "name": "local-bots-dashboard",
+  "private": true,
+  "scripts": {
+    "build:dashboard": "node scripts/build-dashboard.mjs && tailwindcss -i frontend/dashboard.css -o internal/service/web/style.css --minify"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "4.3.3",
+    "htmx.org": "2.0.11",
+    "tailwindcss": "4.3.3"
+  },
+  "overrides": {
+    "@parcel/watcher": "2.6.0"
+  }
+}

@@ -24,14 +24,19 @@ func Secure(next http.Handler, host, token string) http.Handler {
 			http.Error(w, "cross-site request denied", http.StatusForbidden)
 			return
 		}
-		if strings.HasPrefix(r.URL.Path, "/api/") {
+		isAPI := strings.HasPrefix(r.URL.Path, "/api/")
+		if isAPI || strings.HasPrefix(r.URL.Path, "/ui/") {
 			provided := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
 			if token == "" || !strings.HasPrefix(r.Header.Get("Authorization"), "Bearer ") || subtle.ConstantTimeCompare([]byte(provided), []byte(token)) != 1 {
 				http.Error(w, "authentication required", http.StatusUnauthorized)
 				return
 			}
-			if r.Method == http.MethodPost && strings.Split(r.Header.Get("Content-Type"), ";")[0] != "application/json" {
-				http.Error(w, "JSON required", http.StatusUnsupportedMediaType)
+			contentType := "application/x-www-form-urlencoded"
+			if isAPI {
+				contentType = "application/json"
+			}
+			if r.Method == http.MethodPost && strings.Split(r.Header.Get("Content-Type"), ";")[0] != contentType {
+				http.Error(w, "invalid content type", http.StatusUnsupportedMediaType)
 				return
 			}
 		}

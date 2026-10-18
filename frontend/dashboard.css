@@ -1,0 +1,36 @@
+@import "tailwindcss" source(none);
+@source "../internal/service/templates";
+
+@theme {
+  --color-canvas: #0d1118;
+  --color-surface: #141b26;
+  --color-line: #293344;
+  --color-ink: #e8edf5;
+  --color-muted: #95a3b8;
+  --color-accent: #8dd5b0;
+  --font-sans: "Segoe UI", system-ui, sans-serif;
+}
+
+@layer base {
+  body { @apply m-0 bg-canvas text-ink font-sans; color-scheme: dark; }
+  h2 { @apply mb-5 text-lg font-semibold; }
+  h3 { @apply mt-7 mb-3 text-sm font-semibold; }
+  label { @apply mt-4 mb-2 block text-sm; }
+  p { @apply leading-relaxed; }
+  pre { @apply mt-3 max-h-96 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-canvas p-4 font-mono text-sm leading-relaxed; }
+}
+
+@layer components {
+  .panel { @apply mb-5 min-w-0 rounded-2xl border border-line bg-surface p-5 sm:p-6; }
+  .muted { @apply text-sm text-muted; }
+  .field { @apply w-full rounded-lg border border-slate-600 bg-canvas p-3 text-ink outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-canvas; }
+  .btn { @apply mt-4 cursor-pointer rounded-lg bg-accent px-5 py-3 text-sm font-semibold text-emerald-950 disabled:cursor-wait disabled:opacity-50; }
+  .btn-secondary { @apply bg-slate-700 text-slate-100; }
+  .tag { @apply inline-block rounded-full bg-slate-700 px-2.5 py-1 text-xs text-slate-200; }
+  .tag[data-status="completed"] { @apply bg-emerald-950 text-emerald-200; }
+  .tag[data-status="running"] { @apply bg-blue-950 text-blue-200; }
+  .tag[data-status="failed"], .tag[data-status="interrupted"] { @apply bg-rose-950 text-rose-200; }
+  .job, .bot { @apply border-t border-line py-4; }
+  .htmx-indicator { @apply hidden; }
+  .htmx-request .htmx-indicator, .htmx-request.htmx-indicator { @apply inline; }
+}

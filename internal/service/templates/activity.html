@@ -1,0 +1,24 @@
+{{define "jobs"}}
+{{range .}}
+<div id="job-{{.ID}}" class="job">
+  <strong class="mb-2 block">{{.Bot}}</strong>
+  {{template "badge" .Status}}
+  <p class="muted mt-3">{{.Created.Format "2006-01-02 15:04:05 MST"}}</p>
+  {{if .Error}}<p class="mt-3 text-sm text-amber-200">{{.Error | redact}}</p>{{end}}
+  {{if .Run}}{{template "run-output" (runView "job" .Run)}}{{end}}
+  {{if not (terminal .Status)}}
+    {{template "button" (dict "Label" "Cancel task" "Secondary" true "Post" (printf "/ui/jobs/%s/cancel" .ID) "Target" "#notice")}}
+  {{end}}
+</div>
+{{else}}<p class="muted">No tasks yet.</p>{{end}}
+{{end}}
+
+{{define "runs"}}
+{{range .}}
+<div class="job">
+  <strong class="mb-2 block">{{.Bot}} · {{.Version}}</strong>
+  {{template "badge" .Status}}
+  {{template "run-output" (runView "saved" .)}}
+</div>
+{{else}}<p class="muted">Your saved runs will appear here.</p>{{end}}
+{{end}}

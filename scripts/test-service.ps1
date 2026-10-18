@@ -1,4 +1,4 @@
-param([int]$Port = 8091, [switch]$KeepRunning)
+param([int]$Port = 8091, [switch]$KeepRunning, [string]$RuntimeRoot = '')
 $ErrorActionPreference = 'Stop'
 $project = Split-Path $PSScriptRoot -Parent
 Set-Location $project
@@ -6,8 +6,9 @@ $testRoot = Join-Path $project ('.local/service-smoke-' + [guid]::NewGuid().ToSt
 New-Item -ItemType Directory -Path $testRoot | Out-Null
 $framework = Get-Content framework.json -Raw | ConvertFrom-Json
 $framework.home = Join-Path $testRoot 'state'
-$framework.engine.binary = Join-Path $project $framework.engine.binary
-$framework.engine.model_path = Join-Path $project $framework.engine.model_path
+if (!$RuntimeRoot) { $RuntimeRoot = $project }
+$framework.engine.binary = Join-Path $RuntimeRoot $framework.engine.binary
+$framework.engine.model_path = Join-Path $RuntimeRoot $framework.engine.model_path
 $configFile = Join-Path $testRoot 'framework.json'
 [System.IO.File]::WriteAllText($configFile, ($framework | ConvertTo-Json -Depth 10), [System.Text.UTF8Encoding]::new($false))
 $exe = Join-Path $project 'bin/bots.exe'
