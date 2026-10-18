@@ -50,6 +50,7 @@ type Response struct {
 type Model struct {
 	ID          string
 	ContextSize int
+	Adapter     string
 }
 type Provider interface {
 	Load(context.Context, Model) error

@@ -74,6 +74,12 @@ func (s *Server) botViews() ([]BotView, error) {
 			return nil, err
 		}
 		compatibility := "compatible (prompt-only)"
+		if b.Adapter != "" {
+			compatibility = "compatible (experimental adapter)"
+		}
+		if err := s.Catalog.Check(b); err != nil {
+			compatibility = err.Error()
+		}
 		if b.BaseModel != s.Catalog.Model {
 			compatibility = "base model mismatch"
 		}

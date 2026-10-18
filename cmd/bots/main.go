@@ -31,12 +31,15 @@ type appConfig struct {
 	Home    string   `json:"home"`
 	Plugins []string `json:"plugins,omitempty"`
 	Engine  struct {
-		Binary    string `json:"binary"`
-		ModelPath string `json:"model_path"`
-		ModelID   string `json:"model_id"`
-		Context   int    `json:"context_size"`
-		GPU       int    `json:"gpu_layers"`
-		Device    string `json:"device"`
+		CacheType       string `json:"cache_type,omitempty"`
+		BaseManifest    string `json:"base_manifest,omitempty"`
+		RuntimeRevision string `json:"runtime_revision,omitempty"`
+		Binary          string `json:"binary"`
+		ModelPath       string `json:"model_path"`
+		ModelID         string `json:"model_id"`
+		Context         int    `json:"context_size"`
+		GPU             int    `json:"gpu_layers"`
+		Device          string `json:"device"`
 	} `json:"engine"`
 }
 
@@ -49,6 +52,9 @@ func loadConfig(path string) (appConfig, error) {
 	if e = config.Decode(b, &c); e != nil {
 		return c, e
 	}
+	if c.Engine.CacheType != "" && c.Engine.CacheType != "f16" && c.Engine.CacheType != "q8_0" {
+		return c, errors.New("engine.cache_type must be f16 or q8_0")
+	}
 	if c.Home == "" || c.Engine.Binary == "" || c.Engine.ModelPath == "" || c.Engine.ModelID == "" || c.Engine.Context < 512 || c.Engine.Context > 131072 || c.Engine.GPU < 0 {
 		return c, errors.New("invalid framework configuration")
 	}
@@ -60,6 +66,9 @@ func loadConfig(path string) (appConfig, error) {
 		if !filepath.IsAbs(*p) {
 			*p = filepath.Join(base, *p)
 		}
+	}
+	if c.Engine.BaseManifest != "" && !filepath.IsAbs(c.Engine.BaseManifest) {
+		c.Engine.BaseManifest = filepath.Join(base, c.Engine.BaseManifest)
 	}
 	for i, p := range c.Plugins {
 		if !filepath.IsAbs(p) {
@@ -130,6 +139,9 @@ func execute(ctx context.Context, args []string) error {
 		}
 		return write(report)
 	}
+	if args[0] == "dataset" {
+		return datasetCommand(args[1:])
+	}
 	c, e := loadConfig(*configPath)
 	if e != nil {
 		return e
@@ -142,7 +154,13 @@ func execute(ctx context.Context, args []string) error {
 	if e != nil {
 		return e
 	}
-	catalog := application.Catalog{Registry: reg, Model: c.Engine.ModelID, Plugins: plugins}
+	catalog := application.Catalog{Registry: reg, Model: c.Engine.ModelID, Plugins: plugins, BaseManifest: c.Engine.BaseManifest, RuntimeRevision: c.Engine.RuntimeRevision, ArtifactDir: filepath.Join(c.Home, "artifacts"), RuntimeBinary: c.Engine.Binary}
+	if args[0] == "package" {
+		return packageCommand(c, catalog, args[1:])
+	}
+	if args[0] == "artifact" {
+		return artifactCommand(c, args[1:])
+	}
 	if args[0] == "route" {
 		f := flags("route")
 		input := f.String("input", "", "task with explicit @bot mentions")
@@ -235,7 +253,7 @@ func execute(ctx context.Context, args []string) error {
 		}
 		return write(effective)
 	}
-	if args[0] != "run" && args[0] != "eval" {
+	if args[0] != "run" && args[0] != "eval" && args[0] != "compare" {
 		return errors.New("unknown command")
 	}
 	store, e := state.Open(filepath.Join(c.Home, "metadata.db"))
@@ -255,7 +273,16 @@ func execute(ctx context.Context, args []string) error {
 		return e
 	}
 	defer unlock()
-	p := &provider.Llama{Binary: c.Engine.Binary, ModelPath: c.Engine.ModelPath, ModelID: c.Engine.ModelID, Capacity: c.Engine.Context, GPU: c.Engine.GPU, Device: c.Engine.Device, LogPath: filepath.Join(c.Home, "engine.log")}
+	p := &provider.Llama{Binary: c.Engine.Binary, ModelPath: c.Engine.ModelPath, ModelID: c.Engine.ModelID, BaseManifest: c.Engine.BaseManifest, RuntimeRevision: c.Engine.RuntimeRevision, CacheType: c.Engine.CacheType, Capacity: c.Engine.Context, GPU: c.Engine.GPU, Device: c.Engine.Device, LogPath: filepath.Join(c.Home, "engine.log")}
+	installed, err := catalog.Registry.List()
+	if err != nil {
+		return err
+	}
+	for _, bot := range installed {
+		if bot.Adapter != "" {
+			p.AdapterPaths = append(p.AdapterPaths, bot.Adapter)
+		}
+	}
 	manager := provider.NewManager(p)
 	defer func() {
 		shutdown, cancel := context.WithTimeout(context.Background(), 15*time.Second)
@@ -265,6 +292,9 @@ func execute(ctx context.Context, args []string) error {
 		}
 	}()
 	r := &runner.Runner{Models: manager, Store: store, Plugins: plugins}
+	if args[0] == "compare" {
+		return compareCommand(ctx, c, r, args[1:])
+	}
 	if args[0] == "eval" {
 		f := flags("eval")
 		sizes := f.String("contexts", "2048,4096", "comma-separated context limits")

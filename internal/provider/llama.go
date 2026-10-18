@@ -21,6 +21,11 @@ import (
 
 type Llama struct {
 	Binary, ModelPath, ModelID, LogPath, Device string
+	BaseManifest, RuntimeRevision               string
+	CacheType                                   string
+	AdapterPaths                                []string
+	adapters                                    []loadedAdapter
+	active                                      string
 	Capacity                                    int
 	GPU                                         int
 	URL                                         string
@@ -42,6 +47,9 @@ func (p *Llama) client() *http.Client {
 	return http.DefaultClient
 }
 func (p *Llama) Load(ctx context.Context, model Model) error {
+	if p.CacheType != "" && p.CacheType != "f16" && p.CacheType != "q8_0" {
+		return errors.New("cache type must be f16 or q8_0")
+	}
 	if model.ID != p.ModelID {
 		return fmt.Errorf("model %q does not match configured base %q", model.ID, p.ModelID)
 	}
@@ -58,6 +66,9 @@ func (p *Llama) Load(ctx context.Context, model Model) error {
 		return errors.New("configure llama-server binary and local GGUF model")
 	}
 	if _, err := os.Stat(p.ModelPath); err != nil {
+		return err
+	}
+	if err := p.prepareAdapters(); err != nil {
 		return err
 	}
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
@@ -77,9 +88,19 @@ func (p *Llama) Load(ctx context.Context, model Model) error {
 	capacity := model.ContextSize
 	p.cmd = exec.Command(p.Binary, "-m", p.ModelPath, "--alias", p.ModelID, "--host", "127.0.0.1", "--port", strconv.Itoa(port), "-c", strconv.Itoa(capacity), "-np", "1", "-ngl", strconv.Itoa(p.GPU), "--jinja", "--offline", "--no-webui", "--cache-ram", "0", "--log-verbosity", "2")
 	p.cmd.Args = append(p.cmd.Args, "--no-cache-idle-slots", "--cors-origins", "localhost", "--no-cors-credentials")
+	if p.CacheType != "" {
+		p.cmd.Args = append(p.cmd.Args, "-ctk", p.CacheType, "-ctv", p.CacheType, "-fa", "on")
+	}
 	if p.Device != "" {
 		p.cmd.Args = append(p.cmd.Args, "--device", p.Device, "--split-mode", "none")
 	}
+	for _, a := range p.adapters {
+		p.cmd.Args = append(p.cmd.Args, "--lora", a.manifest.Artifact)
+	}
+	if len(p.adapters) > 0 {
+		p.cmd.Args = append(p.cmd.Args, "--lora-init-without-apply")
+	}
+	p.active = ""
 	p.cmd.Stdout = p.log
 	p.cmd.Stderr = p.log
 	if err = p.cmd.Start(); err != nil {
@@ -199,6 +220,9 @@ func (p *Llama) Generate(ctx context.Context, r Request, emit func(string)) (Res
 	p.mu.Unlock()
 	defer func() { cancel(); p.mu.Lock(); p.cancel = nil; p.mu.Unlock() }()
 	body := payload(r)
+	if len(p.adapters) > 0 {
+		body["lora"] = p.scales(p.active)
+	}
 	if emit != nil {
 		body["stream"] = true
 		body["stream_options"] = map[string]bool{"include_usage": true}
@@ -306,6 +330,7 @@ func (p *Llama) Cancel() {
 func (p *Llama) Unload(ctx context.Context) error {
 	p.Cancel()
 	p.loaded = false
+	p.active = ""
 	if p.cmd == nil {
 		return nil
 	}

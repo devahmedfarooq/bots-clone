@@ -23,6 +23,13 @@ func (r Registry) Register(dir string) (config.Bot, error) {
 	if err != nil {
 		return b, err
 	}
+	return r.RegisterBot(b)
+}
+func (r Registry) RegisterBot(b config.Bot) (config.Bot, error) {
+	if err := b.Validate(); err != nil {
+		return b, err
+	}
+	var err error
 	p, _ := r.path(b.ID)
 	if err = os.MkdirAll(r.Dir, 0700); err != nil {
 		return b, err

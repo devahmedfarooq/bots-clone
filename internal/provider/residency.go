@@ -35,6 +35,26 @@ func (m *Manager) Acquire(ctx context.Context, model Model) (func(), error) {
 		release()
 		return nil, err
 	}
+	if model.Adapter != "" {
+		p, ok := m.Provider.(AdapterProvider)
+		if !ok {
+			release()
+			return nil, errors.New("provider does not support adapters")
+		}
+		if err := p.LoadAdapter(ctx, model.Adapter); err != nil {
+			release()
+			return nil, err
+		}
+		if err := p.ActivateAdapter(ctx, model.Adapter); err != nil {
+			release()
+			return nil, err
+		}
+	} else if p, ok := m.Provider.(AdapterProvider); ok {
+		if err := p.DeactivateAdapter(ctx); err != nil {
+			release()
+			return nil, err
+		}
+	}
 	return release, nil
 }
 func (m *Manager) Close(ctx context.Context) error {

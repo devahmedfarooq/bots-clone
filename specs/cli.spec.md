@@ -15,3 +15,12 @@ diagnostics: JSON hardware and missing dependencies. bot register/list/inspect/v
 run ID [-input task | stdin | -interactive] [-session ID] [-stream] [-json=false]: shared Runner, default machine-readable result, optional stderr stream, isolated session reuse. run show ID: stored result.
 eval: registered fixture suites and explicit context sweep -> JSON evidence; failing cases return nonzero. Ctrl+C returns 130; errors return 1; success/help returns 0.
 OS file lock serializes CLI process ownership of the model; it releases automatically on exit/crash. Within a process the Manager queues callers. On normal shutdown always unload/reap the owned engine.
+
+Phase 2 commands:
+  artifact import FILE SHA256 -> verified immutable content-addressed storage
+  package install/validate/upgrade ZIP | rollback ID VERSION | export ID ZIP | uninstall ID
+  dataset validate DATA.jsonl EVALUATION.jsonl [NEW_EXPORT_DIRECTORY] -> split digests + rejected line reasons
+  compare -bots ID,ID -contexts 2048,4096 -output REPORT -> equal-budget three-arm fixture evidence
+  compare -bots ID,ID -switch-cycles 3 -output REPORT -> repeated A/B/base, independent sessions/process count
+Adapters require engine.base_manifest + runtime_revision; runtime binary digest is checked against adapter metadata.
+engine.cache_type accepts f16 (default) or q8_0; changed cache precision requires restart.
