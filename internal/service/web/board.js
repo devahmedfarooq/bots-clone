@@ -4,444 +4,321 @@ if (fragment.has('token')) {
   try { localStorage.setItem('local-bots-token', fragment.get('token')); } catch (_) {}
 }
 history.replaceState(null, '', location.pathname);
-const getToken = () => sessionStorage.getItem('local-bots-token') || localStorage.getItem('local-bots-token') || '';
+const store = {
+  get: key => { try { return localStorage.getItem(key); } catch (_) { return null; } },
+  set: (key, value) => { try { localStorage.setItem(key, value); } catch (_) {} }
+};
+const getToken = () => sessionStorage.getItem('local-bots-token') || store.get('local-bots-token') || '';
 const $ = id => document.getElementById(id);
 const escape = text => String(text ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
 const states = ['Inbox', 'Ready', 'In Progress', 'Review', 'Done', 'Blocked', 'Needs Your Approval'];
-let board = {goals:[], cards:[]}, rendered = '', editing = '', refreshing = false;
-let activeCardId = null, showingRaw = false, showingPreview = false, lastReaderSig = '';
-
-const assistantHints = {
-  'landing-page': {
-    hint: 'Describe your landing page or web component:',
-    placeholder: 'e.g. Build a modern landing page for a coffee roastery with hero banner, product cards, testimonials, and clean dark aesthetic.'
-  },
-  'code-writer': {
-    hint: 'Describe the script, program, or feature to code:',
-    placeholder: 'e.g. Write a Python script to fetch stock prices from an API, calculate moving averages, and save a CSV report.'
-  },
-  'math-solver': {
-    hint: 'Enter your math, algebra, or calculus problem:',
-    placeholder: 'e.g. Solve the system of equations 2x + 3y = 12 and 5x - y = 13 step-by-step and verify the solution.'
-  },
-  'qa-assistant': {
-    hint: 'Describe the code or feature to review and test:',
-    placeholder: 'e.g. Review this user registration workflow for security edge cases, race conditions, and write a full test suite.'
-  },
-  'writer': {
-    hint: 'Describe the article, guide, or copy to write:',
-    placeholder: 'e.g. Write a high-converting announcement post for a new developer tool, highlighting local privacy and speed.'
-  }
+const statusLabels = {
+  'Done': ['Done', 'delivered'], 'Review': ['Checking', 'review'], 'Needs Your Approval': ['Needs your OK', 'review'],
+  'In Progress': ['Working', 'running'], 'Blocked': ['Needs attention', 'blocked'], 'Ready': ['Queued', 'waiting'], 'Inbox': ['Queued', 'waiting']
 };
+const assistants = {
+  'landing-page': {label: 'Landing page', about: 'Web pages (HTML/CSS)', hint: 'Describe the page you want:', placeholder: 'A landing page for a coffee roastery with a hero banner, product cards and testimonials.'},
+  'code-writer': {label: 'Code', about: 'Scripts and programs', hint: 'Describe the program you want:', placeholder: 'A Python script that reads a CSV of prices and writes a moving-average report.'},
+  'math-solver': {label: 'Math', about: 'Step-by-step solutions', hint: 'Enter your math problem:', placeholder: 'Solve 2x + 3y = 12 and 5x - y = 13 step by step.'},
+  'qa-assistant': {label: 'QA', about: 'Reviews and tests', hint: 'Describe what to review or test:', placeholder: 'Review a user registration flow for security edge cases and list test cases.'},
+  'writer': {label: 'Writer', about: 'Articles, copy, poems', hint: 'Describe what to write:', placeholder: 'A short poem about the sea, or a product announcement post.'}
+};
+const settingFields = [['priority','Priority (5 highest)',3,1,5],['token_limit','Total token budget',60000,1,10000000],['run_limit','Max runs',30,1,1000],['run_tokens','Tokens per run',6000,1,131072],['seconds','Seconds per run',180,1,3600],['tool_calls','Tool calls per run',6,0,100]];
+const settingRules = [['before_work','Ask me before any assistant runs'],['before_done','Ask me to sign off on results'],['tools','Ask me before file/tool use']];
 
-function settingsFields() {
-  const fields = [['priority','Priority (5 highest)',3,1,5],['token_limit','Total token budget',60000,1,10000000],['run_limit','Total runs (including planning/review)',30,1,1000],['run_tokens','Tokens per run',6000,1,131072],['seconds','Seconds per run',180,1,3600],['tool_calls','Tool calls per run',6,0,100]];
-  return `<div class="fields">${fields.map(([name,label,value,min,max]) => `<label>${label}<input type="number" name="${name}" value="${value}" min="${min}" max="${max}" required></label>`).join('')}</div><div class="rules">${[['before_work','Manual approval for all worker runs'],['before_done','Manual sign-off on final results'],['tools','Manual approval for file/tool operations']].map(([name,label])=>`<label><input type="checkbox" name="${name}"> ${label}</label>`).join('')}</div>`;
-}
-$('create-settings').innerHTML = settingsFields(); $('edit-settings').innerHTML = settingsFields();
+let board = {goals: [], cards: []}, goalId = store.get('studio-goal') || '', cardId = '', botId = store.get('studio-bot') || '';
+let rendered = '', editing = '', refreshing = false, botsLoaded = false, view = 'formatted', connectionError = false;
+
+const settingsFields = () => `<div class="fields">${settingFields.map(([name,label,value,min,max]) => `<label>${label}<input type="number" name="${name}" value="${value}" min="${min}" max="${max}" required></label>`).join('')}</div><div class="rules">${settingRules.map(([name,label]) => `<label><input type="checkbox" name="${name}"> ${label}</label>`).join('')}</div>`;
+$('create-settings').innerHTML = settingsFields();
+$('edit-settings').innerHTML = settingsFields();
+
+function notify(text, isConnection = false) { $('notice').textContent = text; connectionError = isConnection && !!text; }
 
 async function api(path, data) {
-  const token = getToken();
-  const response = await fetch('/api/'+path, {
-    headers: {
-      Authorization: 'Bearer ' + token,
-      ...(data ? {'Content-Type': 'application/json'} : {})
-    },
+  const response = await fetch('/api/' + path, {
+    headers: {Authorization: 'Bearer ' + getToken(), ...(data ? {'Content-Type': 'application/json'} : {})},
     ...(data ? {method: 'POST', body: JSON.stringify(data)} : {})
   });
   if (!response.ok) {
-    const text = await response.text();
-    throw Error(response.status === 401 ? 'Authentication required. Reopen the dashboard link printed by bots serve to connect.' : text);
+    const text = (await response.text()).trim();
+    throw Error(response.status === 401 ? 'Access key missing or expired. Close this tab and open the link printed by "bots serve".' : text || 'Request failed (' + response.status + ').');
   }
   return response.json();
 }
 
 function settings(form) {
-  const data = new FormData(form), result={rules:{}};
-  for(const name of ['priority','token_limit','run_limit','run_tokens','seconds','tool_calls']) result[name]=Number(data.get(name));
-  for(const name of ['before_work','before_done','tools']) result.rules[name]=data.has(name);
+  const data = new FormData(form), result = {rules: {}};
+  for (const [name] of settingFields) result[name] = Number(data.get(name));
+  for (const [name] of settingRules) result.rules[name] = data.has(name);
   return result;
 }
 
-function statusBadge(card) {
-  switch (card.status) {
-    case 'Done': return '<span class="status-badge badge-delivered">Verified Deliverable</span>';
-    case 'Review': return '<span class="status-badge badge-review">Awaiting Review</span>';
-    case 'Needs Your Approval': return '<span class="status-badge badge-review">Needs Approval</span>';
-    case 'In Progress': return '<span class="status-badge badge-running">Running</span>';
-    case 'Blocked': return '<span class="status-badge badge-blocked">Blocked</span>';
-    default: return '<span class="status-badge badge-waiting">Waiting</span>';
-  }
+function badge(status) {
+  const [label, cls] = statusLabels[status] || ['Queued', 'waiting'];
+  return `<span class="status-badge badge-${cls}">${label}</span>`;
 }
+const statusBadge = card => badge(card.status);
 
 function extractResult(card) {
   const raw = (card.output || '').trim();
-  if (!raw) return { text: '', isJson: false, raw: '' };
+  if (!raw) return {text: '', raw: ''};
   try {
-    let clean = raw;
-    if (clean.startsWith('```json')) clean = clean.slice(7);
-    if (clean.startsWith('```')) clean = clean.slice(3);
-    if (clean.endsWith('```')) clean = clean.slice(0, -3);
-    clean = clean.trim();
-    const parsed = JSON.parse(clean);
-    if (parsed && typeof parsed === 'object') {
-      if (typeof parsed.output === 'string') return { text: parsed.output, isJson: true, raw, parsed };
-      return { text: JSON.stringify(parsed, null, 2), isJson: true, raw, parsed };
-    }
+    const parsed = JSON.parse(raw.replace(/^```(?:json)?\s*/, '').replace(/```$/, '').trim());
+    if (parsed && typeof parsed === 'object') return {text: typeof parsed.output === 'string' ? parsed.output : JSON.stringify(parsed, null, 2), raw};
   } catch (_) {}
-  return { text: raw, isJson: false, raw };
+  return {text: raw, raw};
 }
 
 function formatContent(text) {
-  if (!text) return '';
-  const parts = [];
-  const codeBlockRegex = /```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g;
-  let lastIndex = 0, match;
-  while ((match = codeBlockRegex.exec(text)) !== null) {
-    if (match.index > lastIndex) parts.push({ type: 'text', content: text.slice(lastIndex, match.index) });
-    parts.push({ type: 'code', lang: match[1], content: match[2] });
-    lastIndex = match.index + match[0].length;
+  const parts = [], codeBlock = /```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g;
+  let last = 0, match;
+  while ((match = codeBlock.exec(text)) !== null) {
+    if (match.index > last) parts.push({code: false, content: text.slice(last, match.index)});
+    parts.push({code: true, content: match[2]});
+    last = match.index + match[0].length;
   }
-  if (lastIndex < text.length) parts.push({ type: 'text', content: text.slice(lastIndex) });
-
-  let html = '';
-  for (const part of parts) {
-    if (part.type === 'code') {
-      html += `<pre><code>${escape(part.content.trim())}</code></pre>`;
-      continue;
-    }
-    const paragraphs = part.content.split(/\n\s*\n/);
-    for (let p of paragraphs) {
-      p = p.trim();
-      if (!p) continue;
-      if (/^###\s+/.test(p)) html += `<h3>${escape(p.replace(/^###\s+/, ''))}</h3>`;
-      else if (/^##\s+/.test(p)) html += `<h2>${escape(p.replace(/^##\s+/, ''))}</h2>`;
-      else if (/^#\s+/.test(p)) html += `<h1>${escape(p.replace(/^#\s+/, ''))}</h1>`;
-      else if (/^>\s+/.test(p)) {
-        const quoteLines = p.split('\n').map(l => l.replace(/^>\s*/, ''));
-        html += `<blockquote>${quoteLines.map(escape).join('<br>')}</blockquote>`;
-      } else if (/^(\*|-)\s+/.test(p)) {
-        const items = p.split('\n').filter(l => /^(\*|-)\s+/.test(l));
-        html += `<ul>${items.map(l => `<li>${escape(l.replace(/^(\*|-)\s+/, ''))}</li>`).join('')}</ul>`;
-      } else if (/^\d+\.\s+/.test(p)) {
-        const items = p.split('\n').filter(l => /^\d+\.\s+/.test(l));
-        html += `<ol>${items.map(l => `<li>${escape(l.replace(/^\d+\.\s+/, ''))}</li>`).join('')}</ol>`;
-      } else if (p.includes('|') && p.split('\n').length >= 2 && p.split('\n')[1].includes('---')) {
-        const rows = p.split('\n').map(r => r.trim()).filter(Boolean);
-        const parseRow = r => r.split('|').slice(1, -1).map(c => c.trim());
-        const header = parseRow(rows[0]);
-        const bodyRows = rows.slice(2).map(parseRow);
-        html += `<table><thead><tr>${header.map(c => `<th>${escape(c)}</th>`).join('')}</tr></thead><tbody>${bodyRows.map(r => `<tr>${r.map(c => `<td>${escape(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
-      } else {
-        const lines = p.split('\n').map(escape);
-        html += `<p>${lines.join('<br>')}</p>`;
+  if (last < text.length) parts.push({code: false, content: text.slice(last)});
+  const list = (p, bullet, tag) => `<${tag}>${p.split('\n').filter(l => bullet.test(l)).map(l => `<li>${escape(l.replace(bullet, ''))}</li>`).join('')}</${tag}>`;
+  return parts.map(part => {
+    if (part.code) return `<pre><code>${escape(part.content.trim())}</code></pre>`;
+    return part.content.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean).map(p => {
+      const lines = p.split('\n');
+      if (/^###\s+/.test(p)) return `<h3>${escape(p.replace(/^###\s+/, ''))}</h3>`;
+      if (/^##\s+/.test(p)) return `<h2>${escape(p.replace(/^##\s+/, ''))}</h2>`;
+      if (/^#\s+/.test(p)) return `<h1>${escape(p.replace(/^#\s+/, ''))}</h1>`;
+      if (/^>\s+/.test(p)) return `<blockquote>${lines.map(l => escape(l.replace(/^>\s*/, ''))).join('<br>')}</blockquote>`;
+      if (/^[*-]\s+/.test(p)) return list(p, /^[*-]\s+/, 'ul');
+      if (/^\d+\.\s+/.test(p)) return list(p, /^\d+\.\s+/, 'ol');
+      if (lines.length >= 2 && p.includes('|') && lines[1].includes('---')) {
+        const cells = r => r.split('|').slice(1, -1).map(c => c.trim());
+        return `<table><thead><tr>${cells(lines[0]).map(c => `<th>${escape(c)}</th>`).join('')}</tr></thead><tbody>${lines.slice(2).map(r => `<tr>${cells(r).map(c => `<td>${escape(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
       }
-    }
-  }
-  return html;
+      return `<p>${lines.map(escape).join('<br>')}</p>`;
+    }).join('');
+  }).join('');
 }
 
-function updateReader() {
-  const card = board.cards.find(c => c.id === activeCardId);
-  if (!card) { $('reader-title').textContent = 'Task Not Found'; return; }
-  $('reader-title').textContent = card.title || 'Deliverable Result';
-  const lastAt = card.history.length ? new Date(card.history[card.history.length-1].at).toLocaleTimeString() : '';
-  $('reader-meta').innerHTML = `<span><strong>${escape(card.owner)}</strong></span>${statusBadge(card)}<span>Updated ${escape(lastAt)}</span><span>Job ${escape(card.job || (card.jobs && card.jobs.slice(-1)[0]) || 'none')}</span>`;
-  const res = extractResult(card);
-
-  // Check if content has HTML
-  const hasHtml = /<!DOCTYPE html|<html[\s>]|<body[\s>]|<div[\s>]|<head[\s>]/i.test(res.text) || (card.owner === 'landing-page' && res.text.includes('<') && res.text.includes('>'));
-  $('reader-preview').hidden = !hasHtml;
-
-  if (showingPreview && hasHtml) {
-    $('reader-iframe').hidden = false;
-    $('reader-raw').hidden = true;
-    $('reader-formatted').hidden = true;
-    $('reader-preview').textContent = '📝 Show Code';
-    let htmlCode = res.text;
-    const match = /```(?:html)?\n([\s\S]*?)```/i.exec(res.text);
-    if (match) htmlCode = match[1];
-    $('reader-iframe').srcdoc = htmlCode;
-  } else if (showingRaw) {
-    $('reader-iframe').hidden = true;
-    $('reader-raw').hidden = false;
-    $('reader-formatted').hidden = true;
-    $('reader-preview').textContent = '🌐 Live Preview';
-    $('reader-raw').textContent = res.raw || 'No raw output recorded.';
-  } else {
-    $('reader-iframe').hidden = true;
-    $('reader-raw').hidden = true;
-    $('reader-formatted').hidden = false;
-    $('reader-preview').textContent = '🌐 Live Preview';
-    if (!res.text) {
-      let emptyMsg = 'Waiting for worker output.';
-      if (card.status === 'In Progress') emptyMsg = 'Assistant is currently working on this task…';
-      else if (card.status === 'Blocked') emptyMsg = 'Task is blocked. No completed output available.';
-      else if (card.status === 'Needs Your Approval') emptyMsg = 'Task awaiting approval before dispatch.';
-      $('reader-formatted').innerHTML = `<div class="empty-result">${escape(emptyMsg)}</div>`;
-    } else {
-      $('reader-formatted').innerHTML = formatContent(res.text);
-    }
-  }
+// Exact text to copy/download, its file type and any renderable HTML.
+function deliverable(card, raw) {
+  const res = extractResult(card), text = raw ? (res.raw || res.text) : (res.text || res.raw);
+  const whole = /^```([\w-]*)\n([\s\S]*?)\n?```$/.exec(text.trim());
+  const inner = /```html\n([\s\S]*?)```/i.exec(text);
+  const body = whole ? whole[2] : text;
+  const html = inner ? inner[1] : (/<!DOCTYPE html|<html[\s>]|<body[\s>]/i.test(body) ? body : '');
+  const byLang = {python: 'py', py: 'py', go: 'go', javascript: 'js', js: 'js', ts: 'ts', css: 'css', json: 'json', html: 'html'};
+  const ext = html && whole ? 'html' : byLang[(whole?.[1] || '').toLowerCase()] || (html ? 'html' : card.owner === 'writer' ? 'md' : 'txt');
+  return {body: ext === 'html' && html ? html : body, html, ext};
 }
 
-function openReader(cardId) {
-  activeCardId = cardId;
-  showingRaw = false;
-  showingPreview = false;
-  $('reader-toggle-raw').textContent = 'Diagnostics';
-  $('reader-preview').textContent = '🌐 Live Preview';
-  $('reader-drawer').hidden = false;
-  lastReaderSig = '';
-  updateReader();
+const goalTitle = goal => goal.requirements.trim().split('\n')[0].slice(0, 80);
+const goalCards = goal => {
+  const all = board.cards.filter(c => c.goal === goal.id), tasks = all.filter(c => c.kind === 'task');
+  return tasks.length ? tasks : all;
+};
+const currentGoal = () => board.goals.find(g => g.id === goalId);
+function currentCard(goal) {
+  const cards = goalCards(goal);
+  return cards.find(c => c.id === cardId) || [...cards].reverse().find(c => c.output) || cards[0];
 }
 
-function closeReader() {
-  activeCardId = null;
-  lastReaderSig = '';
-  $('reader-drawer').hidden = true;
+function emptyMessage(card) {
+  return {
+    'In Progress': 'The assistant is working on this. The result appears here when it finishes.',
+    'Needs Your Approval': 'Waiting for your approval (see buttons above).',
+    'Blocked': 'No result yet. See the message above.',
+    'Review': 'Result is being checked.'
+  }[card.status] || 'Queued. The assistant picks this up shortly.';
 }
 
-$('reader-close').addEventListener('click', closeReader);
-$('reader-backdrop').addEventListener('click', closeReader);
-window.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('reader-drawer').hidden) closeReader(); });
+function cardNotice(card) {
+  const last = card.history.length ? card.history[card.history.length - 1].text : '';
+  if (card.status === 'Blocked') return 'Needs attention: ' + last;
+  if (card.status === 'Needs Your Approval') return card.gate === 'done' ? 'Review the result below, then approve or reject it.' : 'This task is waiting for your approval before it runs.';
+  return '';
+}
 
-$('reader-toggle-raw').addEventListener('click', () => {
-  showingRaw = !showingRaw;
-  showingPreview = false;
-  $('reader-toggle-raw').textContent = showingRaw ? 'Formatted' : 'Diagnostics';
-  lastReaderSig = '';
-  updateReader();
-});
-
-$('reader-preview').addEventListener('click', () => {
-  showingPreview = !showingPreview;
-  showingRaw = false;
-  $('reader-toggle-raw').textContent = 'Diagnostics';
-  lastReaderSig = '';
-  updateReader();
-});
-
-$('reader-copy').addEventListener('click', async () => {
-  const card = board.cards.find(c => c.id === activeCardId);
-  if (!card) return;
-  const res = extractResult(card);
-  let content = showingRaw ? (res.raw || res.text) : (res.text || res.raw);
-  const match = /```(?:html|python|go|javascript|ts)?\n([\s\S]*?)```/i.exec(content);
-  if (match) content = match[1];
-  const btn = $('reader-copy');
-  try {
-    await navigator.clipboard.writeText(content);
-    btn.textContent = 'Copied!';
-    setTimeout(() => { btn.textContent = 'Copy'; }, 1500);
-  } catch (_) {
-    const ta = document.createElement('textarea');
-    ta.value = content;
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand('copy');
-    document.body.removeChild(ta);
-    btn.textContent = 'Copied!';
-    setTimeout(() => { btn.textContent = 'Copy'; }, 1500);
-  }
-});
-
-$('reader-download').addEventListener('click', () => {
-  const card = board.cards.find(c => c.id === activeCardId);
-  if (!card) return;
-  const res = extractResult(card);
-  let content = showingRaw ? (res.raw || res.text) : (res.text || res.raw);
-  let ext = 'txt';
-  if (card.owner === 'landing-page' || /<!DOCTYPE html|<html[\s>]/i.test(content)) ext = 'html';
-  else if (card.owner === 'code-writer') {
-    if (/import (?:sys|os|json|requests)|def |print\(/i.test(content)) ext = 'py';
-    else if (/package |func main\(/i.test(content)) ext = 'go';
-    else if (/function |const |let |console\.log/i.test(content)) ext = 'js';
-  } else if (card.owner === 'writer') ext = 'md';
-
-  const match = new RegExp('```(?:' + ext + ')?\n([\\s\\S]*?)```', 'i').exec(content);
-  if (match) content = match[1];
-
-  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  const titleSlug = (card.title || 'deliverable').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'deliverable';
-  a.href = url;
-  a.download = `${titleSlug}.${ext}`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-});
-
-function cardMarkup(card) {
-  const history = card.history.map(item => `<p>${escape(new Date(item.at).toLocaleString())} · ${escape(item.actor)}<br>${escape(item.text)}</p>`).join('');
+function cardButtons(card) {
   const button = (action, label, cls) => `<button type="button" class="${cls}" data-card="${card.id}" data-action="${action}">${label}</button>`;
-  let actions = '';
-  if (card.status === 'Needs Your Approval') {
-    actions = `<div class="card-action-row">${button('approve', '✓ Approve', 'btn-approve')}${button('reject', '✕ Reject', 'btn-reject')}</div>`;
-  } else if (card.status === 'Blocked') {
-    actions = `<div class="card-action-row">${button('retry', '↺ ' + (card.phase === 'verify' ? 'Retry Review' : 'Retry Task'), 'btn-retry')}</div>`;
+  if (card.status === 'Needs Your Approval') return button('approve', 'Approve', 'btn-approve') + button('reject', 'Reject', 'btn-reject');
+  if (card.status === 'Blocked') return button('retry', card.phase === 'verify' ? 'Retry review' : 'Try again', 'btn-retry');
+  return '';
+}
+
+function renderResult() {
+  const goal = currentGoal();
+  $('result-empty').hidden = !!goal;
+  $('result-view').hidden = !goal;
+  if (!goal) return;
+  const cards = goalCards(goal), card = currentCard(goal), res = extractResult(card), file = deliverable(card, view === 'raw');
+  const worker = goal.workers[0], bot = assistants[worker]?.label || worker;
+  const updated = card.history.length ? new Date(card.history[card.history.length - 1].at).toLocaleString() : '';
+  $('reader-title').textContent = goal.direct ? goalTitle(goal) : card.title || goalTitle(goal);
+  $('reader-meta').innerHTML = `<strong>${escape(bot)}</strong>${statusBadge(card)}<span>Updated ${escape(updated)}</span>`;
+  $('task-tabs').innerHTML = cards.length > 1 ? cards.map(c => `<button type="button" data-tab="${c.id}" aria-current="${c.id === card.id}">${escape(c.title)} ${statusBadge(c)}</button>`).join('') : '';
+  const notice = cardNotice(card);
+  $('card-alert').hidden = !notice;
+  $('card-alert').textContent = notice;
+  $('card-actions').innerHTML = cardButtons(card);
+  $('reader-preview').hidden = !file.html;
+  $('reader-preview').textContent = view === 'preview' ? 'Show text' : 'Live preview';
+  $('reader-toggle-raw').textContent = view === 'raw' ? 'Formatted' : 'Diagnostics';
+  $('reader-copy').disabled = $('reader-download').disabled = !res.text;
+  $('chat-form').hidden = !(card.status === 'Done' || card.status === 'Blocked');
+  $('reader-iframe').hidden = view !== 'preview' || !file.html;
+  $('reader-raw').hidden = view !== 'raw';
+  $('reader-formatted').hidden = view !== 'formatted';
+  if (!$('reader-iframe').hidden) $('reader-iframe').srcdoc = file.html;
+  $('reader-raw').textContent = res.raw || 'No raw output recorded.';
+  $('reader-formatted').innerHTML = res.text ? formatContent(res.text) : `<p>${escape(emptyMessage(card))}</p>`;
+  $('usage').textContent = `Tokens ${goal.tokens}/${goal.token_limit} · Runs ${goal.runs}/${goal.run_limit}`;
+  $('history').innerHTML = card.history.map(item => `<p>${escape(new Date(item.at).toLocaleString())} · ${escape(item.actor)}<br>${escape(item.text)}</p>`).join('');
+  if (editing !== goal.id) {
+    const form = $('settings-form');
+    for (const [name] of settingFields) form.elements[name].value = goal[name];
+    for (const [name] of settingRules) form.elements[name].checked = goal.rules[name];
+    editing = goal.id;
   }
-  return `<article class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem">
-      <h3 style="margin:0">${escape(card.title)}</h3>
-      ${statusBadge(card)}
-    </div>
-    <p>Assistant: <strong>${escape(card.owner)}</strong> · ${escape(card.phase)}</p>
-    <button type="button" class="btn-view-result" data-view-result="${card.id}">👁️ View Deliverable</button>
-    <details id="card-${card.id}">
-      <summary>Requirements &amp; History</summary>
-      <p>Requirements</p><pre>${escape(card.requirements)}</pre>
-      <p>Acceptance</p><pre>${escape(card.acceptance)}</pre>
-      <p>Jobs: ${escape((card.jobs || []).join(', ') || card.job || 'Waiting')}</p>
-      <div class="history">${history}</div>
-    </details>${actions}
-  </article>`;
+}
+
+function renderList() {
+  $('work-list').innerHTML = [...board.goals].reverse().map(g => {
+    const worker = g.workers[0], owner = assistants[worker]?.label || worker;
+    return `<button type="button" class="work-item" data-goal="${g.id}" aria-current="${g.id === goalId}"><span>${escape(goalTitle(g))}<small>${escape(owner)}</small></span>${badge(g.status)}</button>`;
+  }).join('') || '<p>Nothing yet.</p>';
+}
+
+function renderBoard() {
+  if (!$('board-view').open) return;
+  $('board').innerHTML = states.map(status => {
+    const cards = board.cards.filter(c => c.status === status);
+    return `<section class="column"><h3>${status} · ${cards.length}</h3>${cards.map(c => `<article class="card"><strong>${escape(c.title)}</strong><br><small>${escape(c.owner)}</small><button type="button" data-open="${c.id}" data-goal="${c.goal}">Open</button></article>`).join('')}</section>`;
+  }).join('');
 }
 
 function draw() {
-  const selected=$('goal').value, goal=board.goals.find(g=>g.id===selected);
-  const signature=JSON.stringify([selected,board]);
-  if(signature===rendered) {
-    if (!$('reader-drawer').hidden && activeCardId) {
-      const card = board.cards.find(c => c.id === activeCardId);
-      if (card) {
-        const sig = card.id + '|' + (card.output || '') + '|' + card.status + '|' + card.phase + '|' + showingRaw + '|' + showingPreview;
-        if (sig !== lastReaderSig) { lastReaderSig = sig; updateReader(); }
-      }
-    }
-    return;
-  }
-  rendered=signature;
-  const open=new Set([...document.querySelectorAll('#board details[open]')].map(d=>d.id));
-  $('goal').innerHTML='<option value="">All projects</option>'+board.goals.map(g=>`<option value="${g.id}">${escape(g.requirements.slice(0,90))}</option>`).join('');$('goal').value=selected;
-  $('board').innerHTML=states.map(status=>{
-    const cards=board.cards.filter(c=>c.status===status && (!selected||c.goal===selected));
-    return `<section class="column"><h2>${status} · ${cards.length}</h2>${cards.map(cardMarkup).join('') || '<p style="color:#5c6f84;font-size:0.85rem">No tasks</p>'}</section>`;
-  }).join('');
-  for(const id of open) if($(id)) $(id).open=true;
-  $('goal-panel').hidden=!goal;
-  $('usage').textContent=goal?`${goal.status} · Priority ${goal.priority} · Tokens ${goal.tokens}/${goal.token_limit} · Runs ${goal.runs}/${goal.run_limit}`:'Select a project to inspect history and chat.';
-  if(goal) {
-    if(editing!==goal.id) {
-      const form=$('settings-form');for(const name of ['priority','token_limit','run_limit','run_tokens','seconds','tool_calls']) form.elements[name].value=goal[name];
-      for(const name of ['before_work','before_done','tools']) form.elements[name].checked=goal.rules[name];editing=goal.id;
-    }
-    const chat=$('chat'),atBottom=chat.scrollHeight-chat.scrollTop-chat.clientHeight<40;
-    chat.innerHTML=goal.chat.map(m=>`<p><strong>${escape(m.actor)}</strong> · ${escape(new Date(m.at).toLocaleString())}<br>${escape(m.text)}</p>`).join('');
-    if(atBottom)chat.scrollTop=chat.scrollHeight;
-  }
-  if (!$('reader-drawer').hidden && activeCardId) {
-    const card = board.cards.find(c => c.id === activeCardId);
-    if (card) {
-      const sig = card.id + '|' + (card.output || '') + '|' + card.status + '|' + card.phase + '|' + showingRaw + '|' + showingPreview;
-      if (sig !== lastReaderSig) { lastReaderSig = sig; updateReader(); }
-    }
-  }
+  const signature = JSON.stringify([goalId, cardId, view, board, $('board-view').open]);
+  if (signature === rendered) return;
+  rendered = signature;
+  renderList();
+  renderBoard();
+  renderResult();
+}
+
+function select(id, card = '') {
+  goalId = id; cardId = card; view = 'formatted'; editing = ''; rendered = '';
+  store.set('studio-goal', id);
+  draw();
 }
 
 async function refresh() {
-  if(refreshing)return;refreshing=true;
-  try {const result=await api('board');board=result.board;draw();$('connection').textContent=result.error?'Storage error: '+result.error:'Connected · Ready';}
-  catch(error){$('connection').textContent='Disconnected';$('notice').textContent=error.message;}finally{refreshing=false;}
+  if (refreshing) return;
+  refreshing = true;
+  try {
+    const result = await api('board');
+    board = result.board;
+    if (!currentGoal() && board.goals.length) goalId = board.goals[board.goals.length - 1].id;
+    if (!botsLoaded) await loadAssistants();
+    if (connectionError) notify('');
+    $('connection').className = '';
+    $('connection').textContent = result.error ? 'Storage error: ' + result.error : 'Connected';
+    draw();
+  } catch (error) {
+    $('connection').className = 'bad';
+    $('connection').textContent = 'Offline, retrying…';
+    notify(error.message, true);
+  } finally { refreshing = false; }
 }
 
-async function mutation(button,run) {
-  if (button) button.disabled=true;
-  try{
-    $('notice').textContent='';
+async function mutation(button, run) {
+  if (button) button.disabled = true;
+  try {
+    notify('');
     await run();
     await refresh();
-  }catch(error){
-    $('notice').textContent='⚠️ ' + error.message;
-    alert('Action error: ' + error.message);
-  }finally{
-    if (button) button.disabled=false;
-  }
+  } catch (error) { notify(error.message); }
+  finally { if (button) button.disabled = false; }
 }
 
-$('goal-form').addEventListener('submit',event=>{
+function chooseBot(id) {
+  botId = id; store.set('studio-bot', id);
+  document.querySelectorAll('#assistants button').forEach(b => b.setAttribute('aria-pressed', b.dataset.bot === id));
+  $('prompt-hint').textContent = assistants[id]?.hint || 'Describe what you need:';
+  $('prompt-input').placeholder = assistants[id]?.placeholder || '';
+}
+
+async function loadAssistants() {
+  const bots = (await api('bots')).filter(b => b.compatibility === 'compatible (prompt-only)' && b.bot.id !== 'manager').map(b => b.bot.id);
+  $('assistants').innerHTML = bots.map(id => `<button type="button" data-bot="${escape(id)}" aria-pressed="false">${escape(assistants[id]?.label || id)}<small>${escape(assistants[id]?.about || '')}</small></button>`).join('');
+  botsLoaded = true;
+  chooseBot(bots.includes(botId) ? botId : bots[0]);
+}
+
+$('assistants').addEventListener('click', e => { const b = e.target.closest('button[data-bot]'); if (b) chooseBot(b.dataset.bot); });
+
+$('goal-form').addEventListener('submit', event => {
   event.preventDefault();
-  const form=event.currentTarget;
-  mutation(event.submitter,async()=>{
-    const data=new FormData(form);
-    const goal=await api('goals',{...settings(form),requirements:data.get('requirements'),manager:data.get('manager'),workers:data.getAll('workers')});
+  const form = event.currentTarget, plan = $('plan-mode').checked;
+  mutation(event.submitter, async () => {
+    if (!botId) throw Error('No assistant is available yet. Install a bot package first.');
+    const goal = await api('goals', {...settings(form), requirements: new FormData(form).get('requirements'), direct: !plan, manager: plan ? 'manager' : '', workers: [botId]});
+    $('prompt-input').value = '';
     board.goals.push(goal);
-    rendered='';
-    draw();
-    $('goal').value=goal.id;
-    draw();
+    select(goal.id);
   });
 });
+$('prompt-input').addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) $('goal-form').requestSubmit(); });
 
-$('goal').addEventListener('change',draw);
-$('settings-form').addEventListener('submit',event=>{event.preventDefault();mutation(event.submitter,async()=>{await api(`goals/${$('goal').value}/settings`,settings(event.currentTarget));editing='';});});
-$('chat-form').addEventListener('submit',event=>{
+$('work-list').addEventListener('click', e => { const b = e.target.closest('button[data-goal]'); if (b) select(b.dataset.goal); });
+$('task-tabs').addEventListener('click', e => { const b = e.target.closest('button[data-tab]'); if (b) { cardId = b.dataset.tab; view = 'formatted'; rendered = ''; draw(); } });
+$('board').addEventListener('click', e => { const b = e.target.closest('button[data-open]'); if (b) { select(b.dataset.goal, b.dataset.open); $('result-panel').scrollIntoView({behavior: 'smooth'}); } });
+$('board-view').addEventListener('toggle', () => { rendered = ''; draw(); });
+
+for (const [id, mode] of [['reader-preview', 'preview'], ['reader-toggle-raw', 'raw']]) {
+  $(id).addEventListener('click', () => { view = view === mode ? 'formatted' : mode; rendered = ''; draw(); });
+}
+
+$('reader-copy').addEventListener('click', async () => {
+  const card = currentCard(currentGoal()), button = $('reader-copy'), {body} = deliverable(card, view === 'raw');
+  try { await navigator.clipboard.writeText(body); } catch (_) {
+    const area = Object.assign(document.createElement('textarea'), {value: body});
+    document.body.appendChild(area); area.select(); document.execCommand('copy'); area.remove();
+  }
+  button.textContent = 'Copied!';
+  setTimeout(() => { button.textContent = 'Copy'; }, 1500);
+});
+
+$('reader-download').addEventListener('click', () => {
+  const goal = currentGoal(), card = currentCard(goal), {body, ext} = deliverable(card, view === 'raw');
+  const link = Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(new Blob([body], {type: 'text/plain;charset=utf-8'})),
+    download: (goalTitle(goal).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'result') + '.' + ext
+  });
+  document.body.appendChild(link); link.click(); link.remove();
+  URL.revokeObjectURL(link.href);
+});
+
+$('card-actions').addEventListener('click', event => {
+  const button = event.target.closest('button[data-card]');
+  if (button) mutation(button, () => api(`cards/${button.dataset.card}/${button.dataset.action}`, {note: button.dataset.action + ' by user'}));
+});
+
+$('chat-form').addEventListener('submit', event => {
   event.preventDefault();
-  const form=event.currentTarget;
-  mutation(event.submitter,async()=>{
-    await api(`goals/${$('goal').value}/chat`,{text:new FormData(form).get('text')});
+  const form = event.currentTarget, goal = currentGoal(), card = currentCard(goal);
+  mutation(event.submitter, async () => {
+    await api(`goals/${goal.id}/chat`, {text: new FormData(form).get('text')});
+    if (card.status === 'Blocked' || (goal.direct && card.status === 'Done')) await api(`cards/${card.id}/retry`, {note: 'changes requested'});
     form.reset();
+    cardId = card.id;
   });
 });
 
-$('board').addEventListener('click',event=>{
-  const viewBtn = event.target.closest('button[data-view-result]');
-  if (viewBtn) { openReader(viewBtn.dataset.viewResult); return; }
-  const button=event.target.closest('button[data-card]');
-  if(!button)return;
-  const action = button.dataset.action;
-  const cardId = button.dataset.card;
-  const originalLabel = button.textContent;
-  mutation(button, async () => {
-    button.textContent = action === 'approve' ? 'Approving…' : (action === 'reject' ? 'Rejecting…' : 'Retrying…');
-    try {
-      await api(`cards/${cardId}/${action}`, { note: action + ' by user' });
-    } catch (err) {
-      button.textContent = originalLabel;
-      throw err;
-    }
-  });
+$('settings-form').addEventListener('submit', event => {
+  event.preventDefault();
+  mutation(event.submitter, async () => { await api(`goals/${goalId}/settings`, settings(event.currentTarget)); editing = ''; });
 });
 
-// Assistant pill click handler
-document.addEventListener('click', event => {
-  const pill = event.target.closest('.assistant-pill');
-  if (!pill) return;
-  document.querySelectorAll('.assistant-pill').forEach(p => p.classList.remove('active'));
-  pill.classList.add('active');
-  const botId = pill.dataset.bot;
-  if ($('workers')) {
-    Array.from($('workers').options).forEach(opt => {
-      opt.selected = (opt.value === botId);
-    });
-  }
-  if (assistantHints[botId]) {
-    $('prompt-hint').textContent = assistantHints[botId].hint;
-    $('prompt-input').placeholder = assistantHints[botId].placeholder;
-  }
-});
-
-(async()=>{
-  try {
-    const bots=await api('bots');
-    const options=bots.filter(b=>b.compatibility==='compatible (prompt-only)').map(b=>`<option value="${escape(b.bot.id)}">${escape(b.bot.id)}</option>`).join('');
-    $('manager').innerHTML=options;
-    $('workers').innerHTML=options;
-    if(bots.some(b=>b.bot.id==='manager')) $('manager').value='manager';
-
-    // Preselect landing-page if available, otherwise first worker
-    if(bots.some(b=>b.bot.id==='landing-page')) {
-      const landingOpt = Array.from($('workers').options).find(o => o.value === 'landing-page');
-      if (landingOpt) landingOpt.selected = true;
-    } else if ($('workers').options.length) {
-      $('workers').options[0].selected = true;
-    }
-
-    await refresh();
-    setInterval(refresh,2000);
-  } catch(error) {
-    $('notice').textContent=error.message;
-  }
-})();
+refresh();
+setInterval(refresh, 2000);

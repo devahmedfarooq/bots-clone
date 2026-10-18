@@ -1,6 +1,6 @@
 # Bot Studio and Human Deliverables Module
 
-STATUS in-progress; human-facing bot assistant studio, real deliverables, live previews, zero JSON exposure.
+STATUS in-progress; human-facing bot assistant studio, direct runs, real deliverables, live previews, zero JSON exposure.
 
 BOTS:
   landing-page:
@@ -34,34 +34,25 @@ TOOLS_ENHANCEMENT:
     maintain default strict non-overwrite behavior (os.O_EXCL) for contract tests
     auto-create parent directories under granted root
 
+DIRECT_MODE:
+  goal.direct (UI default): no manager plan, no manager review
+  create -> one work card owned by chosen assistant, title = first request line
+  run prompt = request + user follow-ups, asks for deliverable only (no JSON)
+  output: JSON envelope {output} if present else raw text; empty -> Blocked
+  finish -> Done (or Approval gate "done" when before_done rule set)
+  retry allowed on Blocked card or Done direct card ("Send & redo" after follow-up)
+  manager planned mode kept behind Advanced toggle (strict JSON plan/work/verify)
+
 HUMAN_INTERFACE:
-  CREATE_GOAL:
-    input: plain natural language intent textarea
-    assistant_pills: 1-click select (Landing Page, Code, Math, QA, Writer)
-    advanced_parameters: collapsed by default (token budgets, approval rules, manager)
-    submit: starts task without exposing technical schemas
-
-  DELIVERABLE_READER:
-    detect_html: if output contains HTML/CSS/DOCTYPE -> enable Live Preview tab
-    live_preview: isolated sandbox iframe srcdoc rendering landing page
-    code_view: syntax-styled code view with line numbers and copy
-    download: one-click file download (.html, .py, .go, .md, .txt)
-    hide_technical: raw JSON, token numbers and internal IDs hidden unless user clicks Diagnostics
-
-  CARD_ACTIONS_AND_AUTONOMY:
-    default_rules:
-      before_work: false
-      before_done: false
-      tools: false
-      note: manager bot handles planning and verification autonomously; human approval only when explicitly requested
-    card_buttons:
-      approve: direct POST /api/cards/{id}/approve (no blocking browser prompt dialog)
-      reject: direct POST /api/cards/{id}/reject (no blocking browser prompt dialog)
-      retry: direct POST /api/cards/{id}/retry
-      visuals: distinctive green approve and red reject styling
-    token_persistence:
-      dual_storage: sync token between sessionStorage and localStorage to survive page refresh
-
-  CHAT_SUBMIT:
-    capture submitting form before asynchronous mutation
-    POST text from that form; reset only after successful response
+  LAYOUT: left = Assign a task (Assign to buttons, request box, Ctrl+Enter, Advanced) + My work list;
+          right = Result for selected request; Board view (kanban) collapsed, optional
+  STATUS_WORDS: Queued | Working | Checking | Needs your OK | Needs attention | Done
+  RESULT: formatted text (line breaks kept), Copy, Download (ext by content), Live preview when HTML,
+          Diagnostics = raw output; blocked reason + Try again; approvals as Approve/Reject buttons
+  PREVIEW: iframe sandbox="allow-scripts" only (opaque origin, cannot reach token)
+  CONNECTION: Connected | Offline, retrying (poll continues); 401 -> explain reopening bots serve link
+  ERRORS: shown in notice region, never alert(); typed text retained on failure
+  STATE: newest request auto-selected; selection + assistant remembered in localStorage (optional)
+  POLLING: re-render only when board signature changes; chat/settings forms are outside re-rendered areas
+  TOKEN: sessionStorage + localStorage
+  CHAT_SUBMIT: capture submitting form before async mutation; reset only after success
