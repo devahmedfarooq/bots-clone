@@ -78,3 +78,9 @@ WORKER_PROMPT (delegated and direct):
   reply = the deliverable itself; plain text accepted as result; JSON {"status":"question|blocked"} for genuine blockers
   files: if saving, overwrite:true and still include full content in reply
 UI_DEFAULT_BUDGETS: tokens per run 24000 (bots allow 24000), total 120000; reservations are serial and refunded
+
+REVIEW_PROMPT:
+  reviewer sees: goal, task, the worker output once, and compact tool evidence
+  tool evidence for file-write = path, status, byte count (never the file content, already in the output)
+  other tools = name, path, status, first 200 chars of result
+  reason: repeating a saved file in the review prompt doubled its size and exceeded the 8192 context

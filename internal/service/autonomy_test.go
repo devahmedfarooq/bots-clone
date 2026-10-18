@@ -533,3 +533,13 @@ func TestGoalGetsPrivateWorkspaceAndVersionedDeliverableCounts(t *testing.T) {
 		t.Fatal("clients must not be able to set the workspace")
 	}
 }
+
+func TestReviewEvidenceDoesNotRepeatFileContents(t *testing.T) {
+	big := strings.Repeat("<p>assignment answer</p>", 400)
+	args, _ := json.Marshal(map[string]any{"path": "out/index.html", "content": big})
+	event, _ := json.Marshal(map[string]any{"kind": "tool_finished", "call": map[string]any{"function": map[string]any{"name": "file-write", "arguments": string(args)}}, "result": map[string]any{"output": "created out/index.html"}})
+	got := toolEvidence(event)
+	if len(got) > 100 || !strings.Contains(got, "out/index.html") || !strings.Contains(got, "9600 bytes") || strings.Contains(got, "assignment answer") {
+		t.Fatalf("evidence repeats content or lacks facts: %q", got)
+	}
+}

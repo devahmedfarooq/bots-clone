@@ -14,7 +14,9 @@ import (
 	"time"
 
 	"bots/internal/config"
+	"bots/internal/provider"
 	"bots/internal/state"
+	"bots/internal/tools"
 )
 
 const (
@@ -738,4 +740,29 @@ func exampleOwner(workers []string) string {
 		return "writer"
 	}
 	return workers[0]
+}
+
+// toolEvidence summarizes a finished tool call for review; file contents are already in the reviewed output.
+func toolEvidence(event json.RawMessage) string {
+	var e struct {
+		Call   provider.Call `json:"call"`
+		Result tools.Result  `json:"result"`
+	}
+	if json.Unmarshal(event, &e) != nil {
+		return "unreadable tool event"
+	}
+	var args tools.FileArgs
+	_ = json.Unmarshal([]byte(e.Call.Function.Arguments), &args)
+	status := "ok"
+	if e.Result.Error != nil {
+		status = "error " + e.Result.Error.Code + ": " + e.Result.Error.Message
+	}
+	if e.Call.Function.Name == "file-write" {
+		return fmt.Sprintf("file-write %s: %s (%d bytes)", args.Path, status, len(args.Content))
+	}
+	output := e.Result.Output
+	if len(output) > 200 {
+		output = output[:200] + "..."
+	}
+	return fmt.Sprintf("%s %s: %s %s", e.Call.Function.Name, args.Path, status, output)
 }
