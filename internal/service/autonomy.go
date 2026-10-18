@@ -660,7 +660,7 @@ func (a *Autonomy) prompt(b Board, g Goal, c Card) string {
 	}
 	switch c.Phase {
 	case "plan":
-		base += `Break the goal into the FEWEST tasks that fully deliver it, in execution order: one task for a simple request such as a poem, post, page or answer. Add research or file tasks only when the goal needs them. Never require saving files unless the goal asks for a file; the deliverable itself is returned as the task result. A question, idea, suggestion or write-up request is ONE task whose requirements restate the goal itself; never make a task whose only job is to make a plan unless the user asked for a plan. Each task's owner must be exactly one of these workers; choose the one whose description fits the task, use writer when unsure, and never use manager:` + "\n" + a.workerList(g) + "\n" + `Each task must contain a complete input and testable acceptance. Every task needs all four fields as plain strings, including owner. Do not write the deliverable itself in the plan; workers produce it. Example: {"tasks":[{"title":"Write the poem","requirements":"Write a 3-stanza poem about rain.","acceptance":"The reply contains a 3-stanza poem about rain.","owner":"` + exampleOwner(g.Workers) + `"}]}`
+		base += `Break the goal into the fewest tasks that fully deliver it, in execution order. One task is normal: a poem, post, page, idea, suggestion or answer is ONE task whose requirements restate what the user asked for with all their details. Add more tasks only when different specialists are truly needed. Never add a task whose only job is to make a plan unless the user asked for a plan. Workers write the deliverable themselves, so never put the deliverable in the plan, and never require saving files unless the goal asks for a file. Each task has a short title, requirements (what to produce), acceptance (how to check the result) and an owner. The owner must be exactly one of these workers; choose the one whose description fits, use writer when unsure, and never use manager:` + "\n" + a.workerList(g) + "\n" + `Reply as JSON with a tasks array.`
 		if c.Feedback != "" {
 			base += "\nYour previous plan was rejected: " + c.Feedback + ". Return a corrected plan."
 		}
@@ -762,13 +762,6 @@ func flatten(v any) string {
 		return fmt.Sprint(x)
 	}
 	return strings.Join(parts, "; ")
-}
-
-func exampleOwner(workers []string) string {
-	if slices.Contains(workers, "writer") {
-		return "writer"
-	}
-	return workers[0]
 }
 
 // toolEvidence summarizes a finished tool call for review; file contents are already in the reviewed output.
