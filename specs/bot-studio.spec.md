@@ -67,3 +67,8 @@ MANAGER_DELEGATION:
     second problem -> Blocked with specific reason and original output; never remap owners silently
   FINAL_RESULT: when >=2 subtasks all Done -> tab "Final result" = outputs in task order under task titles (no model call)
   PROGRESS: "N of M subtasks done" from card statuses; no invented percentages
+
+ACCESS:
+  no login/token: server listens on loopback only
+  kept checks: exact Host, same-origin Origin, reject Sec-Fetch-Site cross-site, JSON/form content type on POST
+  consequence: any local process or user on this machine can use the API

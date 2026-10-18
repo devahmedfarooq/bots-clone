@@ -17,7 +17,7 @@ $stderr = Join-Path $testRoot 'stderr.log'
 $process = $null
 $completed = $false
 function Request($Path, $Data) {
-    $params = @{ Uri = "http://127.0.0.1:$Port/api/$Path"; Headers = @{ Authorization = "Bearer $script:serviceToken" }; TimeoutSec = 240 }
+    $params = @{ Uri = "http://127.0.0.1:$Port/api/$Path"; TimeoutSec = 240 }
     if ($null -ne $Data) { $params.Method = 'Post'; $params.ContentType = 'application/json'; $params.Body = $Data | ConvertTo-Json -Depth 20 -Compress }
     Invoke-RestMethod @params
 }
@@ -42,7 +42,7 @@ try {
     do {
         if ($process.HasExited) { throw ('Service exited: ' + (Get-Content $stderr -Raw)) }
         $log = Get-Content $stderr -Raw -ErrorAction SilentlyContinue
-        if ($log -match '#token=([a-f0-9]{64})') { $script:serviceToken = $Matches[1]; break }
+        if ($log -match 'Local dashboard:') { $script:serviceToken = $true; break }
         Start-Sleep -Milliseconds 100
     } while ((Get-Date) -lt $deadline)
     if (!$script:serviceToken) { throw 'Service startup timed out' }
@@ -57,7 +57,7 @@ try {
     if ($job.status -ne 'completed') { throw ('Extraction failed: ' + $job.error) }
     $invoice = $job.run.output | ConvertFrom-Json
     if ($invoice.invoice_number -ne 'INV-104' -or $invoice.total -ne 149.50 -or $invoice.currency -ne 'USD') { throw 'Unexpected invoice output' }
-    $sse = Invoke-WebRequest -UseBasicParsing -Uri "http://127.0.0.1:$Port/api/jobs/$($job.id)/events" -Headers @{ Authorization = "Bearer $script:serviceToken" } -TimeoutSec 10
+    $sse = Invoke-WebRequest -UseBasicParsing -Uri "http://127.0.0.1:$Port/api/jobs/$($job.id)/events" -TimeoutSec 10
     if ($sse.Content -notmatch 'event: job' -or $sse.Content -notmatch 'completed') { throw 'SSE terminal event missing' }
     $cancelled = Request 'jobs' @{ bot = 'workspace-qa'; input = 'Read project.txt and explain every detail at length.' }
     Request "jobs/$($cancelled.id)/cancel" @{} | Out-Null

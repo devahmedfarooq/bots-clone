@@ -8,8 +8,7 @@ const session = JSON.parse(await readFile('.local/service-smoke-session.json', '
 const localRoot = path.resolve(project, '.local') + path.sep;
 assert(path.resolve(session.root).startsWith(localRoot), 'Test state must be inside .local');
 const log = await readFile(path.join(session.root, 'stderr.log'), 'utf8');
-const token = log.match(/#token=([a-f0-9]{64})/)?.[1];
-assert(token, 'Start scripts/test-service.ps1 -KeepRunning first');
+assert(log.includes('Local dashboard:'), 'Start scripts/test-service.ps1 -KeepRunning first');
 const url = `http://127.0.0.1:${session.port}`;
 const profile = path.join(session.root, 'ui-test-profile');
 await mkdir(profile, { recursive: true });
@@ -46,7 +45,7 @@ try {
     clearTimeout(entry.timer); pending.delete(message.id);
     if (message.error) entry.reject(Error(message.error.message)); else entry.resolve(message.result);
   };
-  const target = await send('Target.createTarget', { url: `${url}/#token=${token}` });
+  const target = await send('Target.createTarget', { url: `${url}/board` });
   const attached = await send('Target.attachToTarget', { targetId: target.targetId, flatten: true });
   async function evaluate(expression) {
     const result = await send('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true }, attached.sessionId);

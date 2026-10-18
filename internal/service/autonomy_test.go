@@ -370,17 +370,16 @@ func TestDispatchKeyDedupAcrossRestart(t *testing.T) {
 	}
 }
 
-func TestBoardAPIAuthenticationAndValidation(t *testing.T) {
+func TestBoardAPIValidation(t *testing.T) {
 	a, _ := testAutonomy(t)
 	s := &Server{Autonomy: a}
 	mux := http.NewServeMux()
 	s.autonomyRoutes(mux)
-	handler := Secure(mux, "127.0.0.1:8080", "test")
+	handler := Secure(mux, "127.0.0.1:8080")
 	for _, test := range []struct {
 		path, method, auth, payload string
 		status                      int
 	}{
-		{"/api/board", "GET", "", "", 401},
 		{"/api/board", "GET", "Bearer test", "", 200},
 		{"/board", "GET", "", "", 200},
 		{"/api/goals", "POST", "Bearer test", `{"requirements":"missing settings"}`, 400},

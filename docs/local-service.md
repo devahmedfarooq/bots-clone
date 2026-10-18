@@ -10,7 +10,7 @@ Register a sample through CLI (`bot register bots/extract`) or the dashboard's l
 
 ## API
 
-All `/api/` routes require `Authorization: Bearer TOKEN`. JSON mutations also require `Content-Type: application/json`. Foreign origins and mismatched Host headers are rejected. GET `/api/bots` returns installed bot metadata, compatibility and resolved settings. GET `/api/runs` returns the latest 100 records; GET `/api/runs/ID/trace` returns the ordered local trace.
+The service has no login: it listens on loopback only and relies on exact Host and same-origin checks. JSON mutations also require `Content-Type: application/json`. Foreign origins and mismatched Host headers are rejected. GET `/api/bots` returns installed bot metadata, compatibility and resolved settings. GET `/api/runs` returns the latest 100 records; GET `/api/runs/ID/trace` returns the ordered local trace.
 
 POST `/api/packages` with exactly one of `{"directory":"absolute-or-local-path"}` or `{"archive":"path.zip"}`. POST `/api/jobs` with `{"bot":"extract","input":"Invoice INV-104 from Cedar Supplies. Total USD 149.50."}`. Inspect GET `/api/jobs/ID`, cancel POST `/api/jobs/ID/cancel` with `{}`, or stream authenticated GET `/api/jobs/ID/events`. Events are redacted status/result snapshots, not token fragments. Disconnecting a watcher does not cancel its job. Queue saturation returns HTTP 429.
 

@@ -1,12 +1,12 @@
 package service
 
 import (
-	"crypto/subtle"
 	"net/http"
 	"strings"
 )
 
-func Secure(next http.Handler, host, token string) http.Handler {
+// Secure confines the loopback service: exact Host, same-origin browsers only, strict POST content types.
+func Secure(next http.Handler, host string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("Referrer-Policy", "no-referrer")
@@ -26,11 +26,6 @@ func Secure(next http.Handler, host, token string) http.Handler {
 		}
 		isAPI := strings.HasPrefix(r.URL.Path, "/api/")
 		if isAPI || strings.HasPrefix(r.URL.Path, "/ui/") {
-			provided := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
-			if token == "" || !strings.HasPrefix(r.Header.Get("Authorization"), "Bearer ") || subtle.ConstantTimeCompare([]byte(provided), []byte(token)) != 1 {
-				http.Error(w, "authentication required", http.StatusUnauthorized)
-				return
-			}
 			contentType := "application/x-www-form-urlencoded"
 			if isAPI {
 				contentType = "application/json"

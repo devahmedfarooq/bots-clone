@@ -25,7 +25,7 @@ function Start-ServiceUnderTest {
     do {
         if ($script:process.HasExited) { throw 'Service exited unexpectedly' }
         $log = Get-Content (Join-Path $testRoot 'stderr.log') -Raw -ErrorAction SilentlyContinue
-        if ($log -match '#token=([a-f0-9]{64})') { $script:serviceToken = $Matches[1]; return }
+        if ($log -match 'Local dashboard:') { return }
         Start-Sleep -Milliseconds 100
     } while ((Get-Date) -lt $deadline)
     throw 'Startup timed out'
@@ -38,7 +38,7 @@ function Stop-ServiceUnderTest {
     }
 }
 function Request($Path, $Data) {
-    $params = @{Uri="http://127.0.0.1:$Port/api/$Path"; Headers=@{Authorization="Bearer $script:serviceToken"}; TimeoutSec=30}
+    $params = @{Uri="http://127.0.0.1:$Port/api/$Path"; TimeoutSec=30}
     if ($null -ne $Data) { $params.Method='Post'; $params.ContentType='application/json'; $params.Body=$Data | ConvertTo-Json -Depth 20 -Compress }
     Invoke-RestMethod @params
 }
@@ -71,7 +71,7 @@ try {
     $chrome = 'C:/Program Files/Google/Chrome/Application/chrome.exe'
     if (Test-Path -LiteralPath $chrome) {
         $screenshot = Join-Path $testRoot 'board.png'
-        $browser = Start-Process -FilePath $chrome -ArgumentList @('--headless','--disable-gpu','--no-first-run',('--user-data-dir="' + (Join-Path $testRoot 'chrome') + '"'),'--window-size=1440,1000','--virtual-time-budget=5000',('--screenshot="' + $screenshot + '"'),'--dump-dom',"http://127.0.0.1:$Port/board#token=$script:serviceToken") -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $testRoot 'board.html') -RedirectStandardError (Join-Path $testRoot 'chrome.log')
+        $browser = Start-Process -FilePath $chrome -ArgumentList @('--headless','--disable-gpu','--no-first-run',('--user-data-dir="' + (Join-Path $testRoot 'chrome') + '"'),'--window-size=1440,1000','--virtual-time-budget=5000',('--screenshot="' + $screenshot + '"'),'--dump-dom',"http://127.0.0.1:$Port/board") -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $testRoot 'board.html') -RedirectStandardError (Join-Path $testRoot 'chrome.log')
         if (!$browser.WaitForExit(30000)) { $browser.Kill(); throw 'Browser render timed out' }
         $html = Get-Content (Join-Path $testRoot 'board.html') -Raw
         if ($html -notmatch 'Find|Read|report' -or $html -notmatch 'class="column"' -or $html -notmatch 'Connected') { throw 'Board browser rendering failed' }

@@ -54,7 +54,7 @@ The dashboard uses **HTMX + Tailwind CSS** with centralized Go template componen
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start.ps1
 ```
 
-Open the link printed by the service. It includes a per-start access token; the dashboard removes it from the address bar. Install a trusted local directory or checksummed ZIP, choose a bot, submit a task, inspect output/trace, or cancel it. One bounded queue shares the GPU. The service listens only on loopback and runs offline after setup. Ctrl+C stops it.
+Open the link printed by the service (no login needed). Install a trusted local directory or checksummed ZIP, choose a bot, submit a task, inspect output/trace, or cancel it. One bounded queue shares the GPU. The service listens only on loopback and runs offline after setup. Ctrl+C stops it.
 
 Workflows use explicit text/JSON dependencies, checkpoint each transition, and keep bot histories separate. Safe completed/pending checkpoints can resume; uncertain tool actions cannot be replayed automatically. API examples, package format, extension authoring, retention and recovery: [local operating guide](docs/local-service.md). Live laptop and browser evidence: [Phase 3 acceptance](evaluation/phase3-acceptance.json), [dashboard checks](evaluation/dashboard-acceptance.json).
 

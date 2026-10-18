@@ -26,12 +26,11 @@ func TestDashboardEscapesAndRedactsModelOutput(t *testing.T) {
 func TestUIUsesProtectedFragmentsAndBoundedForms(t *testing.T) {
 	q, _, store := testQueue(t, 4)
 	s := &Server{Catalog: q.catalog, Queue: q, Store: store}
-	h := Secure(s.Handler(), "127.0.0.1:8080", "fixture-token")
+	h := Secure(s.Handler(), "127.0.0.1:8080")
 	for _, test := range []struct {
 		method, path, auth, content, data string
 		status                            int
 	}{
-		{"GET", "/ui/workspace", "", "", "", 401},
 		{"GET", "/ui/workspace", "Bearer fixture-token", "", "", 200},
 		{"POST", "/ui/jobs", "Bearer fixture-token", "application/json", "{}", 415},
 		{"POST", "/ui/jobs", "Bearer fixture-token", "application/x-www-form-urlencoded", "bot=missing&input=hello", 400},
@@ -63,7 +62,7 @@ func TestFirstBotInstallEnablesTaskSubmission(t *testing.T) {
 		t.Fatal(err)
 	}
 	s := &Server{Catalog: q.catalog, Queue: q, Store: store}
-	h := Secure(s.Handler(), "127.0.0.1:8080", "fixture-token")
+	h := Secure(s.Handler(), "127.0.0.1:8080")
 	request := func(method, path, data string) *httptest.ResponseRecorder {
 		r := httptest.NewRequest(method, "http://127.0.0.1:8080"+path, strings.NewReader(data))
 		r.Header.Set("Authorization", "Bearer fixture-token")

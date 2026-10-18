@@ -1,14 +1,7 @@
-const fragment = new URLSearchParams(location.hash.slice(1));
-if (fragment.has('token')) {
-  sessionStorage.setItem('local-bots-token', fragment.get('token'));
-  try { localStorage.setItem('local-bots-token', fragment.get('token')); } catch (_) {}
-}
-history.replaceState(null, '', location.pathname);
 const store = {
   get: key => { try { return localStorage.getItem(key); } catch (_) { return null; } },
   set: (key, value) => { try { localStorage.setItem(key, value); } catch (_) {} }
 };
-const getToken = () => sessionStorage.getItem('local-bots-token') || store.get('local-bots-token') || '';
 const $ = id => document.getElementById(id);
 const escape = text => String(text ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
@@ -40,12 +33,12 @@ function notify(text, isConnection = false) { $('notice').textContent = text; co
 
 async function api(path, data) {
   const response = await fetch('/api/' + path, {
-    headers: {Authorization: 'Bearer ' + getToken(), ...(data ? {'Content-Type': 'application/json'} : {})},
+    headers: data ? {'Content-Type': 'application/json'} : {},
     ...(data ? {method: 'POST', body: JSON.stringify(data)} : {})
   });
   if (!response.ok) {
     const text = (await response.text()).trim();
-    throw Error(response.status === 401 ? 'Access key missing or expired. Close this tab and open the link printed by "bots serve".' : text || 'Request failed (' + response.status + ').');
+    throw Error(text || 'Request failed (' + response.status + ').');
   }
   return response.json();
 }
