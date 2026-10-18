@@ -41,6 +41,22 @@ func body(w http.ResponseWriter, r *http.Request, v any) error {
 func (s *Server) Handler() http.Handler {
 	m := http.NewServeMux()
 	m.Handle("GET /", dashboard())
+	m.HandleFunc("POST /api/route", func(w http.ResponseWriter, r *http.Request) {
+		var req struct {
+			Input string `json:"input"`
+			Bot   string `json:"bot,omitempty"`
+		}
+		if err := body(w, r, &req); err != nil {
+			problem(w, err)
+			return
+		}
+		route, err := s.Catalog.Route(req.Input, req.Bot)
+		if err != nil {
+			problem(w, err)
+			return
+		}
+		respond(w, 200, route)
+	})
 	if s.Workflows != nil {
 		m.HandleFunc("POST /api/workflows/{id}/resume", func(w http.ResponseWriter, r *http.Request) {
 			f, err := s.Workflows.Resume(r.PathValue("id"))

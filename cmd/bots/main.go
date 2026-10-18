@@ -129,6 +129,22 @@ func execute(ctx context.Context, args []string) error {
 	}
 	reg := registry.Registry{Dir: filepath.Join(c.Home, "bots")}
 	catalog := application.Catalog{Registry: reg, Model: c.Engine.ModelID}
+	if args[0] == "route" {
+		f := flags("route")
+		input := f.String("input", "", "task with explicit @bot mentions")
+		bot := f.String("bot", "", "explicit bot ID")
+		if e = f.Parse(args[1:]); e != nil {
+			return e
+		}
+		if f.NArg() != 0 {
+			return errors.New("unexpected route arguments")
+		}
+		result, e := catalog.Route(*input, *bot)
+		if e != nil {
+			return e
+		}
+		return write(result)
+	}
 	if args[0] == "serve" {
 		return serve(ctx, c, catalog, args[1:])
 	}
