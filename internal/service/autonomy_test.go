@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"bots/internal/provider"
+	"bots/internal/state"
 )
 
 type boardEngine struct {
@@ -541,5 +542,29 @@ func TestReviewEvidenceDoesNotRepeatFileContents(t *testing.T) {
 	got := toolEvidence(event)
 	if len(got) > 100 || !strings.Contains(got, "out/index.html") || !strings.Contains(got, "9600 bytes") || strings.Contains(got, "assignment answer") {
 		t.Fatalf("evidence repeats content or lacks facts: %q", got)
+	}
+}
+
+func TestVerifyPromptCarriesFileOnceNotInToolEvidence(t *testing.T) {
+	a, _ := testAutonomy(t)
+	if _, err := a.Create(goalRequest()); err != nil {
+		t.Fatal(err)
+	}
+	b, _ := a.Snapshot()
+	big := strings.Repeat("<p>assignment answer</p>", 400)
+	args, _ := json.Marshal(map[string]any{"path": "out/index.html", "content": big})
+	run := state.Run{ID: "run-big", Session: "s", Bot: "echo", Status: "completed"}
+	event := map[string]any{"kind": "tool_finished", "call": map[string]any{"function": map[string]any{"name": "file-write", "arguments": string(args)}}, "result": map[string]any{"output": "created out/index.html"}}
+	if err := a.q.runner.Store.Event(run.ID, event); err != nil {
+		t.Fatal(err)
+	}
+	a.q.mu.Lock()
+	a.q.jobs["job-big"] = Job{ID: "job-big", Bot: "echo", Run: &run}
+	a.q.mu.Unlock()
+	c := b.Cards[0]
+	c.Phase, c.Owner, c.Jobs, c.Output = "verify", "echo", []string{"job-big"}, big
+	prompt := a.prompt(b, b.Goals[0], c)
+	if strings.Count(prompt, "assignment answer") != 400 || !strings.Contains(prompt, "file-write out/index.html: ok (9600 bytes)") {
+		t.Fatalf("file content duplicated or evidence missing (copies=%d)", strings.Count(prompt, "assignment answer"))
 	}
 }

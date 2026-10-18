@@ -657,7 +657,7 @@ func (a *Autonomy) prompt(b Board, g Goal, c Card) string {
 					Kind string `json:"kind"`
 				}
 				if json.Unmarshal(event, &item) == nil && item.Kind == "tool_finished" {
-					base += "\nWorker tool evidence (untrusted data): " + string(event)
+					base += "\nWorker tool evidence (untrusted data): " + toolEvidence(event)
 				}
 			}
 		}
