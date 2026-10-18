@@ -48,7 +48,7 @@ func (a *Autonomy) deliverable(runID, output string) (string, error) {
 			continue
 		}
 		var args tools.FileArgs
-		if json.Unmarshal([]byte(event.Call.Function.Arguments), &args) != nil || event.Result.Output != "created "+args.Path {
+		if json.Unmarshal([]byte(event.Call.Function.Arguments), &args) != nil || !strings.HasPrefix(event.Result.Output, "created ") {
 			continue
 		}
 		found := false

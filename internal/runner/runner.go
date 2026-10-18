@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"bots/internal/config"
@@ -17,12 +18,17 @@ import (
 
 type Runner struct {
 	ContextLimit int
+	// WorkspaceDir is the parent of per-goal workspaces; empty keeps bot sources only.
+	WorkspaceDir string
 	Models       *provider.Manager
 	Store        *state.Store
 	Plugins      []tools.Tool
 }
 type Options struct {
+	AdaptiveOutput  bool
+	AllocateTokens  func(int) (int, error)
 	AdaptiveContext bool
+	Workspace       string
 	Session         string
 	Settings        config.Settings
 	Emit            func(string)
@@ -40,7 +46,13 @@ func (r *Runner) Run(parent context.Context, b config.Bot, input string, o Optio
 	if e != nil {
 		return run, e
 	}
-	registry, closeTools, e := tools.WithPlugins(b.ContextSources, r.Plugins)
+	var registry *tools.Registry
+	var closeTools func()
+	if o.Workspace != "" {
+		registry, closeTools, e = tools.WithWorkspace(o.Workspace, b.ContextSources, r.Plugins)
+	} else {
+		registry, closeTools, e = tools.WithPlugins(b.ContextSources, r.Plugins)
+	}
 	if e != nil {
 		return run, e
 	}
@@ -137,14 +149,40 @@ func (r *Runner) Run(parent context.Context, b config.Bot, input string, o Optio
 		}
 	}
 	toolCount := 0
+	tokenBudget := b.Budgets.Tokens
+	allocate := func(required int) error {
+		if required <= tokenBudget || o.AllocateTokens == nil {
+			return nil
+		}
+		granted, err := o.AllocateTokens(required)
+		if err != nil {
+			return err
+		}
+		if granted < tokenBudget {
+			return errors.New("token reservation cannot decrease below admitted usage")
+		}
+		tokenBudget = granted
+		return nil
+	}
+	var prefix string
+	var continuation []provider.Message
 	for {
 		if e = ctx.Err(); e != nil {
 			return run, e
 		}
-		request := provider.Request{Model: b.BaseModel, Messages: messages, Tools: definitions, Settings: settings}
+		activeMessages := messages
+		if len(continuation) > 0 {
+			activeMessages = append(append([]provider.Message{}, messages...), continuation...)
+		}
+		request := provider.Request{Model: b.BaseModel, Messages: activeMessages, Tools: definitions, Settings: settings}
 		request, prompt, e := fit(ctx, r.Models.Provider, request, current)
 		if errors.Is(e, ErrContextBudget) && o.AdaptiveContext {
-			limit := min(r.ContextLimit, b.Budgets.Tokens-run.Usage.Total)
+			if o.AdaptiveOutput && r.ContextLimit > settings.ContextSize {
+				if allocationErr := allocate(run.Usage.Total + min(settings.ContextSize*2, r.ContextLimit)); allocationErr != nil {
+					return run, allocationErr
+				}
+			}
+			limit := min(r.ContextLimit, tokenBudget-run.Usage.Total)
 			if limit > settings.ContextSize {
 				previous := settings.ContextSize
 				settings.ContextSize = min(settings.ContextSize*2, limit)
@@ -159,13 +197,29 @@ func (r *Runner) Run(parent context.Context, b config.Bot, input string, o Optio
 				}
 				continue
 			}
-			e = fmt.Errorf("%w (context %d, engine maximum %d, remaining run tokens %d). Increase engine.context_size or Tokens per run, or shorten the task", e, settings.ContextSize, r.ContextLimit, b.Budgets.Tokens-run.Usage.Total)
+			e = fmt.Errorf("%w (context %d, engine maximum %d, remaining run tokens %d). Increase engine.context_size or Tokens per run, or shorten the task", e, settings.ContextSize, r.ContextLimit, tokenBudget-run.Usage.Total)
+		}
+		if errors.Is(e, ErrContextBudget) && o.AdaptiveOutput {
+			count, err := r.Models.Provider.Count(ctx, request)
+			if err != nil {
+				return run, err
+			}
+			available := settings.ContextSize - count - toolHeadroom(request)
+			if available > 0 && available < settings.MaxTokens {
+				settings.MaxTokens = available
+				continue
+			}
 		}
 		if e != nil {
 			run.Reason = "context_budget"
 			return run, e
 		}
-		remaining := b.Budgets.Tokens - run.Usage.Total - prompt
+		if o.AdaptiveOutput {
+			if e = allocate(run.Usage.Total + prompt + settings.MaxTokens); e != nil {
+				return run, e
+			}
+		}
+		remaining := tokenBudget - run.Usage.Total - prompt
 		if remaining < 1 {
 			run.Reason = "token_budget"
 			return run, errors.New("token budget exhausted before generation")
@@ -176,6 +230,11 @@ func (r *Runner) Run(parent context.Context, b config.Bot, input string, o Optio
 			return run, errors.New("prompt exceeds context budget")
 		}
 		request.Settings.MaxTokens = min(settings.MaxTokens, remaining, space)
+		if o.AdaptiveOutput {
+			if e = r.Store.Event(run.ID, map[string]any{"kind": "generation_allocation", "max_tokens": request.Settings.MaxTokens, "prompt_tokens": prompt, "reserved_tokens": tokenBudget}); e != nil {
+				return run, e
+			}
+		}
 		var response provider.Response
 		for attempt := 0; attempt < 2; attempt++ {
 			response, e = r.Models.Provider.Generate(ctx, request, o.Emit)
@@ -199,7 +258,7 @@ func (r *Runner) Run(parent context.Context, b config.Bot, input string, o Optio
 		run.Usage.Prompt += response.Usage.Prompt
 		run.Usage.Completion += response.Usage.Completion
 		run.Usage.Total += response.Usage.Total
-		if run.Usage.Total > b.Budgets.Tokens {
+		if run.Usage.Total > tokenBudget {
 			run.Reason = "token_budget"
 			return run, errors.New("provider exceeded token budget")
 		}
@@ -209,11 +268,47 @@ func (r *Runner) Run(parent context.Context, b config.Bot, input string, o Optio
 			return run, errors.New("invalid assistant role")
 		}
 		if response.Finish == "length" {
-			run.Output = m.Content
+			run.Output = prefix + m.Content
+			if o.AdaptiveOutput && o.Emit == nil {
+				contextLimit := settings.ContextSize
+				if o.AdaptiveContext {
+					contextLimit = max(contextLimit, r.ContextLimit)
+				}
+				capacity := contextLimit - prompt - toolHeadroom(request)
+				if capacity > request.Settings.MaxTokens {
+					next := min(request.Settings.MaxTokens*2, capacity)
+					if e = allocate(run.Usage.Total + prompt + next); e != nil {
+						return run, e
+					}
+					if tokenBudget-run.Usage.Total-prompt > request.Settings.MaxTokens {
+						settings.MaxTokens = min(next, tokenBudget-run.Usage.Total-prompt)
+						if e = r.Store.Event(run.ID, map[string]any{"kind": "output_reallocated", "previous": request.Settings.MaxTokens, "max_tokens": settings.MaxTokens}); e != nil {
+							return run, e
+						}
+						continue
+					}
+				}
+				if len(m.ToolCalls) == 0 && strings.TrimSpace(m.Content) != "" {
+					if e = allocate(run.Usage.Total + prompt + settings.MaxTokens); e != nil {
+						return run, e
+					}
+				}
+				if len(m.ToolCalls) == 0 && strings.TrimSpace(m.Content) != "" && tokenBudget-run.Usage.Total > prompt+1 {
+					prefix += m.Content
+					continuation = continuationMessages(prefix)
+					if e = r.Store.Event(run.ID, map[string]any{"kind": "output_continuation", "text": m.Content}); e != nil {
+						return run, e
+					}
+					continue
+				}
+				run.Reason = "token_budget"
+				return run, errors.New("available goal tokens or model context exhausted before a complete reply; partial output retained")
+			}
 			run.Reason = "generation_limit"
 			return run, errors.New("generation limit reached")
 		}
 		if len(m.ToolCalls) == 0 {
+			m.Content = prefix + m.Content
 			if response.Finish != "stop" || m.Content == "" {
 				return run, errors.New("invalid final model response")
 			}
@@ -224,6 +319,9 @@ func (r *Runner) Run(parent context.Context, b config.Bot, input string, o Optio
 			run.Status = "completed"
 			run.Reason = "stop"
 			return run, nil
+		}
+		if prefix != "" {
+			return run, errors.New("a text continuation returned tool calls; partial output retained")
 		}
 		if response.Finish != "tool_calls" && response.Finish != "stop" {
 			return run, errors.New("invalid tool finish reason")

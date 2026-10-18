@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"maps"
+	"os"
+	"path/filepath"
 	"slices"
 	"sort"
 	"strings"
@@ -58,15 +60,17 @@ type BoardMessage struct {
 type Goal struct {
 	ID string `json:"id"`
 	GoalRequest
-	Versions map[string]string `json:"versions"`
-	Created  time.Time         `json:"created"`
-	Status   string            `json:"status"`
-	Tokens   int               `json:"tokens"`
-	Runs     int               `json:"runs"`
-	Chat     []BoardMessage    `json:"chat"`
+	Workspace string            `json:"workspace,omitempty"`
+	Versions  map[string]string `json:"versions"`
+	Created   time.Time         `json:"created"`
+	Status    string            `json:"status"`
+	Tokens    int               `json:"tokens"`
+	Runs      int               `json:"runs"`
+	Chat      []BoardMessage    `json:"chat"`
 }
 
 type TaskPlan struct {
+	OutputTokens int    `json:"output_tokens,omitempty"`
 	Title        string `json:"title"`
 	Requirements string `json:"requirements"`
 	Acceptance   string `json:"acceptance"`
@@ -229,6 +233,12 @@ func (a *Autonomy) Create(req GoalRequest) (Goal, error) {
 			return Goal{}, err
 		}
 		g.Versions[id] = bot.Version
+	}
+	if base := a.q.runner.WorkspaceDir; base != "" {
+		g.Workspace = filepath.Join(base, g.ID)
+		if err := os.MkdirAll(g.Workspace, 0700); err != nil {
+			return Goal{}, err
+		}
 	}
 	b := cloneBoard(a.board)
 	b.Goals = append(b.Goals, g)
@@ -406,7 +416,7 @@ func (a *Autonomy) dispatch(b Board, i int) error {
 		block(c, "Owner unavailable or version changed. Create a new goal with the current bot version.")
 		return a.save(b)
 	}
-	c.Reserved = min(g.RunTokens, g.TokenLimit-g.Tokens, bot.Budgets.Tokens)
+	c.Reserved = min(g.RunTokens, g.TokenLimit-g.Tokens)
 	g.Tokens += c.Reserved
 	g.Runs++
 	c.Key = state.ID()
@@ -434,8 +444,24 @@ func (a *Autonomy) advance(b Board, i int) error {
 		if c.Phase == "verify" {
 			owner = g.Manager
 		}
+		settings := config.Settings{}
+		if c.Phase == "work" && c.OutputTokens > 0 {
+			bot, err := a.q.catalog.Registry.Get(owner)
+			if err != nil {
+				block(c, err.Error())
+				return a.save(b)
+			}
+			base, _ := config.Resolve(bot.Settings, settings)
+			limit := a.q.runner.ContextLimit
+			if limit == 0 {
+				limit = base.ContextSize
+			}
+			settings.MaxTokens = min(c.OutputTokens, limit-1)
+			settings.ContextSize = max(base.ContextSize, settings.MaxTokens+1)
+		}
+		key := c.Key
 		var err error
-		job, err = a.q.submitOnce(Request{AdaptiveContext: true, Bot: owner, Version: g.Versions[owner], Input: a.prompt(b, *g, *c), ReadOnly: c.Phase != "work", Budgets: &config.Budgets{Tokens: c.Reserved, ToolCalls: g.ToolCalls, Seconds: g.Seconds}}, c.Key)
+		job, err = a.q.submitOnce(Request{AdaptiveOutput: true, AllocateTokens: func(required int) (int, error) { return a.allocateTokens(key, required) }, Settings: settings, AdaptiveContext: true, Workspace: g.Workspace, Bot: owner, Version: g.Versions[owner], Input: a.prompt(b, *g, *c), ReadOnly: c.Phase != "work", Budgets: &config.Budgets{Tokens: c.Reserved, ToolCalls: g.ToolCalls, Seconds: g.Seconds}}, c.Key)
 		if errors.Is(err, ErrQueueFull) {
 			return nil
 		}
@@ -482,7 +508,7 @@ func (a *Autonomy) advance(b Board, i int) error {
 		}
 		tasks := make([]TaskPlan, len(plan.Tasks))
 		for i, t := range plan.Tasks {
-			tasks[i] = TaskPlan{Title: t.Title, Requirements: string(t.Requirements), Acceptance: string(t.Acceptance), Owner: t.Owner}
+			tasks[i] = TaskPlan{Title: t.Title, Requirements: string(t.Requirements), Acceptance: string(t.Acceptance), Owner: t.Owner, OutputTokens: t.OutputTokens}
 		}
 		problem := "the response did not match {\"tasks\":[{\"title\",\"requirements\",\"acceptance\",\"owner\"}]} (" + fmt.Sprint(err) + ")"
 		if err == nil {
@@ -591,7 +617,7 @@ func (a *Autonomy) finishDirect(b Board, i int, output string) error {
 }
 
 func directPrompt(g Goal) string {
-	text := "Complete this task and reply with the finished deliverable only: no JSON, no preamble. If you also save a file, set overwrite:true (an earlier version may exist) and still include the full content in your reply.\n" + g.Requirements
+	text := "Complete this task and reply with the finished deliverable only: no JSON, no preamble. If you also save a file, use a relative path in your goal workspace (an existing name is saved as a new version) and still include the full content in your reply.\n" + g.Requirements
 	for _, m := range g.Chat[1:] {
 		if m.Actor == "user" {
 			text += "\nUser instruction: " + m.Text
@@ -626,7 +652,7 @@ func (a *Autonomy) prompt(b Board, g Goal, c Card) string {
 	}
 	switch c.Phase {
 	case "plan":
-		base += `Break the goal into the FEWEST tasks that fully deliver it, in execution order: one task for a simple request such as a poem, post, page or answer. Add research or file tasks only when the goal needs them. Never require saving files unless the goal asks for a file; the deliverable itself is returned as the task result. Each task's owner must be exactly one of: ` + strings.Join(g.Workers, ", ") + `. Each task must contain a complete input and testable acceptance. Every task needs all four fields as plain strings, including owner. Do not write the deliverable itself in the plan; workers produce it. Example: {"tasks":[{"title":"Write the poem","requirements":"Write a 3-stanza poem about rain.","acceptance":"The reply contains a 3-stanza poem about rain.","owner":"` + exampleOwner(g.Workers) + `"}]}`
+		base += `Break the goal into the FEWEST tasks that fully deliver it, in execution order: one task for a simple request such as a poem, post, page or answer. Add research or file tasks only when the goal needs them. Never require saving files unless the goal asks for a file; the deliverable itself is returned as the task result. Each task's owner must be exactly one of: ` + strings.Join(g.Workers, ", ") + `. Each task must contain a complete input and testable acceptance. Every task needs all four fields as plain strings, including owner. Optionally set output_tokens to choose its starting reply allowance (small for short answers, larger for full code or training tables); omit it or use 0 for automatic allocation. Allowances grow automatically if a reply needs more space. Do not write the deliverable itself in the plan; workers produce it. Example: {"tasks":[{"title":"Write the poem","requirements":"Write a 3-stanza poem about rain.","acceptance":"The reply contains a 3-stanza poem about rain.","owner":"` + exampleOwner(g.Workers) + `"}]}`
 		if c.Feedback != "" {
 			base += "\nYour previous plan was rejected: " + c.Feedback + ". Return a corrected plan."
 		}
@@ -651,7 +677,7 @@ func (a *Autonomy) prompt(b Board, g Goal, c Card) string {
 			}
 		}
 	default:
-		base += `Execute the assigned task within your grants. Reply with the complete deliverable itself (full text or code), never only a file name, summary or plan to do it later. If you also save a file, set overwrite:true (an earlier version may exist) and still include the full content in your reply. Only if you truly cannot proceed, reply with JSON {"status":"question|blocked","message":"what you need"}.`
+		base += `Execute the assigned task within your grants. Reply with the complete deliverable itself (full text or code), never only a file name, summary or plan to do it later. If you also save a file, use a relative path in your goal workspace (an existing name is saved as a new version) and still include the full content in your reply. Only if you truly cannot proceed, reply with JSON {"status":"question|blocked","message":"what you need"}.`
 		for _, other := range b.Cards {
 			if other.Goal == g.ID && other.Status == Done && other.Kind == "task" {
 				base += "\nPrior task " + other.Title + ": " + other.Output
@@ -679,6 +705,9 @@ func planProblem(tasks []TaskPlan, workers []string) string {
 		if !slices.Contains(workers, t.Owner) {
 			return fmt.Sprintf("task %d owner %q is not allowed; use exactly one of: %s", i+1, t.Owner, strings.Join(workers, ", "))
 		}
+		if t.OutputTokens < 0 || t.OutputTokens > 131071 {
+			return fmt.Sprintf("task %d output_tokens must be 0 (automatic) or 1..131071", i+1)
+		}
 		if strings.TrimSpace(t.Title) == "" || strings.TrimSpace(t.Requirements) == "" || strings.TrimSpace(t.Acceptance) == "" || len(t.Title) > 200 || len(t.Requirements) > 8000 || len(t.Acceptance) > 4000 {
 			return fmt.Sprintf("task %d needs a title, requirements and acceptance within size limits", i+1)
 		}
@@ -690,6 +719,7 @@ func planProblem(tasks []TaskPlan, workers []string) string {
 type planText string
 
 type planTask struct {
+	OutputTokens int      `json:"output_tokens,omitempty"`
 	Title        string   `json:"title"`
 	Requirements planText `json:"requirements"`
 	Acceptance   planText `json:"acceptance"`

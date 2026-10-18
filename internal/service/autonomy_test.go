@@ -111,8 +111,8 @@ func TestAutonomousGoalCompletesAndPersists(t *testing.T) {
 		t.Fatal(len(e.requests))
 	}
 	for _, r := range e.requests {
-		if r.Settings.MaxTokens > 90 {
-			t.Fatal("run token cap not enforced")
+		if r.Settings.MaxTokens < 1 || r.Settings.MaxTokens+10 > goalRequest().TokenLimit {
+			t.Fatal("reply allocation exceeds shared goal budget")
 		}
 		if !strings.Contains(r.Messages[len(r.Messages)-1].Content, "Use direct evidence.") {
 			t.Fatal("instruction missing")

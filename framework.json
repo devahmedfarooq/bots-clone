@@ -4,7 +4,7 @@
     "binary": "runtime/llama/llama-server.exe",
     "model_path": "models/Qwen3-1.7B-Q8_0.gguf",
     "model_id": "qwen3-1.7b-q8",
-    "context_size": 8192,
+    "context_size": 16384,
     "device": "Vulkan0",
     "gpu_layers": 99
   }

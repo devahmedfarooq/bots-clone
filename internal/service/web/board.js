@@ -18,7 +18,7 @@ const assistants = {
   'qa-assistant': {label: 'QA', about: 'Reviews and tests', hint: 'Describe what to review or test:', placeholder: 'Review a user registration flow for security edge cases and list test cases.'},
   'writer': {label: 'Writer', about: 'Articles, copy, poems', hint: 'Describe what to write:', placeholder: 'A short poem about the sea, or a product announcement post.'}
 };
-const settingFields = [['priority','Priority (5 highest)',3,1,5],['token_limit','Total token budget',120000,1,10000000],['run_limit','Max runs',30,1,1000],['run_tokens','Tokens per run',24000,1,131072],['seconds','Seconds per run',180,1,3600],['tool_calls','Tool calls per run',6,0,100]];
+const settingFields = [['priority','Priority (5 highest)',3,1,5],['token_limit','Total token budget',120000,1,10000000],['run_limit','Max runs',30,1,1000],['run_tokens','Starting run tokens (manager adjusts)',24000,1,131072],['seconds','Seconds per run',180,1,3600],['tool_calls','Tool calls per run',6,0,100]];
 const settingRules = [['before_work','Ask me before any assistant runs'],['before_done','Ask me to sign off on results'],['tools','Ask me before file/tool use']];
 
 let board = {goals: [], cards: []}, goalId = store.get('studio-goal') || '', cardId = '', botId = '';

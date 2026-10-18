@@ -29,3 +29,9 @@ For crash recovery, run `scripts/supervise.ps1`. It restarts abnormal service ex
 API: GET `/api/board`; POST `/api/goals`; POST `/api/goals/{id}/settings`; POST `/api/goals/{id}/chat` with `{"text":"..."}`; POST `/api/cards/{id}/approve`, `/reject`, `/retry` with `{"note":"..."}`. All mutations require JSON and the existing same-origin checks (no login). Goal creation accepts `requirements`, `manager`, `workers`, `priority`, `token_limit`, `run_limit`, `run_tokens`, `seconds`, `tool_calls`, and `rules` (`before_work`, `before_done`, `tools`).
 
 Module pseudocode: `specs/autonomy.spec.md`. Contract coverage: `go test ./...`. Live model and browser acceptance: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test-autonomy.ps1`. Cleanup preserves autonomous dispatch runs and traces, including their deduplication records.
+
+## Automatic reply allowances
+
+The manager controls worker reply allowances. A package's max_tokens and token budget no longer impose a fixed ceiling on a managed job: max_tokens is a starting hint, and Starting run tokens is an initial reservation. Plans can specify output_tokens for a shorter or longer first reply. The manager reserves extra tokens durably from the goal's remaining pool as needed, refunds unused reservations on completion, and records adjustments in history and traces.
+
+Truncated non-streaming replies are regenerated with a larger allowance. At the model context ceiling, plain-text answers can continue in chunks, with the complete answer assembled before completion. Completed tool calls are retained and are not replayed; incomplete tool arguments are never executed. GPU context capacity, your overall goal budget, deadlines and tool permissions still apply. Ordinary fixed-budget CLI and streaming runs keep their existing limits.

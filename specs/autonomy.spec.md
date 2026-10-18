@@ -67,3 +67,14 @@ PROMPT_CONTEXT:
   send goal requirements, task, relevant output and user instructions
   include worker capabilities for planning; omit operational history, IDs and dispatch telemetry
   keep complete audit history in SQLite, outside the inference prompt
+
+MANAGER_TOKEN_ALLOCATION:
+  run_tokens = starting reservation; package token budgets do not cap managed jobs
+  plan task may request output_tokens; use it as initial completion allowance within engine capacity
+  runner requests more tokens by active dispatch key
+  under autonomy mutex: clone board; grow reservation toward request from unreserved goal pool
+  save reservation and goal token usage atomically BEFORE allowing inference to spend it
+  no grant beyond user goal token_limit; inactive dispatch cannot allocate
+  terminal job refunds all unused reservation; interruption retains uncertain reservation
+  updated settings cannot go below reservations; tool grants, tool caps and deadlines stay intact
+  direct CLI jobs retain their configured fixed budgets and streaming behavior

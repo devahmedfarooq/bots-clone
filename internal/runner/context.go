@@ -22,10 +22,7 @@ func fit(ctx context.Context, p provider.Provider, request provider.Request, cur
 		if e != nil {
 			return request, 0, e
 		}
-		reserve := request.Settings.MaxTokens
-		if len(request.Tools) > 0 {
-			reserve += min(256, request.Settings.ContextSize/8)
-		}
+		reserve := request.Settings.MaxTokens + toolHeadroom(request)
 		if prompt+reserve <= request.Settings.ContextSize {
 			return request, prompt, nil
 		}
@@ -68,4 +65,22 @@ func fit(ctx context.Context, p provider.Provider, request provider.Request, cur
 			return request, 0, ErrContextBudget
 		}
 	}
+}
+
+func toolHeadroom(request provider.Request) int {
+	if len(request.Tools) > 0 {
+		return min(256, request.Settings.ContextSize/8)
+	}
+	return 0
+}
+
+func continuationMessages(text string) []provider.Message {
+	tail := text
+	if len(tail) > 1024 {
+		tail = tail[len(tail)-1024:]
+		for !utf8.ValidString(tail) {
+			tail = tail[1:]
+		}
+	}
+	return []provider.Message{{Role: "assistant", Content: tail}, {Role: "user", Content: "Continue the same answer exactly after its last character. Return only the remaining text: do not repeat any previous text, restart the answer, or add a new opening code fence."}}
 }
