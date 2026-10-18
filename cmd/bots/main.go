@@ -24,11 +24,13 @@ import (
 	"bots/internal/registry"
 	"bots/internal/runner"
 	"bots/internal/state"
+	"bots/internal/tools"
 )
 
 type appConfig struct {
-	Home   string `json:"home"`
-	Engine struct {
+	Home    string   `json:"home"`
+	Plugins []string `json:"plugins,omitempty"`
+	Engine  struct {
 		Binary    string `json:"binary"`
 		ModelPath string `json:"model_path"`
 		ModelID   string `json:"model_id"`
@@ -57,6 +59,11 @@ func loadConfig(path string) (appConfig, error) {
 	for _, p := range []*string{&c.Home, &c.Engine.Binary, &c.Engine.ModelPath} {
 		if !filepath.IsAbs(*p) {
 			*p = filepath.Join(base, *p)
+		}
+	}
+	for i, p := range c.Plugins {
+		if !filepath.IsAbs(p) {
+			c.Plugins[i] = filepath.Join(base, p)
 		}
 	}
 	return c, nil
@@ -128,7 +135,11 @@ func execute(ctx context.Context, args []string) error {
 		return e
 	}
 	reg := registry.Registry{Dir: filepath.Join(c.Home, "bots")}
-	catalog := application.Catalog{Registry: reg, Model: c.Engine.ModelID}
+	plugins, e := tools.LoadPlugins(c.Plugins)
+	if e != nil {
+		return e
+	}
+	catalog := application.Catalog{Registry: reg, Model: c.Engine.ModelID, Plugins: plugins}
 	if args[0] == "route" {
 		f := flags("route")
 		input := f.String("input", "", "task with explicit @bot mentions")
@@ -244,7 +255,7 @@ func execute(ctx context.Context, args []string) error {
 			fmt.Fprintln(os.Stderr, "shutdown:", e)
 		}
 	}()
-	r := &runner.Runner{Models: manager, Store: store}
+	r := &runner.Runner{Models: manager, Store: store, Plugins: plugins}
 	if args[0] == "eval" {
 		f := flags("eval")
 		sizes := f.String("contexts", "2048,4096", "comma-separated context limits")

@@ -14,8 +14,9 @@ import (
 )
 
 type Runner struct {
-	Models *provider.Manager
-	Store  *state.Store
+	Models  *provider.Manager
+	Store   *state.Store
+	Plugins []tools.Tool
 }
 type Options struct {
 	Session  string
@@ -35,7 +36,7 @@ func (r *Runner) Run(parent context.Context, b config.Bot, input string, o Optio
 	if e != nil {
 		return run, e
 	}
-	registry, closeTools, e := tools.Files(b.ContextSources)
+	registry, closeTools, e := tools.WithPlugins(b.ContextSources, r.Plugins)
 	if e != nil {
 		return run, e
 	}

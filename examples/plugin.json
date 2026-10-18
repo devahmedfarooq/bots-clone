@@ -1,0 +1,7 @@
+{
+  "protocol_version": 1,
+  "name": "plugin-echo",
+  "description": "Echo supplied text through a trusted local executable.",
+  "executable": "../bin/plugin-echo.exe",
+  "parameters": {"type": "object", "properties": {"text": {"type": "string"}}, "required": ["text"], "additionalProperties": false}
+}

@@ -12,6 +12,7 @@ import (
 type Catalog struct {
 	Registry registry.Registry
 	Model    string
+	Plugins  []tools.Tool
 }
 
 func (c Catalog) Validate(dir string) (config.Bot, error) {
@@ -22,7 +23,7 @@ func (c Catalog) Validate(dir string) (config.Bot, error) {
 	if b.BaseModel != c.Model {
 		return b, errors.New("base_model does not match configured engine")
 	}
-	r, close, err := tools.Files(b.ContextSources)
+	r, close, err := tools.WithPlugins(b.ContextSources, c.Plugins)
 	if err != nil {
 		return b, err
 	}

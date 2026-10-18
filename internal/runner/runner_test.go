@@ -79,7 +79,7 @@ func setup(t *testing.T, f *fake) (*Runner, config.Bot) {
 	}
 	m := provider.NewManager(f)
 	t.Cleanup(func() { m.Close(context.Background()); store.Close() })
-	return &Runner{m, store}, bot(root)
+	return &Runner{Models: m, Store: store}, bot(root)
 }
 func TestToolLoopAndIsolation(t *testing.T) {
 	f := &fake{responses: []provider.Response{tool("file-write", `{"root":0,"path":"answer.txt","content":"42"}`), tool("file-read", `{"root":0,"path":"answer.txt"}`), final("42")}}

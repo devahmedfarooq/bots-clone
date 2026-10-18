@@ -53,7 +53,7 @@ func serve(ctx context.Context, c appConfig, catalog application.Catalog, args [
 		defer cancel()
 		_ = manager.Close(shutdown)
 	}()
-	q, err := service.NewQueue(ctx, &runner.Runner{Models: manager, Store: store}, catalog, *limit)
+	q, err := service.NewQueue(ctx, &runner.Runner{Models: manager, Store: store, Plugins: catalog.Plugins}, catalog, *limit)
 	if err != nil {
 		return err
 	}
