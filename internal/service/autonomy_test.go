@@ -515,3 +515,21 @@ func TestManagerPromptOmitsOperationalHistory(t *testing.T) {
 		t.Fatal("irrelevant history or missing task context")
 	}
 }
+
+func TestGoalGetsPrivateWorkspaceAndVersionedDeliverableCounts(t *testing.T) {
+	a, _ := testAutonomy(t)
+	a.q.runner.WorkspaceDir = t.TempDir()
+	g, err := a.Create(goalRequest())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := filepath.Join(a.q.runner.WorkspaceDir, g.ID); g.Workspace != want {
+		t.Fatal(g.Workspace)
+	}
+	if info, err := os.Stat(g.Workspace); err != nil || !info.IsDir() {
+		t.Fatal("workspace not created", err)
+	}
+	if b, _ := json.Marshal(Request{Workspace: "C:/evil"}); strings.Contains(string(b), "evil") {
+		t.Fatal("clients must not be able to set the workspace")
+	}
+}

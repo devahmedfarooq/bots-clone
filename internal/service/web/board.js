@@ -178,6 +178,7 @@ function renderResult() {
   $('reader-raw').textContent = res.raw || 'No raw output recorded.';
   $('reader-formatted').innerHTML = res.text ? formatContent(res.text) : `<p>${escape(emptyMessage(card))}</p>`;
   $('usage').textContent = `Tokens ${goal.tokens}/${goal.token_limit} · Runs ${goal.runs}/${goal.run_limit}`;
+  $('workspace').textContent = goal.workspace ? 'Files saved in: ' + goal.workspace : '';
   $('history').innerHTML = card.history.map(item => `<p>${escape(new Date(item.at).toLocaleString())} · ${escape(item.actor)}<br>${escape(item.text)}</p>`).join('');
   if (editing !== goal.id) {
     const form = $('settings-form');

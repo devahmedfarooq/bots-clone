@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"maps"
+	"os"
+	"path/filepath"
 	"slices"
 	"sort"
 	"strings"
@@ -58,12 +60,13 @@ type BoardMessage struct {
 type Goal struct {
 	ID string `json:"id"`
 	GoalRequest
-	Versions map[string]string `json:"versions"`
-	Created  time.Time         `json:"created"`
-	Status   string            `json:"status"`
-	Tokens   int               `json:"tokens"`
-	Runs     int               `json:"runs"`
-	Chat     []BoardMessage    `json:"chat"`
+	Workspace string            `json:"workspace,omitempty"`
+	Versions  map[string]string `json:"versions"`
+	Created   time.Time         `json:"created"`
+	Status    string            `json:"status"`
+	Tokens    int               `json:"tokens"`
+	Runs      int               `json:"runs"`
+	Chat      []BoardMessage    `json:"chat"`
 }
 
 type TaskPlan struct {
@@ -229,6 +232,12 @@ func (a *Autonomy) Create(req GoalRequest) (Goal, error) {
 			return Goal{}, err
 		}
 		g.Versions[id] = bot.Version
+	}
+	if base := a.q.runner.WorkspaceDir; base != "" {
+		g.Workspace = filepath.Join(base, g.ID)
+		if err := os.MkdirAll(g.Workspace, 0700); err != nil {
+			return Goal{}, err
+		}
 	}
 	b := cloneBoard(a.board)
 	b.Goals = append(b.Goals, g)
@@ -435,7 +444,7 @@ func (a *Autonomy) advance(b Board, i int) error {
 			owner = g.Manager
 		}
 		var err error
-		job, err = a.q.submitOnce(Request{AdaptiveContext: true, Bot: owner, Version: g.Versions[owner], Input: a.prompt(b, *g, *c), ReadOnly: c.Phase != "work", Budgets: &config.Budgets{Tokens: c.Reserved, ToolCalls: g.ToolCalls, Seconds: g.Seconds}}, c.Key)
+		job, err = a.q.submitOnce(Request{AdaptiveContext: true, Workspace: g.Workspace, Bot: owner, Version: g.Versions[owner], Input: a.prompt(b, *g, *c), ReadOnly: c.Phase != "work", Budgets: &config.Budgets{Tokens: c.Reserved, ToolCalls: g.ToolCalls, Seconds: g.Seconds}}, c.Key)
 		if errors.Is(err, ErrQueueFull) {
 			return nil
 		}
@@ -591,7 +600,7 @@ func (a *Autonomy) finishDirect(b Board, i int, output string) error {
 }
 
 func directPrompt(g Goal) string {
-	text := "Complete this task and reply with the finished deliverable only: no JSON, no preamble. If you also save a file, set overwrite:true (an earlier version may exist) and still include the full content in your reply.\n" + g.Requirements
+	text := "Complete this task and reply with the finished deliverable only: no JSON, no preamble. If you also save a file, use a relative path in your goal workspace (an existing name is saved as a new version) and still include the full content in your reply.\n" + g.Requirements
 	for _, m := range g.Chat[1:] {
 		if m.Actor == "user" {
 			text += "\nUser instruction: " + m.Text
@@ -651,7 +660,7 @@ func (a *Autonomy) prompt(b Board, g Goal, c Card) string {
 			}
 		}
 	default:
-		base += `Execute the assigned task within your grants. Reply with the complete deliverable itself (full text or code), never only a file name, summary or plan to do it later. If you also save a file, set overwrite:true (an earlier version may exist) and still include the full content in your reply. Only if you truly cannot proceed, reply with JSON {"status":"question|blocked","message":"what you need"}.`
+		base += `Execute the assigned task within your grants. Reply with the complete deliverable itself (full text or code), never only a file name, summary or plan to do it later. If you also save a file, use a relative path in your goal workspace (an existing name is saved as a new version) and still include the full content in your reply. Only if you truly cannot proceed, reply with JSON {"status":"question|blocked","message":"what you need"}.`
 		for _, other := range b.Cards {
 			if other.Goal == g.ID && other.Status == Done && other.Kind == "task" {
 				base += "\nPrior task " + other.Title + ": " + other.Output

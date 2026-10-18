@@ -31,9 +31,13 @@ type SearchMatch struct {
 type FileTool struct {
 	Kind  string
 	Roots []*os.Root
+	// Versioned makes root 0 a goal workspace: existing names are saved as new versions.
+	Versioned bool
 }
 
-func Files(paths []string) (*Registry, func(), error) {
+func Files(paths []string) (*Registry, func(), error) { return files(paths, false) }
+
+func files(paths []string, versioned bool) (*Registry, func(), error) {
 	r := New()
 	roots := []*os.Root{}
 	close := func() {
@@ -50,7 +54,7 @@ func Files(paths []string) (*Registry, func(), error) {
 		roots = append(roots, root)
 	}
 	for _, kind := range []string{"file-read", "file-search", "file-write"} {
-		if e := r.Register(&FileTool{kind, roots}); e != nil {
+		if e := r.Register(&FileTool{kind, roots, versioned}); e != nil {
 			close()
 			return nil, nil, e
 		}
@@ -59,8 +63,11 @@ func Files(paths []string) (*Registry, func(), error) {
 }
 func (t *FileTool) Definition() provider.ToolDefinition {
 	properties := map[string]any{"root": map[string]any{"type": "integer", "minimum": 0}, "path": map[string]any{"type": "string"}}
-	required := []string{"root", "path"}
-	description := "Read a UTF-8 file under an allowed root index. Use only relative paths."
+	required := []string{"path"}
+	description := "Read a UTF-8 file. Use only relative paths; root is optional and defaults to 0."
+	if t.Versioned {
+		description = "Read a UTF-8 file from your goal workspace. Use only relative paths; root is optional."
+	}
 	if t.Kind == "file-search" {
 		properties["query"] = map[string]string{"type": "string"}
 		required = append(required, "query")
@@ -71,6 +78,9 @@ func (t *FileTool) Definition() provider.ToolDefinition {
 		properties["overwrite"] = map[string]string{"type": "boolean"}
 		required = append(required, "content")
 		description = "Create or write a UTF-8 file under an allowed root index. Set overwrite:true to update existing files."
+		if t.Versioned {
+			description = "Save a UTF-8 file in your goal workspace by relative path (root optional). An existing name is saved as a new version such as name-v2.ext; overwrite:true replaces it."
+		}
 	}
 	schema, _ := json.Marshal(map[string]any{"type": "object", "properties": properties, "required": required, "additionalProperties": false})
 	return provider.ToolDefinition{Name: t.Kind, Description: description, Parameters: schema}
@@ -84,10 +94,8 @@ func (t *FileTool) args(raw json.RawMessage) (FileArgs, error) {
 	if e := json.Unmarshal(raw, &fields); e != nil {
 		return a, e
 	}
-	for _, required := range []string{"root", "path"} {
-		if fields[required] == nil {
-			return a, fmt.Errorf("%s is required", required)
-		}
+	if fields["path"] == nil {
+		return a, errors.New("path is required")
 	}
 	if a.Root < 0 || a.Root >= len(t.Roots) {
 		return a, errors.New("root index is not granted")
@@ -141,20 +149,16 @@ func (t *FileTool) Execute(ctx context.Context, raw json.RawMessage) (string, er
 		if e = ctx.Err(); e != nil {
 			return "", e
 		}
-		flag := os.O_CREATE | os.O_EXCL | os.O_WRONLY
-		if a.Overwrite {
-			flag = os.O_CREATE | os.O_WRONLY | os.O_TRUNC
+		if dir := filepath.Dir(a.Path); dir != "." {
+			if e = root.MkdirAll(dir, 0700); e != nil {
+				return "", e
+			}
 		}
-		f, e := root.OpenFile(a.Path, flag, 0600)
+		saved, e := writeFile(root, a, t.Versioned && a.Root == 0)
 		if e != nil {
 			return "", e
 		}
-		_, e = f.WriteString(a.Content)
-		closeErr := f.Close()
-		if e != nil {
-			return "", e
-		}
-		return "created " + a.Path, closeErr
+		return "created " + saved, nil
 	case "file-search":
 		matches := []SearchMatch{}
 		outputBytes := 0
@@ -215,4 +219,32 @@ func (t *FileTool) Execute(ctx context.Context, raw json.RawMessage) (string, er
 		return string(data), e
 	}
 	return "", errors.New("unsupported file tool")
+}
+
+// writeFile creates the file exclusively unless overwriting; versioned roots pick the first free name-vN.ext.
+func writeFile(root *os.Root, a FileArgs, versioned bool) (string, error) {
+	if a.Overwrite {
+		return a.Path, writeTo(root, a.Path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, a.Content)
+	}
+	ext := filepath.Ext(a.Path)
+	stem := strings.TrimSuffix(a.Path, ext)
+	for n := 1; ; n++ {
+		path := a.Path
+		if n > 1 {
+			path = fmt.Sprintf("%s-v%d%s", stem, n, ext)
+		}
+		err := writeTo(root, path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, a.Content)
+		if !versioned || !errors.Is(err, fs.ErrExist) || n >= 99 {
+			return path, err
+		}
+	}
+}
+
+func writeTo(root *os.Root, path string, flag int, content string) error {
+	f, err := root.OpenFile(path, flag, 0600)
+	if err != nil {
+		return err
+	}
+	_, err = f.WriteString(content)
+	return errors.Join(err, f.Close())
 }

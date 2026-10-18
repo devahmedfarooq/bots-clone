@@ -65,7 +65,7 @@ func serve(ctx context.Context, c appConfig, catalog application.Catalog, args [
 		defer cancel()
 		_ = manager.Close(shutdown)
 	}()
-	q, err := service.NewQueue(ctx, &runner.Runner{ContextLimit: c.Engine.Context, Models: manager, Store: store, Plugins: catalog.Plugins}, catalog, *limit)
+	q, err := service.NewQueue(ctx, &runner.Runner{ContextLimit: c.Engine.Context, WorkspaceDir: filepath.Join(c.Home, "workspaces"), Models: manager, Store: store, Plugins: catalog.Plugins}, catalog, *limit)
 	if err != nil {
 		return err
 	}

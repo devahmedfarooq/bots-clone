@@ -176,3 +176,14 @@ Goal: user states one goal; the manager bot splits it into subtasks, assigns the
 
 BS-05 live evidence (real Qwen3-1.7B, 2026-10-19): poem -> 1 task, writer, reviewed, Done. Coffee shop landing page + announcement -> 2 tasks (landing-page, writer), both reviewed, Done in 5 runs / ~15k tokens.
 Known limits: the 1.7B reviewer is lenient (approved a one-paragraph "3-stanza" poem; writer output can include chatty preamble). Delegated planning needed a worked example, structured-field tolerance and a one-shot correction to be reliable. Not tested: approvals, restart mid-goal, UI in a real browser against live data.
+
+## Goal workspaces (WS)
+
+Plan from the file/workspace review. Spec: [goal workspace spec](specs/goal-workspace.spec.md). Branch `feature/goal-workspaces`.
+
+- [x] WS-01: Per-goal workspace folder, path-only file tools (root optional), versioned writes, parent dirs auto-created.
+- [ ] WS-02: Artifact table (goal, task, path, hash, version, run) + Files tab (preview/download/zip).
+- [ ] WS-03: Task inputs/outputs in the manager plan; per-task grants (workers write only their output area).
+- [ ] WS-04: Projects grouping goals; attached read-only input folders; retention/cleanup.
+
+WS-01 live evidence (real Qwen3-1.7B, 2026-10-19): the coffee-shop landing page + announcement goal ran twice with identical file names; both finished Done, each saving index.html/announcement.txt in its own `.local/workspaces/<goal>/` folder, with nothing written into the repo.

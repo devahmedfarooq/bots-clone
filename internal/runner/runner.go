@@ -17,12 +17,15 @@ import (
 
 type Runner struct {
 	ContextLimit int
+	// WorkspaceDir is the parent of per-goal workspaces; empty keeps bot sources only.
+	WorkspaceDir string
 	Models       *provider.Manager
 	Store        *state.Store
 	Plugins      []tools.Tool
 }
 type Options struct {
 	AdaptiveContext bool
+	Workspace       string
 	Session         string
 	Settings        config.Settings
 	Emit            func(string)
@@ -40,7 +43,13 @@ func (r *Runner) Run(parent context.Context, b config.Bot, input string, o Optio
 	if e != nil {
 		return run, e
 	}
-	registry, closeTools, e := tools.WithPlugins(b.ContextSources, r.Plugins)
+	var registry *tools.Registry
+	var closeTools func()
+	if o.Workspace != "" {
+		registry, closeTools, e = tools.WithWorkspace(o.Workspace, b.ContextSources, r.Plugins)
+	} else {
+		registry, closeTools, e = tools.WithPlugins(b.ContextSources, r.Plugins)
+	}
 	if e != nil {
 		return run, e
 	}

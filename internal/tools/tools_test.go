@@ -97,3 +97,48 @@ func TestTimeout(t *testing.T) {
 		t.Fatal(result)
 	}
 }
+
+func TestGoalWorkspaceVersionsPathOnlyAndConfinement(t *testing.T) {
+	base := t.TempDir()
+	workspace, other := filepath.Join(base, "goal"), filepath.Join(base, "source")
+	os.Mkdir(workspace, 0700)
+	os.Mkdir(other, 0700)
+	r, close, e := WithWorkspace(workspace, []string{other}, nil)
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer close()
+	ctx, grants := context.Background(), []string{"file-read", "file-write"}
+	write := func(args string) string {
+		result := r.Call(ctx, grants, call("file-write", args))
+		if result.Error != nil {
+			t.Fatal(result.Error)
+		}
+		return result.Output
+	}
+	if got := write(`{"path":"out/index.html","content":"one"}`); got != "created out/index.html" {
+		t.Fatal(got)
+	}
+	if got := write(`{"path":"out/index.html","content":"two"}`); got != "created out/index-v2.html" {
+		t.Fatal(got)
+	}
+	if got := write(`{"path":"out/index.html","content":"three"}`); got != "created out/index-v3.html" {
+		t.Fatal(got)
+	}
+	write(`{"path":"out/index.html","content":"replaced","overwrite":true}`)
+	if data, _ := os.ReadFile(filepath.Join(workspace, "out", "index.html")); string(data) != "replaced" {
+		t.Fatal("overwrite ignored")
+	}
+	if result := r.Call(ctx, grants, call("file-read", `{"path":"out/index-v2.html"}`)); result.Output != "two" {
+		t.Fatal("path-only read failed", result)
+	}
+	if result := r.Call(ctx, grants, call("file-write", `{"root":1,"path":"x.txt","content":"a"}`)); result.Error != nil {
+		t.Fatal(result.Error)
+	}
+	if result := r.Call(ctx, grants, call("file-write", `{"root":1,"path":"x.txt","content":"b"}`)); result.Error == nil {
+		t.Fatal("non-workspace root must stay exclusive")
+	}
+	if result := r.Call(ctx, grants, call("file-write", `{"path":"../escape.txt","content":"x"}`)); result.Error == nil {
+		t.Fatal("traversal allowed")
+	}
+}

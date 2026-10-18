@@ -173,7 +173,16 @@ func (p *PluginTool) Execute(ctx context.Context, raw json.RawMessage) (string, 
 }
 
 func WithPlugins(paths []string, extra []Tool) (*Registry, func(), error) {
-	r, close, err := Files(paths)
+	return withTools(paths, false, extra)
+}
+
+// WithWorkspace makes workspace root 0 (versioned, read/write) ahead of the bot's own sources.
+func WithWorkspace(workspace string, sources []string, extra []Tool) (*Registry, func(), error) {
+	return withTools(append([]string{workspace}, sources...), true, extra)
+}
+
+func withTools(paths []string, versioned bool, extra []Tool) (*Registry, func(), error) {
+	r, close, err := files(paths, versioned)
 	if err != nil {
 		return nil, nil, err
 	}
