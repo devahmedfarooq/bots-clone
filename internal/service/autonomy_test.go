@@ -483,3 +483,15 @@ func TestPlanAcceptsStructuredRequirementsFromSmallModels(t *testing.T) {
 		t.Fatal(got)
 	}
 }
+
+func TestDelegatedWorkerPlainTextIsTheResult(t *testing.T) {
+	a, e := testAutonomy(t)
+	e.plain = "Waves fold like pages"
+	if _, err := a.Create(goalRequest()); err != nil {
+		t.Fatal(err)
+	}
+	b := driveBoard(t, a, func(b Board) bool { return b.Goals[0].Status == Done })
+	if b.Cards[1].Output != "Waves fold like pages" {
+		t.Fatalf("bad output: %q", b.Cards[1].Output)
+	}
+}
