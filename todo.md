@@ -127,3 +127,15 @@ User requested Phase 3 before Phase 2. Each Phase 3 ticket has a feature branch;
 ## Deferred scope
 
 These are not prerequisites for the three phases: a custom inference engine, training a base model from scratch, simultaneous GPU workers, a public bot marketplace, arbitrary cross-base adapter loading, reinforcement learning, or claims of general autonomous intelligence.
+## Autonomous bot operation and interface
+
+- [x] Provide a Kanban dashboard and chat interface for instructions to the manager bot.
+- [x] Let users set goals, priorities, budget limits, and approval rules.
+- [x] Use Inbox -> Ready -> In Progress -> Review -> Done, plus Blocked and Needs Your Approval states.
+- [x] Have the manager bot break goals into tasks, assign worker bots, track progress, verify results, and confirm completion.
+- [x] Have worker bots pick up assigned cards and communicate progress, questions, blockers, and results through the board.
+- [x] Store requirements, ownership, decisions, history, and outputs on each task card.
+- [x] Let the manager approve routine work automatically and request user approval according to configured rules.
+- [x] Support 24/7 background operation with persistent storage, queued jobs, automatic restarts, and recovery after interruptions.
+- [x] Support the local RTX 5050 laptop; document that continuous operation requires the host to remain powered on and awake.
+- [x] Write the module pseudocode spec before implementing this workflow on a dedicated feature branch.

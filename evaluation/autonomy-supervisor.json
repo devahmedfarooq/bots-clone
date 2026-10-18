@@ -1,0 +1,8 @@
+﻿{
+    "checks":  [
+                   "fresh state directory startup",
+                   "hidden supervisor startup",
+                   "automatic restart after forced service crash"
+               ],
+    "passed":  true
+}

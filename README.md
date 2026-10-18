@@ -87,3 +87,7 @@ go build -buildvcs=false -o bin/bots.exe ./cmd/bots
 ```
 
 Tests cover configuration, package registration, SQLite persistence and ownership, tools/grants/timeouts, Windows junction escapes, HTTP/SSE parsing, cancellation, budgets, inference queueing and recovery. Live inference evidence and laptop defaults are recorded in [evaluation](evaluation/README.md). Fixture success is a small baseline, not a claim of general quality or adapter improvement.
+
+## Autonomous operation
+
+Open **Bot Operations** from the local dashboard for Kanban tasks, manager instructions, goals, budgets and approvals. See [setup and continuous operation](docs/autonomous-operation.md) and [module pseudocode](specs/autonomy.spec.md). The laptop must remain powered on and awake.

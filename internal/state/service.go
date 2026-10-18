@@ -5,6 +5,8 @@ import (
 	"time"
 )
 
+const dispatchRuns = `SELECT json_extract(body,'$.run.id') AS run_id FROM checkpoints WHERE kind='job' AND coalesce(json_extract(body,'$.dispatch_key'),'')<>'' AND json_extract(body,'$.run.id') IS NOT NULL`
+
 func (s *Store) Runs(limit int) ([]Run, error) {
 	rows, err := s.db.Query("SELECT record FROM runs ORDER BY rowid DESC LIMIT ?", limit)
 	if err != nil {
@@ -75,7 +77,7 @@ func (s *Store) Recover() error {
 }
 
 func (s *Store) RetentionPlan(before time.Time, keep map[string]bool) ([]string, error) {
-	rows, err := s.db.Query("SELECT id,record FROM runs")
+	rows, err := s.db.Query("SELECT id,record FROM runs WHERE id NOT IN (" + dispatchRuns + ")")
 	if err != nil {
 		return nil, err
 	}
@@ -104,6 +106,13 @@ func (s *Store) DeleteRuns(ids []string) error {
 	}
 	defer tx.Rollback()
 	for _, id := range ids {
+		var retained int
+		if err = tx.QueryRow("SELECT count(*) FROM ("+dispatchRuns+") WHERE run_id=?", id).Scan(&retained); err != nil {
+			return err
+		}
+		if retained > 0 {
+			continue
+		}
 		var status string
 		if err = tx.QueryRow("SELECT json_extract(record,'$.status') FROM runs WHERE id=?", id).Scan(&status); err != nil {
 			return err

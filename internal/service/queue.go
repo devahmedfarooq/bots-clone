@@ -19,18 +19,21 @@ type Request struct {
 	Input    string          `json:"input"`
 	Settings config.Settings `json:"settings,omitempty"`
 	Version  string          `json:"bot_version,omitempty"`
+	Budgets  *config.Budgets `json:"budgets,omitempty"`
+	ReadOnly bool            `json:"read_only,omitempty"`
 }
 
 var ErrQueueFull = errors.New("queue full")
 
 type Job struct {
-	ID        string              `json:"id"`
-	Bot       string              `json:"bot"`
-	Status    string              `json:"status"`
-	Created   time.Time           `json:"created"`
-	Run       *state.Run          `json:"run,omitempty"`
-	Error     string              `json:"error,omitempty"`
-	Resources *diagnostics.Sample `json:"resources,omitempty"`
+	DispatchKey string              `json:"dispatch_key,omitempty"`
+	ID          string              `json:"id"`
+	Bot         string              `json:"bot"`
+	Status      string              `json:"status"`
+	Created     time.Time           `json:"created"`
+	Run         *state.Run          `json:"run,omitempty"`
+	Error       string              `json:"error,omitempty"`
+	Resources   *diagnostics.Sample `json:"resources,omitempty"`
 }
 
 type queued struct {
@@ -93,6 +96,10 @@ func NewQueue(parent context.Context, r *runner.Runner, c application.Catalog, l
 }
 
 func (q *Queue) Submit(req Request) (Job, error) {
+	return q.submitOnce(req, "")
+}
+
+func (q *Queue) submitOnce(req Request, key string) (Job, error) {
 	b, err := q.catalog.Registry.Get(req.Bot)
 	if err != nil {
 		return Job{}, err
@@ -109,15 +116,32 @@ func (q *Queue) Submit(req Request) (Job, error) {
 	if _, err = config.Resolve(b.Settings, req.Settings); err != nil {
 		return Job{}, err
 	}
+	if req.Budgets != nil {
+		v := *req.Budgets
+		if v.Tokens < 1 || v.ToolCalls < 0 || v.Seconds < 1 {
+			return Job{}, errors.New("positive token/time limits and nonnegative tool limit required")
+		}
+		b.Budgets = config.Budgets{Tokens: min(b.Budgets.Tokens, v.Tokens), ToolCalls: min(b.Budgets.ToolCalls, v.ToolCalls), Seconds: min(b.Budgets.Seconds, v.Seconds)}
+	}
+	if req.ReadOnly {
+		b.Tools = nil
+	}
 	q.mu.Lock()
 	defer q.mu.Unlock()
+	if key != "" {
+		for _, j := range q.jobs {
+			if j.DispatchKey == key {
+				return j, nil
+			}
+		}
+	}
 	if q.ctx.Err() != nil {
 		return Job{}, errors.New("service stopped")
 	}
 	if len(q.pending) == cap(q.pending) {
 		return Job{}, ErrQueueFull
 	}
-	j := Job{ID: state.ID(), Bot: b.ID, Status: "queued", Created: time.Now().UTC()}
+	j := Job{ID: state.ID(), DispatchKey: key, Bot: b.ID, Status: "queued", Created: time.Now().UTC()}
 	if err = q.runner.Store.Checkpoint("job", j.ID, j); err != nil {
 		return Job{}, err
 	}

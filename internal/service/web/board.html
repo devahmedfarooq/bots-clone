@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bot Operations</title><link rel="stylesheet" href="/board.css"><script src="/board.js" defer></script></head>
+<body>
+<header><a href="/">Local Bots</a><strong>Bot Operations</strong><span id="connection" role="status">Connecting…</span></header>
+<main>
+<h1>Your goals. A working team.</h1><p>Set the direction, follow each task, and approve work when needed.</p>
+<p id="notice" role="alert"></p>
+<details id="new-goal"><summary>Create a goal</summary>
+<form id="goal-form"><label>Requirements and expected outcome<textarea name="requirements" required maxlength="16000" rows="3"></textarea></label>
+<div class="fields"><label>Manager bot<select name="manager" id="manager" required></select></label><label>Worker bots (select one or more)<select name="workers" id="workers" multiple required></select></label></div>
+<div id="create-settings"></div><button>Create goal</button></form></details>
+<label class="goal-picker">Goal<select id="goal"><option value="">All goals</option></select></label>
+<p id="usage"></p>
+<section id="board" aria-label="Task board"></section>
+<section id="goal-panel" hidden>
+<details><summary>Priority, budgets and approvals</summary><form id="settings-form"><div id="edit-settings"></div><button>Save settings</button></form></details>
+<h2>Manager chat</h2><p>Instructions apply at the next dispatch. Retry blocked cards after answering questions.</p><div id="chat" role="log" aria-live="polite"></div>
+<form id="chat-form"><label>Instructions or answers<textarea name="text" required maxlength="8000" rows="2"></textarea></label><button>Send instruction</button></form>
+</section>
+<footer>Local RTX 5050 · One inference at a time · Continuous operation requires the host powered on and awake.</footer>
+</main></body></html>

@@ -1,0 +1,35 @@
+{{define "button"}}
+<button {{if .ID}}id="{{.ID}}"{{end}} type="{{if .Type}}{{.Type}}{{else}}button{{end}}"
+  class="btn {{if .Secondary}}btn-secondary{{end}}" {{if .Disabled}}disabled{{end}}
+  {{if .Get}}hx-get="{{.Get}}"{{end}} {{if .Post}}hx-post="{{.Post}}"{{end}}
+  {{if .Target}}hx-target="{{.Target}}"{{end}} {{if .Swap}}hx-swap="{{.Swap}}"{{end}}>
+  {{.Label}}
+</button>
+{{end}}
+
+{{define "badge"}}<span class="tag" data-status="{{.}}">{{.}}</span>{{end}}
+
+{{define "bot-card"}}
+<div class="bot">
+  <strong class="mb-2 block">{{.Bot.ID}} · {{.Bot.Version}}</strong>
+  {{template "badge" .Compatibility}}
+  <p class="muted mt-3">Tools: {{join .Bot.Tools}}</p>
+  <p class="muted mt-2 break-all">Folders: {{join .Bot.ContextSources}}</p>
+</div>
+{{end}}
+
+{{define "run-output"}}
+{{if terminal .Run.Status}}
+<details id="{{.Prefix}}-output-{{.Run.ID}}" class="mt-3" hx-preserve>
+  <summary class="cursor-pointer text-sm text-blue-300">Output and trace</summary>
+  <pre>{{if .Run.Output}}{{.Run.Output | redact}}{{else if .Run.Error}}{{.Run.Error | redact}}{{else}}No output.{{end}}</pre>
+  <p class="muted mt-3 break-all">{{.Run.ID}} · {{.Run.DurationMS}} ms · {{.Run.Usage.Total}} tokens</p>
+  <div class="trace-section">
+    {{template "button" (dict "Label" "Inspect tool trace" "Secondary" true "Get" (printf "/ui/runs/%s/trace" .Run.ID) "Target" "closest .trace-section" "Swap" "outerHTML")}}
+  </div>
+</details>
+{{else}}<p class="muted mt-3">Task is running…</p>{{end}}
+{{end}}
+
+{{define "trace"}}<div class="trace-section"><pre>{{.}}</pre></div>{{end}}
+{{define "notice"}}<span>{{.}}</span>{{end}}

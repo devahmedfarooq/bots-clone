@@ -11,9 +11,9 @@
                    "attributable trace"
                ],
     "resources":  {
-                      "at":  "2026-10-18T00:43:41.1116067Z",
-                      "device_vram_mib":  3427,
-                      "system_used_ram_bytes":  14772322304
+                      "at":  "2026-10-18T00:57:05.3497272Z",
+                      "device_vram_mib":  3372,
+                      "system_used_ram_bytes":  15547084800
                   },
     "adapter_checks":  "Pending Phase 2",
     "workflow_invoice":  {
@@ -28,7 +28,7 @@
                                           "prompt_tokens":  103,
                                           "total_tokens":  145
                                       },
-                            "duration_ms":  4928
+                            "duration_ms":  5432
                         },
     "invoice":  {
                     "vendor":  "Cedar Supplies",
@@ -36,9 +36,9 @@
                     "currency":  "USD",
                     "total":  149.5
                 },
-    "date":  "2026-10-18T00:43:43.2852778Z",
+    "date":  "2026-10-18T00:57:07.6641572Z",
     "model":  "qwen3-1.7b-q8",
-    "test_state":  "A:\\projects\\bots-clone\\.local\\service-smoke-e5ee677921d74cc0a9fa1d49e665a472",
+    "test_state":  "A:\\projects\\bots-clone\\.local\\service-smoke-e5705851fe77496ea97213bb3afddef1",
     "workflow_metrics":  {
                              "extract":  {
                                              "bot":  "extract",
@@ -47,7 +47,7 @@
                                                            "prompt_tokens":  117,
                                                            "total_tokens":  153
                                                        },
-                                             "duration_ms":  383,
+                                             "duration_ms":  393,
                                              "version":  "1.0.0"
                                          },
                              "read":  {
@@ -57,7 +57,7 @@
                                                         "prompt_tokens":  959,
                                                         "total_tokens":  1022
                                                     },
-                                          "duration_ms":  786,
+                                          "duration_ms":  924,
                                           "version":  "1.0.2"
                                       }
                          }

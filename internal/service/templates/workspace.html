@@ -1,0 +1,62 @@
+{{define "workspace"}}
+<div class="grid gap-5 md:grid-cols-2">
+  <section class="panel">
+    <h2>Start a task</h2>
+    <form id="run-form" hx-post="/ui/jobs" hx-target="#notice" hx-disabled-elt="find button">
+      <div id="bot-picker" hx-get="/ui/bots/picker" hx-trigger="botsChanged from:body" hx-target="this" hx-swap="innerHTML">
+        {{template "bot-picker" .}}
+      </div>
+      <label for="input">Task</label>
+      <textarea id="input" name="input" class="field resize-y" rows="6" placeholder="What would you like this bot to do?" required maxlength="1048576"></textarea>
+      <div id="submit-area">{{template "submit-control" .}}</div>
+      <span class="htmx-indicator muted ml-3" role="status">Submitting…</span>
+    </form>
+  </section>
+  <section class="panel">
+    <h2>Install a local bot</h2>
+    <p class="muted">Choose a trusted directory or a checksummed ZIP package. Review its granted folders and tools before running it.</p>
+    <form id="install-form" hx-post="/ui/packages" hx-target="#notice" hx-disabled-elt="find button">
+      <label for="package-kind">Package format</label>
+      <select id="package-kind" name="kind" class="field"><option value="directory">Local directory</option><option value="archive">ZIP archive</option></select>
+      <label for="directory">Local path</label>
+      <input id="directory" name="path" class="field" placeholder="A:\projects\bots-clone\bots\extract" required>
+      {{template "button" (dict "Label" "Install bot" "Type" "submit" "Secondary" true)}}
+      <span class="htmx-indicator muted ml-3" role="status">Installing…</span>
+    </form>
+    <h3>Installed bots</h3>
+    <div id="bots" hx-get="/ui/bots" hx-trigger="botsChanged from:body">{{template "bots" .}}</div>
+  </section>
+</div>
+<section class="panel">
+  <div class="flex items-center justify-between">
+    <h2 class="mb-0">Task activity</h2>
+    {{template "button" (dict "ID" "refresh" "Label" "Refresh" "Secondary" true "Get" "/ui/jobs" "Target" "#jobs")}}
+  </div>
+  <p class="muted mt-4 mb-4">Tasks share one execution slot. Cancelling a task does not undo completed tool actions.</p>
+  <div id="jobs" hx-get="/ui/jobs" hx-trigger="load, every 2s, jobsChanged from:body" hx-sync="this:replace"></div>
+</section>
+<section class="panel">
+  <h2>Saved runs</h2>
+  <div id="runs" hx-get="/ui/runs" hx-trigger="load, every 2s, jobsChanged from:body" hx-sync="this:replace"></div>
+</section>
+{{end}}
+
+{{define "bot-picker"}}
+<label for="bot">Bot</label>
+<select id="bot" name="bot" class="field" required hx-get="/ui/bots/settings" hx-target="#details">
+  {{range .Bots}}<option value="{{.Bot.ID}}">{{.Bot.ID}}</option>{{end}}
+</select>
+<p id="details" class="muted mt-3">{{template "settings" .Selected}}</p>
+{{end}}
+
+{{define "submit-control"}}{{template "button" (dict "ID" "submit" "Label" "Run task →" "Type" "submit" "Disabled" (not .Bots))}}{{end}}
+{{define "picker-update"}}
+{{template "bot-picker" .}}
+<div hx-swap-oob="innerHTML:#submit-area">{{template "submit-control" .}}</div>
+{{end}}
+
+{{define "settings"}}
+{{if .}}{{.Bot.Description | redact}} · {{.Effective.ContextSize}} context · {{.Effective.MaxTokens}} output tokens{{else}}Install a bot to get started.{{end}}
+{{end}}
+
+{{define "bots"}}{{range .Bots}}{{template "bot-card" .}}{{else}}<p class="muted">No bots installed yet.</p>{{end}}{{end}}
