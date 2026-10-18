@@ -111,6 +111,9 @@ func (s *Store) DeleteRuns(ids []string) error {
 		if status == "running" {
 			continue
 		}
+		if _, err = tx.Exec("DELETE FROM checkpoints WHERE kind='job' AND json_extract(body,'$.run.id')=? AND json_extract(body,'$.status') NOT IN ('queued','running')", id); err != nil {
+			return err
+		}
 		for _, table := range []string{"messages", "events", "runs"} {
 			key := "run"
 			if table == "runs" {

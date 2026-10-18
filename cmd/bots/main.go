@@ -135,6 +135,9 @@ func execute(ctx context.Context, args []string) error {
 		return e
 	}
 	reg := registry.Registry{Dir: filepath.Join(c.Home, "bots")}
+	if args[0] == "cleanup" {
+		return cleanup(c, args[1:])
+	}
 	plugins, e := tools.LoadPlugins(c.Plugins)
 	if e != nil {
 		return e
