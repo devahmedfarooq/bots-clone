@@ -158,7 +158,7 @@ Module pseudocode: [human-usability spec](specs/human-usability.spec.md).
 
 Problem: studio needs a manager plan + per-task review by a 1.7B model before any result appears; UI is a 7-column kanban with a hidden-required form, broken chat form, `alert()` errors, and a preview iframe sharing the app origin. Spec: [bot-studio spec](specs/bot-studio.spec.md). Branch: `feature/studio-usability`.
 
-- [ ] BS-01: Direct mode (backend). Goal `direct` skips manager planning/review: one work card owned by the chosen assistant; plain-text output accepted as the result; marked Done. Manager optional. Tests.
-- [ ] BS-02: Studio UI rewrite. Pick assistant -> describe -> Run (Ctrl+Enter). "My work" list with plain statuses (Working / Done / Needs you / Failed). Result shown inline with Copy, Download, sandboxed Live Preview. Kanban moved into an optional "Board view". Direct by default; manager planning under Advanced.
-- [ ] BS-03: Fix defects: chat form crash, `allow-same-origin` preview sandbox, hidden `required` selects, `alert()`, stuck "Connecting…", token-expired recovery message.
-- [ ] BS-04: Update spec, keep `go vet`/`go test ./internal/service` green, JS syntax check.
+- [x] BS-01: Direct mode (backend). Goal `direct` skips manager planning/review: one work card owned by the chosen assistant; plain-text output accepted as the result; marked Done. Manager optional. Tests.
+- [x] BS-02: Studio UI rewrite. Pick assistant -> describe -> Run (Ctrl+Enter). "My work" list with plain statuses (Working / Done / Needs you / Failed). Result shown inline with Copy, Download, sandboxed Live Preview. Kanban moved into an optional "Board view". Direct by default; manager planning under Advanced.
+- [x] BS-03: Fix defects: chat form crash, `allow-same-origin` preview sandbox, hidden `required` selects, `alert()`, stuck "Connecting…", token-expired recovery message.
+- [x] BS-04: Update spec, keep `go vet`/`go test ./internal/service` green, JS syntax check.

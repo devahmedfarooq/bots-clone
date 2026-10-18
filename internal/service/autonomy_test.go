@@ -416,7 +416,7 @@ func TestBoardReaderAssets(t *testing.T) {
 		t.Fatal(err)
 	}
 	html := string(htmlBytes)
-	for _, required := range []string{"reader-drawer", "reader-formatted", "reader-raw", "reader-copy", "reader-download", "reader-toggle-raw", "reader-close"} {
+	for _, required := range []string{"reader-formatted", "reader-raw", "reader-copy", "reader-download", "reader-toggle-raw", "chat-form"} {
 		if !strings.Contains(html, required) {
 			t.Fatalf("missing %s in board.html", required)
 		}
@@ -426,7 +426,7 @@ func TestBoardReaderAssets(t *testing.T) {
 		t.Fatal(err)
 	}
 	js := string(jsBytes)
-	for _, required := range []string{"openReader", "closeReader", "extractResult", "formatContent", "statusBadge", "reader-copy", "reader-download"} {
+	for _, required := range []string{"extractResult", "formatContent", "statusBadge", "reader-copy", "reader-download"} {
 		if !strings.Contains(js, required) {
 			t.Fatalf("missing %s in board.js", required)
 		}

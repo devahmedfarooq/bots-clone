@@ -10,100 +10,77 @@
 <body>
 <header>
   <a href="/">Local Bots</a>
-  <strong>AI Studio &amp; Operations</strong>
+  <strong>Bot Studio</strong>
   <span id="connection" role="status">Connecting…</span>
 </header>
 <main>
-  <section class="hero-section">
-    <h1>What do you want to build today?</h1>
-    <p>Create landing pages, write code, solve math, review QA, or draft articles on your local machine.</p>
-  </section>
-
   <p id="notice" role="alert"></p>
+  <div class="layout">
+    <aside class="side">
+      <section class="panel" aria-labelledby="new-title">
+        <h2 id="new-title">New request</h2>
+        <div id="assistants" class="assistants" role="group" aria-label="Choose an assistant"></div>
+        <form id="goal-form">
+          <label><span id="prompt-hint">What do you need?</span>
+            <textarea name="requirements" id="prompt-input" required maxlength="16000" rows="4"></textarea>
+          </label>
+          <details class="advanced">
+            <summary>Advanced</summary>
+            <label class="check"><input type="checkbox" id="plan-mode"> Let the manager plan and review (slower, multi-step)</label>
+            <div id="create-settings"></div>
+          </details>
+          <button type="submit" class="primary">Run <small>Ctrl+Enter</small></button>
+        </form>
+      </section>
+      <section class="panel" aria-labelledby="work-title">
+        <h2 id="work-title">My work</h2>
+        <div id="work-list" class="work-list"></div>
+      </section>
+    </aside>
 
-  <section class="creator-card">
-    <div class="assistant-bar" role="group" aria-label="Choose an assistant">
-      <button type="button" class="assistant-pill active" data-bot="landing-page" title="Build responsive HTML/CSS landing pages">🌐 Landing Page</button>
-      <button type="button" class="assistant-pill" data-bot="code-writer" title="Write Python, Go, JS scripts & programs">💻 Code Engineer</button>
-      <button type="button" class="assistant-pill" data-bot="math-solver" title="Solve equations & math step-by-step">📐 Math Solver</button>
-      <button type="button" class="assistant-pill" data-bot="qa-assistant" title="Review code & write test suites">🛡️ QA Assistant</button>
-      <button type="button" class="assistant-pill" data-bot="writer" title="Write articles, copy & technical guides">✍️ Content Writer</button>
-    </div>
-
-    <form id="goal-form">
-      <label class="prompt-label">
-        <span id="prompt-hint">Describe your project or task:</span>
-        <textarea name="requirements" id="prompt-input" required maxlength="16000" rows="3" placeholder="e.g. Build a modern landing page for a coffee roastery with hero section, menu cards, testimonials, and dark aesthetic."></textarea>
-      </label>
-
-      <!-- Worker and manager selections synchronized with assistant pills -->
-      <select name="manager" id="manager" hidden required></select>
-      <select name="workers" id="workers" multiple hidden required></select>
-
-      <details class="advanced-settings">
-        <summary>⚙️ Advanced settings (budgets &amp; approvals)</summary>
-        <div id="create-settings"></div>
-      </details>
-
-      <button type="submit" class="btn-create-goal">🚀 Create &amp; Run Assistant</button>
-    </form>
-  </section>
-
-  <div class="workspace-header">
-    <label class="goal-picker">Current Project / Goal
-      <select id="goal"><option value="">All projects</option></select>
-    </label>
-    <p id="usage" class="usage-status"></p>
+    <section class="panel result" id="result-panel" aria-live="polite">
+      <div id="result-empty" class="empty-result">Pick an assistant, describe what you need and press Run. Your result appears here.</div>
+      <div id="result-view" hidden>
+        <div class="result-head">
+          <div>
+            <h2 id="reader-title"></h2>
+            <div id="reader-meta" class="meta"></div>
+          </div>
+          <div class="result-actions">
+            <button type="button" id="reader-preview" hidden>Live preview</button>
+            <button type="button" id="reader-copy">Copy</button>
+            <button type="button" id="reader-download">Download</button>
+            <button type="button" id="reader-toggle-raw">Diagnostics</button>
+          </div>
+        </div>
+        <div id="task-tabs" class="tabs"></div>
+        <div id="card-alert" class="card-alert" hidden></div>
+        <div id="card-actions" class="card-action-row"></div>
+        <iframe id="reader-iframe" title="Live preview" hidden sandbox="allow-scripts"></iframe>
+        <div id="reader-formatted" class="reader-content"></div>
+        <pre id="reader-raw" class="reader-raw" hidden></pre>
+        <form id="chat-form">
+          <label>Ask for changes
+            <textarea name="text" required maxlength="8000" rows="2" placeholder="e.g. Make it shorter and more playful."></textarea>
+          </label>
+          <button type="submit">Send &amp; redo</button>
+        </form>
+        <details id="goal-details">
+          <summary>History and limits</summary>
+          <p id="usage" class="meta"></p>
+          <div id="history" class="history"></div>
+          <form id="settings-form"><div id="edit-settings"></div><button>Save limits</button></form>
+        </details>
+      </div>
+    </section>
   </div>
 
-  <section id="board" aria-label="Task board"></section>
+  <details class="panel" id="board-view">
+    <summary>Board view (all tasks by state)</summary>
+    <section id="board" aria-label="Task board"></section>
+  </details>
 
-  <section id="goal-panel" hidden>
-    <details class="goal-settings-panel">
-      <summary>Project Settings &amp; Limits</summary>
-      <form id="settings-form">
-        <div id="edit-settings"></div>
-        <button class="btn-save-settings">Save settings</button>
-      </form>
-    </details>
-    <div class="chat-section">
-      <h2>Manager &amp; Assistant Discussion</h2>
-      <p>Send additional instructions or feedback. Cards will incorporate these on their next dispatch.</p>
-      <div id="chat" role="log" aria-live="polite"></div>
-      <form id="chat-form">
-        <label>Add instruction or feedback
-          <textarea name="text" required maxlength="8000" rows="2" placeholder="e.g. Make the hero banner more vibrant, or add unit tests for edge cases."></textarea>
-        </label>
-        <button class="btn-send-chat">Send instruction</button>
-      </form>
-    </div>
-  </section>
-
-  <footer>Local RTX 5050 · One inference at a time · Continuous operation requires the host powered on and awake.</footer>
+  <footer>Runs locally · one task at a time · keep this computer powered on and awake for background work.</footer>
 </main>
-
-<aside id="reader-drawer" class="reader-drawer" hidden aria-label="Deliverable Viewer">
-  <div class="reader-backdrop" id="reader-backdrop"></div>
-  <div class="reader-panel" role="dialog" aria-modal="true" aria-labelledby="reader-title">
-    <div class="reader-header">
-      <div class="reader-heading">
-        <h2 id="reader-title">Deliverable Result</h2>
-        <div id="reader-meta" class="reader-meta"></div>
-      </div>
-      <div class="reader-actions">
-        <button type="button" id="reader-preview" class="action-btn preview-btn" hidden title="View live rendered HTML landing page">🌐 Live Preview</button>
-        <button type="button" id="reader-copy" class="action-btn" title="Copy exact output or code">Copy</button>
-        <button type="button" id="reader-download" class="action-btn" title="Download as file">Download File</button>
-        <button type="button" id="reader-toggle-raw" class="action-btn" title="View technical diagnostics or raw output">Diagnostics</button>
-        <button type="button" id="reader-close" class="action-btn close-btn" aria-label="Close reader">✕</button>
-      </div>
-    </div>
-    <div class="reader-body">
-      <iframe id="reader-iframe" class="reader-iframe" hidden sandbox="allow-scripts allow-same-origin"></iframe>
-      <div id="reader-formatted" class="reader-content"></div>
-      <pre id="reader-raw" class="reader-raw" hidden></pre>
-    </div>
-  </div>
-</aside>
 </body>
 </html>

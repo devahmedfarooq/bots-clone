@@ -312,8 +312,8 @@ func (a *Autonomy) Action(id, action, note string) error {
 			}
 			block(c, "User rejected approval.")
 		case "retry":
-			if c.Status != Blocked {
-				return errors.New("only blocked cards can retry")
+			if c.Status != Blocked && !(c.Status == Done && b.Goals[goalIndex(b, c.Goal)].Direct) {
+				return errors.New("only blocked cards or finished direct tasks can retry")
 			}
 			c.Status = Ready
 			c.Key = ""
