@@ -96,10 +96,13 @@ func (w *Workflows) Start(d workflow.Definition) (Flow, error) {
 		if err != nil {
 			return Flow{}, err
 		}
+		if err = w.q.catalog.Check(b); err != nil {
+			return Flow{}, err
+		}
 		f.Steps[step.ID] = StepResult{Status: "pending", Version: b.Version}
 	}
 	w.mu.Lock()
-	if w.closed || len(w.cancels) >= 8 {
+	if w.closed || w.q.ctx.Err() != nil || len(w.cancels) >= 8 {
 		w.mu.Unlock()
 		return Flow{}, errors.New("workflow capacity reached or service stopped")
 	}
@@ -188,7 +191,7 @@ func (w *Workflows) execute(ctx context.Context, f Flow, ordered []workflow.Step
 		for attempt := 0; attempt <= step.Retries; attempt++ {
 			var job Job
 			for {
-				job, err = w.q.Submit(Request{Bot: step.Bot, Input: input})
+				job, err = w.q.Submit(Request{Bot: step.Bot, Input: input, Version: result.Version})
 				if err == nil || !errors.Is(err, ErrQueueFull) {
 					break
 				}

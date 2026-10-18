@@ -20,16 +20,23 @@ func (c Catalog) Validate(dir string) (config.Bot, error) {
 	if err != nil {
 		return b, err
 	}
+	return b, c.Check(b)
+}
+
+func (c Catalog) Check(b config.Bot) error {
+	if err := b.Validate(); err != nil {
+		return err
+	}
 	if b.BaseModel != c.Model {
-		return b, errors.New("base_model does not match configured engine")
+		return errors.New("base_model does not match configured engine")
 	}
 	r, close, err := tools.WithPlugins(b.ContextSources, c.Plugins)
 	if err != nil {
-		return b, err
+		return err
 	}
 	defer close()
 	_, err = r.Definitions(b.Tools)
-	return b, err
+	return err
 }
 
 func (c Catalog) Install(dir string) (config.Bot, error) {

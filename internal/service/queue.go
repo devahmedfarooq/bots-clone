@@ -18,6 +18,7 @@ type Request struct {
 	Bot      string          `json:"bot"`
 	Input    string          `json:"input"`
 	Settings config.Settings `json:"settings,omitempty"`
+	Version  string          `json:"bot_version,omitempty"`
 }
 
 var ErrQueueFull = errors.New("queue full")
@@ -87,10 +88,6 @@ func NewQueue(parent context.Context, r *runner.Runner, c application.Catalog, l
 		}
 		q.jobs[j.ID] = j
 	}
-	if err = r.Store.Recover(); err != nil {
-		cancel()
-		return nil, err
-	}
 	go q.work()
 	return q, nil
 }
@@ -100,8 +97,11 @@ func (q *Queue) Submit(req Request) (Job, error) {
 	if err != nil {
 		return Job{}, err
 	}
-	if b.BaseModel != q.catalog.Model {
-		return Job{}, errors.New("incompatible base model")
+	if req.Version != "" && req.Version != b.Version {
+		return Job{}, errors.New("bot version changed")
+	}
+	if err = q.catalog.Check(b); err != nil {
+		return Job{}, err
 	}
 	if len(req.Input) == 0 || len(req.Input) > 1<<20 {
 		return Job{}, errors.New("input must be 1..1048576 bytes")

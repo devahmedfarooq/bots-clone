@@ -188,3 +188,25 @@ func TestGenerationFailureDoesNotPoisonNextJob(t *testing.T) {
 		t.Fatal(result)
 	}
 }
+
+func TestSubmissionChecksPinnedVersionAndGrants(t *testing.T) {
+	q, _, _ := testQueue(t, 4)
+	if _, err := q.Submit(Request{Bot: "echo", Input: "hello", Version: "2.0.0"}); err == nil {
+		t.Fatal("wrong bot version admitted")
+	}
+	b, err := q.catalog.Registry.Get("echo")
+	if err != nil {
+		t.Fatal(err)
+	}
+	b.Tools = []string{"missing-tool"}
+	data, _ := json.Marshal(b)
+	if err = os.WriteFile(filepath.Join(q.catalog.Registry.Dir, "echo.json"), data, 0600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = q.Submit(Request{Bot: "echo", Input: "hello"}); err == nil {
+		t.Fatal("invalid grant admitted")
+	}
+	if len(q.List()) != 0 {
+		t.Fatal("invalid submissions persisted")
+	}
+}
