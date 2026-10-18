@@ -1,0 +1,34 @@
+﻿{
+    "model":  "qwen3-1.7b-q8",
+    "test_state":  "A:\\projects\\bots-clone\\.local\\service-smoke-9d589c174a214a9b8cacf9761a3d08e4",
+    "resources":  {
+                      "at":  "2026-10-18T00:35:34.7033426Z",
+                      "device_vram_mib":  3484,
+                      "system_used_ram_bytes":  14037487616
+                  },
+    "invoice":  {
+                    "vendor":  "Cedar Supplies",
+                    "invoice_number":  "INV-104",
+                    "currency":  "USD",
+                    "total":  149.5
+                },
+    "workflow_invoice":  {
+                             "vendor":  "Cedar Supplies",
+                             "invoice_number":  "INV-104",
+                             "currency":  "USD",
+                             "total":  149.5
+                         },
+    "date":  "2026-10-18T00:35:36.7183144Z",
+    "checks":  [
+                   "CLI registration",
+                   "API local installation",
+                   "bot settings/compatibility",
+                   "unauthorized request rejected",
+                   "real invoice extraction",
+                   "SSE final event",
+                   "active cancellation",
+                   "two-bot workflow",
+                   "attributable trace"
+               ],
+    "adapter_checks":  "Pending Phase 2"
+}

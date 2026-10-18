@@ -1,0 +1,16 @@
+{
+  "checks": [
+    "installed bot through UI",
+    "real UI task output",
+    "expanded output and trace survive refresh",
+    "UI cancellation",
+    "mobile no horizontal overflow",
+    "token removed from URL"
+  ],
+  "invoice": {
+    "vendor": "Pine Goods",
+    "invoice_number": "INV-205",
+    "currency": "EUR",
+    "total": 73.25
+  }
+}
