@@ -1,6 +1,10 @@
 const fragment = new URLSearchParams(location.hash.slice(1));
-if (fragment.has('token')) sessionStorage.setItem('local-bots-token', fragment.get('token'));
+if (fragment.has('token')) {
+  sessionStorage.setItem('local-bots-token', fragment.get('token'));
+  try { localStorage.setItem('local-bots-token', fragment.get('token')); } catch (_) {}
+}
 history.replaceState(null, '', location.pathname);
+const getToken = () => sessionStorage.getItem('local-bots-token') || localStorage.getItem('local-bots-token') || '';
 const $ = id => document.getElementById(id);
 const escape = text => String(text ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const states = ['Inbox', 'Ready', 'In Progress', 'Review', 'Done', 'Blocked', 'Needs Your Approval'];
@@ -32,13 +36,23 @@ const assistantHints = {
 
 function settingsFields() {
   const fields = [['priority','Priority (5 highest)',3,1,5],['token_limit','Total token budget',60000,1,10000000],['run_limit','Total runs (including planning/review)',30,1,1000],['run_tokens','Tokens per run',6000,1,131072],['seconds','Seconds per run',180,1,3600],['tool_calls','Tool calls per run',6,0,100]];
-  return `<div class="fields">${fields.map(([name,label,value,min,max]) => `<label>${label}<input type="number" name="${name}" value="${value}" min="${min}" max="${max}" required></label>`).join('')}</div><div class="rules">${[['before_work','Approve all worker runs'],['before_done','Approve verified results'],['tools','Approve bots with tool access']].map(([name,label])=>`<label><input type="checkbox" name="${name}" ${name==='tools'?'checked':''}>${label}</label>`).join('')}</div>`;
+  return `<div class="fields">${fields.map(([name,label,value,min,max]) => `<label>${label}<input type="number" name="${name}" value="${value}" min="${min}" max="${max}" required></label>`).join('')}</div><div class="rules">${[['before_work','Manual approval for all worker runs'],['before_done','Manual sign-off on final results'],['tools','Manual approval for file/tool operations']].map(([name,label])=>`<label><input type="checkbox" name="${name}"> ${label}</label>`).join('')}</div>`;
 }
 $('create-settings').innerHTML = settingsFields(); $('edit-settings').innerHTML = settingsFields();
 
 async function api(path, data) {
-  const response = await fetch('/api/'+path, {headers:{Authorization:'Bearer '+(sessionStorage.getItem('local-bots-token')||''), ...(data?{'Content-Type':'application/json'}:{})}, ...(data?{method:'POST',body:JSON.stringify(data)}:{})});
-  if (!response.ok) { const text=await response.text(); throw Error(response.status===401?'Open the dashboard link printed by bots serve to connect.':text); }
+  const token = getToken();
+  const response = await fetch('/api/'+path, {
+    headers: {
+      Authorization: 'Bearer ' + token,
+      ...(data ? {'Content-Type': 'application/json'} : {})
+    },
+    ...(data ? {method: 'POST', body: JSON.stringify(data)} : {})
+  });
+  if (!response.ok) {
+    const text = await response.text();
+    throw Error(response.status === 401 ? 'Authentication required. Reopen the dashboard link printed by bots serve to connect.' : text);
+  }
   return response.json();
 }
 
@@ -144,7 +158,6 @@ function updateReader() {
     $('reader-raw').hidden = true;
     $('reader-formatted').hidden = true;
     $('reader-preview').textContent = '📝 Show Code';
-    // Extract raw html if inside markdown code blocks
     let htmlCode = res.text;
     const match = /```(?:html)?\n([\s\S]*?)```/i.exec(res.text);
     if (match) htmlCode = match[1];
@@ -263,10 +276,13 @@ $('reader-download').addEventListener('click', () => {
 
 function cardMarkup(card) {
   const history = card.history.map(item => `<p>${escape(new Date(item.at).toLocaleString())} · ${escape(item.actor)}<br>${escape(item.text)}</p>`).join('');
-  const button = (action, label) => `<button data-card="${card.id}" data-action="${action}">${label}</button>`;
+  const button = (action, label, cls) => `<button type="button" class="${cls}" data-card="${card.id}" data-action="${action}">${label}</button>`;
   let actions = '';
-  if (card.status === 'Needs Your Approval') actions = button('approve', 'Approve') + button('reject', 'Reject');
-  if (card.status === 'Blocked') actions = button('retry', card.phase === 'verify' ? 'Retry review' : 'Retry task');
+  if (card.status === 'Needs Your Approval') {
+    actions = `<div class="card-action-row">${button('approve', '✓ Approve', 'btn-approve')}${button('reject', '✕ Reject', 'btn-reject')}</div>`;
+  } else if (card.status === 'Blocked') {
+    actions = `<div class="card-action-row">${button('retry', '↺ ' + (card.phase === 'verify' ? 'Retry Review' : 'Retry Task'), 'btn-retry')}</div>`;
+  }
   return `<article class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem">
       <h3 style="margin:0">${escape(card.title)}</h3>
@@ -331,7 +347,19 @@ async function refresh() {
   catch(error){$('connection').textContent='Disconnected';$('notice').textContent=error.message;}finally{refreshing=false;}
 }
 
-async function mutation(button,run) {button.disabled=true;try{$('notice').textContent='';await run();await refresh();}catch(error){$('notice').textContent=error.message;}finally{button.disabled=false;}}
+async function mutation(button,run) {
+  if (button) button.disabled=true;
+  try{
+    $('notice').textContent='';
+    await run();
+    await refresh();
+  }catch(error){
+    $('notice').textContent='⚠️ ' + error.message;
+    alert('Action error: ' + error.message);
+  }finally{
+    if (button) button.disabled=false;
+  }
+}
 
 $('goal-form').addEventListener('submit',event=>{
   event.preventDefault();
@@ -354,9 +382,20 @@ $('chat-form').addEventListener('submit',event=>{event.preventDefault();mutation
 $('board').addEventListener('click',event=>{
   const viewBtn = event.target.closest('button[data-view-result]');
   if (viewBtn) { openReader(viewBtn.dataset.viewResult); return; }
-  const button=event.target.closest('button[data-card]');if(!button)return;
-  const note=prompt(button.dataset.action==='retry'?'Retry can repeat interrupted tool actions. Inspect the history first. Add an instruction or reason:':'Decision note (optional):');if(note===null)return;
-  mutation(button,()=>api(`cards/${button.dataset.card}/${button.dataset.action}`,{note}));
+  const button=event.target.closest('button[data-card]');
+  if(!button)return;
+  const action = button.dataset.action;
+  const cardId = button.dataset.card;
+  const originalLabel = button.textContent;
+  mutation(button, async () => {
+    button.textContent = action === 'approve' ? 'Approving…' : (action === 'reject' ? 'Rejecting…' : 'Retrying…');
+    try {
+      await api(`cards/${cardId}/${action}`, { note: action + ' by user' });
+    } catch (err) {
+      button.textContent = originalLabel;
+      throw err;
+    }
+  });
 });
 
 // Assistant pill click handler

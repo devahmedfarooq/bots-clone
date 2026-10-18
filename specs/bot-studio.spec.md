@@ -47,3 +47,17 @@ HUMAN_INTERFACE:
     code_view: syntax-styled code view with line numbers and copy
     download: one-click file download (.html, .py, .go, .md, .txt)
     hide_technical: raw JSON, token numbers and internal IDs hidden unless user clicks Diagnostics
+
+  CARD_ACTIONS_AND_AUTONOMY:
+    default_rules:
+      before_work: false
+      before_done: false
+      tools: false
+      note: manager bot handles planning and verification autonomously; human approval only when explicitly requested
+    card_buttons:
+      approve: direct POST /api/cards/{id}/approve (no blocking browser prompt dialog)
+      reject: direct POST /api/cards/{id}/reject (no blocking browser prompt dialog)
+      retry: direct POST /api/cards/{id}/retry
+      visuals: distinctive green approve and red reject styling
+    token_persistence:
+      dual_storage: sync token between sessionStorage and localStorage to survive page refresh

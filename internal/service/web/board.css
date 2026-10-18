@@ -27,9 +27,13 @@ details{background:#141d28;border:1px solid #273344;border-radius:8px;padding:1r
 .card h3{font-size:1rem;margin:0 0 .5rem;color:#fff}
 .card p{font-size:.8rem;color:#8da1b5;margin:.3rem 0}
 .card details{padding:.6rem;background:#111822;border:1px solid #233140;margin-top:.6rem}
-.card button{margin:.25rem 0;font-size:.8rem}
-.card pre,#chat p{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit}
-.card pre{font-size:.85rem;max-height:360px;overflow:auto}
+.card-action-row{display:flex;gap:.5rem;margin-top:.6rem}
+.btn-approve{background:#184e3a!important;color:#78d7c2!important;border:1px solid #287a5c!important;font-weight:700!important;flex:1;padding:.45rem!important;border-radius:6px!important;cursor:pointer;text-align:center}
+.btn-approve:hover{background:#21634a!important}
+.btn-reject{background:#4d1c1c!important;color:#f78d8d!important;border:1px solid #793030!important;font-weight:600!important;flex:1;padding:.45rem!important;border-radius:6px!important;cursor:pointer;text-align:center}
+.btn-reject:hover{background:#612424!important}
+.btn-retry{background:#1a2f42!important;color:#7cbbf7!important;border:1px solid #2d4f6e!important;font-weight:600!important;width:100%;padding:.45rem!important;border-radius:6px!important;cursor:pointer;text-align:center}
+.btn-retry:hover{background:#233e57!important}
 .btn-view-result{background:#111822!important;color:#78d7c2!important;border:1px solid #35475e!important;padding:.5rem .8rem!important;font-size:.85rem!important;font-weight:600;border-radius:6px!important;cursor:pointer;display:block;margin-top:.6rem!important;width:100%;text-align:center}
 .btn-view-result:hover{background:#1a2736!important;border-color:#78d7c2!important}
 .history{font-size:.8rem;max-height:300px;overflow:auto}
