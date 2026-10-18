@@ -20,6 +20,7 @@ func isFileReceipt(output string) bool {
 
 // Use the successful write's recorded payload, never a model-supplied path or a later filesystem read.
 func (a *Autonomy) deliverable(runID, output string) (string, error) {
+	output = unwrapToolCallText(output)
 	var envelope struct {
 		Output string `json:"output"`
 	}

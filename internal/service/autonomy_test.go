@@ -767,3 +767,20 @@ func TestPlanSchemaGeneratesFieldsInDependencyOrder(t *testing.T) {
 		t.Fatalf("the reviewer must explain before it decides: %s", verdict)
 	}
 }
+
+func TestUnwrapToolCallText(t *testing.T) {
+	page := "<!DOCTYPE html>\n<html><body>Bean There</body></html>"
+	wrapped, _ := json.Marshal(map[string]any{"name": "file-write", "arguments": map[string]any{"path": "index.html", "content": page}})
+	for output, want := range map[string]string{
+		string(wrapped):                        page,
+		"  " + string(wrapped) + "\n":          page,
+		"plain text answer":                    "plain text answer",
+		`{"name":"file-read","arguments":{}}`:  `{"name":"file-read","arguments":{}}`,
+		`{"name":"file-write","arguments":{}}`: `{"name":"file-write","arguments":{}}`,
+		`{"output":"x"}`:                       `{"output":"x"}`,
+	} {
+		if got := unwrapToolCallText(output); got != want {
+			t.Errorf("unwrap(%.50q) = %.50q, want %.50q", output, got, want)
+		}
+	}
+}

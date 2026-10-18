@@ -111,3 +111,13 @@ WORKER_QUALITY:
     effect: always valid JSON, no invented owners, no runaway fields (verdict about 64 tokens, about 1s)
   REJECTED_IDEA: requiring the reviewer to quote evidence from the output; a 1.7B model pastes the whole output or describes
     it instead of quoting (measured), so it was removed
+
+LOOP_GUARD (runner, any tool): identical tool call (name + arguments) already succeeded -> not run again, result says so;
+  from the first duplicate no tools are offered next turn so the model must answer in text; a third identical call ends the run
+  completed with reason repeated_tool_call (saved work stays; deliverable recovery still applies)
+  reason: a worker re-sent the same file-write 6 times (about 21k tokens) and never replied
+PLAN_FIELDS: plan schema emits title, requirements, acceptance, owner in that order (alphabetical order made the model fill
+  acceptance with the worker name); verdict emits reason before approved
+PLAN_CONTEXT: the planner is not shown the plan card's own task fields (it copied "Plan goal" text into plans) and gets
+  short role hints per worker, not full descriptions (it copied descriptions into requirements); no worked example (leaked)
+TOOL_CALL_TEXT: a reply that is a printed file-write call JSON is unwrapped to its content before deliverable recovery

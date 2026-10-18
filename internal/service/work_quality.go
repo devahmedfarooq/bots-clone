@@ -106,3 +106,18 @@ func outputSchema(c Card, g Goal) json.RawMessage {
 	}
 	return nil
 }
+
+// unwrapToolCallText recovers the content when a model prints a file-write call as its reply instead of making the call.
+func unwrapToolCallText(output string) string {
+	var call struct {
+		Name      string `json:"name"`
+		Arguments struct {
+			Content string `json:"content"`
+		} `json:"arguments"`
+	}
+	text := strings.TrimSpace(output)
+	if !strings.HasPrefix(text, "{") || json.Unmarshal([]byte(text), &call) != nil || call.Name != "file-write" || strings.TrimSpace(call.Arguments.Content) == "" {
+		return output
+	}
+	return call.Arguments.Content
+}
