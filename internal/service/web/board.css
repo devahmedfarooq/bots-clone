@@ -9,12 +9,14 @@ p,footer,.meta{color:var(--muted)}
 label{display:grid;gap:.35rem;font-size:.9rem}
 input,textarea,select,button{font:inherit;border-radius:6px;border:1px solid #3b4d66;padding:.55rem .8rem;background:#16202c;color:#e5eaf2}
 textarea{width:100%;resize:vertical;line-height:1.5}
-button{cursor:pointer}button:hover{border-color:var(--accent)}button:disabled{opacity:.5;cursor:wait}
+button{cursor:pointer}button:hover{border-color:var(--accent)}button:disabled{opacity:.35;cursor:not-allowed;border-style:dashed}
+.field-label{margin:0 0 .5rem;font-size:.9rem;font-weight:600;color:#e5eaf2}
 :focus-visible{outline:2px solid #7cbbf7;outline-offset:2px}
 form{display:grid;gap:.9rem}
-.layout{display:grid;grid-template-columns:minmax(300px,420px) 1fr;gap:1.25rem;align-items:start}
+.layout{display:grid;grid-template-columns:minmax(300px,420px) minmax(0,1fr);gap:1.25rem;align-items:start}.layout>*{min-width:0}
+.side,.work-list,form,label{grid-template-columns:minmax(0,1fr)}
 .side{display:grid;gap:1.25rem}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:1.1rem}
+.panel{min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:1.1rem}
 details.panel{margin-top:1.25rem}summary{cursor:pointer;font-weight:600}
 .assistants{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:.5rem;margin-bottom:1rem}
 .assistants button{text-align:left;line-height:1.3;padding:.6rem}
@@ -30,7 +32,7 @@ details.panel{margin-top:1.25rem}summary{cursor:pointer;font-weight:600}
 .work-list{display:grid;gap:.5rem;max-height:420px;overflow:auto}
 .work-item{display:flex;justify-content:space-between;align-items:center;gap:.6rem;text-align:left;width:100%}
 .work-item[aria-current=true]{border-color:var(--accent);background:#1a2a38}
-.work-item span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.work-item span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .work-item small{display:block;color:var(--muted)}
 .empty-result{color:var(--muted);padding:3rem 1.5rem;text-align:center;border:1px dashed var(--line);border-radius:8px}
 .result-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:1rem;margin-bottom:1rem}

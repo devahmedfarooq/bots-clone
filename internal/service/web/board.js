@@ -152,7 +152,7 @@ function renderResult() {
   $('result-view').hidden = !goal;
   if (!goal) return;
   const cards = goalCards(goal), card = currentCard(goal), res = extractResult(card), file = deliverable(card, view === 'raw');
-  const bot = assistants[card.owner]?.label || card.owner;
+  const worker = goal.workers[0], bot = assistants[worker]?.label || worker;
   const updated = card.history.length ? new Date(card.history[card.history.length - 1].at).toLocaleString() : '';
   $('reader-title').textContent = goal.direct ? goalTitle(goal) : card.title || goalTitle(goal);
   $('reader-meta').innerHTML = `<strong>${escape(bot)}</strong>${statusBadge(card)}<span>Updated ${escape(updated)}</span>`;
@@ -165,6 +165,7 @@ function renderResult() {
   $('reader-preview').textContent = view === 'preview' ? 'Show text' : 'Live preview';
   $('reader-toggle-raw').textContent = view === 'raw' ? 'Formatted' : 'Diagnostics';
   $('reader-copy').disabled = $('reader-download').disabled = !res.text;
+  $('chat-form').hidden = !(card.status === 'Done' || card.status === 'Blocked');
   $('reader-iframe').hidden = view !== 'preview' || !file.html;
   $('reader-raw').hidden = view !== 'raw';
   $('reader-formatted').hidden = view !== 'formatted';
@@ -183,7 +184,7 @@ function renderResult() {
 
 function renderList() {
   $('work-list').innerHTML = [...board.goals].reverse().map(g => {
-    const card = goalCards(g)[0], owner = card ? (assistants[card.owner]?.label || card.owner) : '';
+    const worker = g.workers[0], owner = assistants[worker]?.label || worker;
     return `<button type="button" class="work-item" data-goal="${g.id}" aria-current="${g.id === goalId}"><span>${escape(goalTitle(g))}<small>${escape(owner)}</small></span>${badge(g.status)}</button>`;
   }).join('') || '<p>Nothing yet.</p>';
 }

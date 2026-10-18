@@ -18,8 +18,9 @@
   <div class="layout">
     <aside class="side">
       <section class="panel" aria-labelledby="new-title">
-        <h2 id="new-title">New request</h2>
-        <div id="assistants" class="assistants" role="group" aria-label="Choose an assistant"></div>
+        <h2 id="new-title">Assign a task</h2>
+        <p class="field-label" id="assign-label">Assign to</p>
+        <div id="assistants" class="assistants" role="group" aria-labelledby="assign-label"></div>
         <form id="goal-form">
           <label><span id="prompt-hint">What do you need?</span>
             <textarea name="requirements" id="prompt-input" required maxlength="16000" rows="4"></textarea>
@@ -29,7 +30,7 @@
             <label class="check"><input type="checkbox" id="plan-mode"> Let the manager plan and review (slower, multi-step)</label>
             <div id="create-settings"></div>
           </details>
-          <button type="submit" class="primary">Run <small>Ctrl+Enter</small></button>
+          <button type="submit" class="primary">Assign task <small>Ctrl+Enter</small></button>
         </form>
       </section>
       <section class="panel" aria-labelledby="work-title">
@@ -39,7 +40,7 @@
     </aside>
 
     <section class="panel result" id="result-panel" aria-live="polite">
-      <div id="result-empty" class="empty-result">Pick an assistant, describe what you need and press Run. Your result appears here.</div>
+      <div id="result-empty" class="empty-result">Choose who to assign to, describe the task and press Assign task. The result appears here.</div>
       <div id="result-view" hidden>
         <div class="result-head">
           <div>
