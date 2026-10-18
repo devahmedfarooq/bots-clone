@@ -1,0 +1,9 @@
+[
+  {
+    "name": "minimal-text",
+    "input": "Reply with only the word READY.",
+    "contains": [
+      "READY"
+    ]
+  }
+]
