@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "id": "extract-twice",
+  "steps": [
+    {"id": "extract", "bot": "extract", "input": "Invoice INV-104 from Cedar Supplies. Total USD 149.50.", "input_type": "text", "output_type": "json"},
+    {"id": "check", "bot": "extract", "depends_on": ["extract"], "input_from": "extract", "input_type": "json", "output_type": "json"}
+  ]
+}
