@@ -123,6 +123,7 @@ const goalCards = goal => {
 const currentGoal = () => board.goals.find(g => g.id === goalId);
 function currentCard(goal) {
   const cards = goalCards(goal);
+  if (!cards.length) return undefined;
   return cards.find(c => c.id === cardId) || (cards[0].kind === 'final' ? cards[0] : [...cards].reverse().find(c => c.output) || cards[0]);
 }
 
@@ -149,12 +150,26 @@ function cardButtons(card) {
   return '';
 }
 
+function renderWaiting(goal) {
+  $('reader-title').textContent = goalTitle(goal);
+  $('reader-meta').innerHTML = badge('Inbox') + '<span>Waiting for the manager to pick this up…</span>';
+  $('task-tabs').innerHTML = $('card-actions').innerHTML = '';
+  $('card-alert').hidden = $('reader-preview').hidden = $('reader-iframe').hidden = $('reader-raw').hidden = $('chat-form').hidden = true;
+  $('reader-copy').disabled = $('reader-download').disabled = true;
+  $('reader-formatted').hidden = false;
+  $('reader-formatted').innerHTML = '<p>Starting. The result appears here when the assistant finishes.</p>';
+  $('usage').textContent = $('workspace').textContent = '';
+  $('history').innerHTML = '';
+}
+
 function renderResult() {
   const goal = currentGoal();
   $('result-empty').hidden = !!goal;
   $('result-view').hidden = !goal;
   if (!goal) return;
-  const cards = goalCards(goal), card = currentCard(goal), res = extractResult(card), file = deliverable(card, view === 'raw');
+  const cards = goalCards(goal), card = currentCard(goal);
+  if (!card) return renderWaiting(goal);
+  const res = extractResult(card), file = deliverable(card, view === 'raw');
   const worker = card.owner, bot = assistants[worker]?.label || worker;
   const updated = card.history.length ? new Date(card.history[card.history.length - 1].at).toLocaleString() : '';
   const tasks = goalTasks(goal), finished = tasks.filter(c => c.status === 'Done').length;
@@ -290,7 +305,9 @@ for (const [id, mode] of [['reader-preview', 'preview'], ['reader-toggle-raw', '
 }
 
 $('reader-copy').addEventListener('click', async () => {
-  const card = currentCard(currentGoal()), button = $('reader-copy'), {body} = deliverable(card, view === 'raw');
+  const card = currentCard(currentGoal()), button = $('reader-copy');
+  if (!card) return;
+  const {body} = deliverable(card, view === 'raw');
   try { await navigator.clipboard.writeText(body); } catch (_) {
     const area = Object.assign(document.createElement('textarea'), {value: body});
     document.body.appendChild(area); area.select(); document.execCommand('copy'); area.remove();
@@ -300,7 +317,9 @@ $('reader-copy').addEventListener('click', async () => {
 });
 
 $('reader-download').addEventListener('click', () => {
-  const goal = currentGoal(), card = currentCard(goal), {body, ext} = deliverable(card, view === 'raw');
+  const goal = currentGoal(), card = currentCard(goal);
+  if (!card) return;
+  const {body, ext} = deliverable(card, view === 'raw');
   const link = Object.assign(document.createElement('a'), {
     href: URL.createObjectURL(new Blob([body], {type: 'text/plain;charset=utf-8'})),
     download: (goalTitle(goal).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'result') + '.' + ext
@@ -317,6 +336,7 @@ $('card-actions').addEventListener('click', event => {
 $('chat-form').addEventListener('submit', event => {
   event.preventDefault();
   const form = event.currentTarget, goal = currentGoal(), card = currentCard(goal);
+  if (!card) return;
   mutation(event.submitter, async () => {
     await api(`goals/${goal.id}/chat`, {text: new FormData(form).get('text')});
     if (card.status === 'Blocked' || (goal.direct && card.status === 'Done')) await api(`cards/${card.id}/retry`, {note: 'changes requested'});
