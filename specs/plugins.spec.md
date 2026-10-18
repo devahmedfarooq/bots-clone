@@ -5,3 +5,4 @@ Bot must grant plugin name; registry checks grant and validates required/unknown
 Call -> new executable process (no shell) -> protocol-versioned bounded JSON stdin/stdout -> context timeout + bounded wait -> structured result/error; stderr discarded and inherited environment minimized.
 Go authors use public plugin.Serve(in,out,callback); sample cmd/plugin-echo builds without core edits.
 Executables are trusted code with host account access, not a sandbox. No shell/code execution tool is provided. Packages cannot add plugins or install hooks. Network/mount sandboxing must be implemented before offering arbitrary shell/code tools.
+Default registry tests reject shell/code/exec/Python/PowerShell grants and calls. P3-10 constrained arbitrary execution remains deferred; time/output/process cancellation bounds on trusted plugins do not imply filesystem/network isolation.
