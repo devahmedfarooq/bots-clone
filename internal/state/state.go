@@ -21,6 +21,8 @@ type Run struct {
 	Session    string         `json:"session"`
 	Bot        string         `json:"bot"`
 	Version    string         `json:"version"`
+	Model      string         `json:"base_model,omitempty"`
+	Adapter    string         `json:"adapter,omitempty"`
 	Status     string         `json:"status"`
 	Reason     string         `json:"termination_reason"`
 	Error      string         `json:"error,omitempty"`
@@ -171,6 +173,6 @@ func (s *Store) Get(id string) (Run, error) {
 }
 func (s *Store) ToolEvents(id string) (int, error) {
 	var count int
-	e := s.db.QueryRow("SELECT count(*) FROM events WHERE run=? AND json_extract(body,'$.result.error') IS NULL", id).Scan(&count)
+	e := s.db.QueryRow("SELECT count(*) FROM events WHERE run=? AND json_type(body,'$.result')='object' AND json_extract(body,'$.result.error') IS NULL", id).Scan(&count)
 	return count, e
 }

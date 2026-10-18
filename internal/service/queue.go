@@ -9,6 +9,7 @@ import (
 
 	"bots/internal/application"
 	"bots/internal/config"
+	"bots/internal/diagnostics"
 	"bots/internal/runner"
 	"bots/internal/state"
 )
@@ -20,12 +21,13 @@ type Request struct {
 }
 
 type Job struct {
-	ID      string     `json:"id"`
-	Bot     string     `json:"bot"`
-	Status  string     `json:"status"`
-	Created time.Time  `json:"created"`
-	Run     *state.Run `json:"run,omitempty"`
-	Error   string     `json:"error,omitempty"`
+	ID        string              `json:"id"`
+	Bot       string              `json:"bot"`
+	Status    string              `json:"status"`
+	Created   time.Time           `json:"created"`
+	Run       *state.Run          `json:"run,omitempty"`
+	Error     string              `json:"error,omitempty"`
+	Resources *diagnostics.Sample `json:"resources,omitempty"`
 }
 
 type queued struct {
@@ -149,7 +151,9 @@ func (q *Queue) work() {
 				q.jobs[current.ID] = current
 				return nil
 			}})
+			sample := diagnostics.Measure()
 			q.mu.Lock()
+			j.Resources = &sample
 			j.Status = run.Status
 			if run.ID != "" {
 				stored, e := q.runner.Store.Get(run.ID)

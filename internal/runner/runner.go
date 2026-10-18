@@ -50,7 +50,7 @@ func (r *Runner) Run(parent context.Context, b config.Bot, input string, o Optio
 		return run, e
 	}
 	started := time.Now()
-	run = state.Run{ID: state.ID(), Session: session, Bot: b.ID, Version: b.Version, Status: "running", Started: started}
+	run = state.Run{ID: state.ID(), Session: session, Bot: b.ID, Version: b.Version, Model: b.BaseModel, Adapter: b.Adapter, Status: "running", Started: started}
 	if e = r.Store.Save(run); e != nil {
 		return run, e
 	}
@@ -84,6 +84,9 @@ func (r *Runner) Run(parent context.Context, b config.Bot, input string, o Optio
 				run.Error = err.Error()
 			}
 		}
+		if traceErr := r.Store.Event(run.ID, map[string]any{"kind": "termination", "status": run.Status, "reason": run.Reason, "error": run.Error, "duration_ms": run.DurationMS, "usage": run.Usage}); traceErr != nil {
+			err = errors.Join(err, traceErr)
+		}
 		if saveErr := r.Store.Save(run); saveErr != nil {
 			err = errors.Join(err, saveErr)
 		}
@@ -94,6 +97,9 @@ func (r *Runner) Run(parent context.Context, b config.Bot, input string, o Optio
 		if e = o.Started(run); e != nil {
 			return run, e
 		}
+	}
+	if e = r.Store.Event(run.ID, map[string]any{"kind": "run_start", "base_model": b.BaseModel, "adapter": b.Adapter, "bot_version": b.Version, "effective_settings": settings}); e != nil {
+		return run, e
 	}
 	release, e = r.Models.Acquire(ctx, provider.Model{ID: b.BaseModel, ContextSize: settings.ContextSize})
 	if e != nil {
@@ -201,8 +207,12 @@ func (r *Runner) Run(parent context.Context, b config.Bot, input string, o Optio
 				return run, errors.New("tool-call budget exhausted")
 			}
 			toolCount++
+			toolStarted := time.Now()
+			if e = r.Store.Event(run.ID, map[string]any{"kind": "tool_started", "call": call, "at": toolStarted.UTC()}); e != nil {
+				return run, e
+			}
 			result := registry.Call(ctx, b.Tools, call)
-			if e = r.Store.Event(run.ID, map[string]any{"call": call, "result": result}); e != nil {
+			if e = r.Store.Event(run.ID, map[string]any{"kind": "tool_finished", "call": call, "result": result, "duration_ms": time.Since(toolStarted).Milliseconds()}); e != nil {
 				return run, e
 			}
 			data, e := json.Marshal(result)
