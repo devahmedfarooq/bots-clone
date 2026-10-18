@@ -58,7 +58,12 @@ func serve(ctx context.Context, c appConfig, catalog application.Catalog, args [
 		return err
 	}
 	defer q.Close()
-	s := &service.Server{Catalog: catalog, Queue: q, Store: store}
+	flows, err := service.NewWorkflows(q)
+	if err != nil {
+		return err
+	}
+	defer flows.Close()
+	s := &service.Server{Catalog: catalog, Queue: q, Store: store, Workflows: flows}
 	token := state.ID() + state.ID()
 	server := &http.Server{Handler: service.Secure(s.Handler(), ln.Addr().String(), token), ReadHeaderTimeout: 5 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
 	done := make(chan struct{})

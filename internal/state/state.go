@@ -134,6 +134,7 @@ func encoded(v any) ([]byte, error) {
 	}
 	return json.Marshal(clean(data))
 }
+func Sanitized(v any) ([]byte, error) { return encoded(v) }
 func (s *Store) Save(r Run) error {
 	b, e := encoded(r)
 	if e != nil {

@@ -10,12 +10,14 @@ import (
 	"bots/internal/application"
 	"bots/internal/config"
 	"bots/internal/state"
+	"bots/internal/workflow"
 )
 
 type Server struct {
-	Catalog application.Catalog
-	Queue   *Queue
-	Store   *state.Store
+	Catalog   application.Catalog
+	Queue     *Queue
+	Store     *state.Store
+	Workflows *Workflows
 }
 
 func respond(w http.ResponseWriter, code int, v any) {
@@ -39,6 +41,37 @@ func body(w http.ResponseWriter, r *http.Request, v any) error {
 func (s *Server) Handler() http.Handler {
 	m := http.NewServeMux()
 	m.Handle("GET /", dashboard())
+	if s.Workflows != nil {
+		m.HandleFunc("GET /api/workflows", func(w http.ResponseWriter, r *http.Request) { respond(w, 200, s.Workflows.List()) })
+		m.HandleFunc("POST /api/workflows", func(w http.ResponseWriter, r *http.Request) {
+			var d workflow.Definition
+			if err := body(w, r, &d); err != nil {
+				problem(w, err)
+				return
+			}
+			f, err := s.Workflows.Start(d)
+			if err != nil {
+				problem(w, err)
+				return
+			}
+			respond(w, 202, f)
+		})
+		m.HandleFunc("GET /api/workflows/{id}", func(w http.ResponseWriter, r *http.Request) {
+			f, ok := s.Workflows.Get(r.PathValue("id"))
+			if !ok {
+				http.NotFound(w, r)
+				return
+			}
+			respond(w, 200, f)
+		})
+		m.HandleFunc("POST /api/workflows/{id}/cancel", func(w http.ResponseWriter, r *http.Request) {
+			if err := s.Workflows.Cancel(r.PathValue("id")); err != nil {
+				problem(w, err)
+				return
+			}
+			respond(w, 200, map[string]bool{"cancel_requested": true})
+		})
+	}
 	m.HandleFunc("GET /api/bots", func(w http.ResponseWriter, r *http.Request) {
 		bots, err := s.Catalog.Registry.List()
 		if err != nil {
