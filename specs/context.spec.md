@@ -16,3 +16,8 @@ VERIFY: traversal/injection, attribution, bounds, history/tool-pair preservation
 COMPACT: require each replacement to shrink encoded content; otherwise use a fixed marker
   honor cancellation; drop only framework-added retrieval immediately after current input
   never infer retrieval authority from user-authored JSON
+
+AUTONOMOUS_FIT:
+  optional adaptive context growth bounded by engine maximum and remaining run token budget
+  fit error is typed ErrContextBudget; only this error allows context expansion
+  record allocation in run trace; never repeat completed tool calls while fitting larger context

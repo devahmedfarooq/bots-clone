@@ -9,6 +9,8 @@ import (
 	"unicode/utf8"
 )
 
+var ErrContextBudget = errors.New("instructions/current task exceed context after reserving output and tool space")
+
 func fit(ctx context.Context, p provider.Provider, request provider.Request, current int) (provider.Request, int, error) {
 	messages := append([]provider.Message{}, request.Messages...)
 	request.Messages = messages
@@ -63,7 +65,7 @@ func fit(ctx context.Context, p provider.Provider, request provider.Request, cur
 			}
 		}
 		if !changed {
-			return request, 0, errors.New("instructions/current task exceed context after reserving output and tool space")
+			return request, 0, ErrContextBudget
 		}
 	}
 }

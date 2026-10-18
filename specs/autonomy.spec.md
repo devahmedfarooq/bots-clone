@@ -43,3 +43,27 @@ HOST: Windows supervisor restarts crashes with backoff; optional login scheduled
 TEST: plan->workers->verification->completion, approval/rejection, budget exhaustion, priorities,
   malformed plans/results, ownership, persistent chat/history, restart reconciliation, key dedup,
   capped runner budgets, API validation and authentication, dashboard render/build.
+
+DELIVERABLES:
+  on worker result (direct or managed): load this run's durable tool trace
+  successful file-write receipts -> use exact recorded content; latest write per root/path wins
+  one file -> its complete text; multiple -> labeled complete contents
+  failed, truncated or unfinished writes are never evidence of a saved deliverable
+  receipt/filename without nonempty successful write -> Blocked, never Review/Done
+  manager verifies actual content rather than only a filename
+  startup: repair prior receipt-only cards from completed worker evidence without replaying tools
+    missing evidence -> Blocked; keep original runs/history for diagnostics
+
+ADAPTIVE_CONTEXT (autonomous plan/work/review, including direct tasks):
+  begin at bot context; reserve its configured output plus tool headroom
+  if context cannot fit after safe compaction:
+    grow context toward min(engine configured maximum, remaining reserved run tokens)
+    release/reacquire single model slot; reload serially; retry fitting only, never replay tools
+    record context_allocated event; preserve full current task, tool pairs and all budget caps
+  engine maximum for this laptop = 8192; normal bot context stays 4096
+  never silently increase goal/per-run token limits or tool/file grants
+  if capped, report current context, engine maximum and remaining run tokens with recovery action
+PROMPT_CONTEXT:
+  send goal requirements, task, relevant output and user instructions
+  include worker capabilities for planning; omit operational history, IDs and dispatch telemetry
+  keep complete audit history in SQLite, outside the inference prompt

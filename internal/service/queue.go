@@ -15,12 +15,13 @@ import (
 )
 
 type Request struct {
-	Bot      string          `json:"bot"`
-	Input    string          `json:"input"`
-	Settings config.Settings `json:"settings,omitempty"`
-	Version  string          `json:"bot_version,omitempty"`
-	Budgets  *config.Budgets `json:"budgets,omitempty"`
-	ReadOnly bool            `json:"read_only,omitempty"`
+	AdaptiveContext bool            `json:"adaptive_context,omitempty"`
+	Bot             string          `json:"bot"`
+	Input           string          `json:"input"`
+	Settings        config.Settings `json:"settings,omitempty"`
+	Version         string          `json:"bot_version,omitempty"`
+	Budgets         *config.Budgets `json:"budgets,omitempty"`
+	ReadOnly        bool            `json:"read_only,omitempty"`
 }
 
 var ErrQueueFull = errors.New("queue full")
@@ -175,7 +176,7 @@ func (q *Queue) work() {
 			}
 			q.jobs[j.ID] = j
 			q.mu.Unlock()
-			run, err := q.runner.Run(task.ctx, task.bot, task.request.Input, runner.Options{Settings: task.request.Settings, Started: func(r state.Run) error {
+			run, err := q.runner.Run(task.ctx, task.bot, task.request.Input, runner.Options{AdaptiveContext: task.request.AdaptiveContext, Settings: task.request.Settings, Started: func(r state.Run) error {
 				q.mu.Lock()
 				defer q.mu.Unlock()
 				current := q.jobs[task.id]

@@ -495,3 +495,23 @@ func TestDelegatedWorkerPlainTextIsTheResult(t *testing.T) {
 		t.Fatalf("bad output: %q", b.Cards[1].Output)
 	}
 }
+
+func TestManagerPromptOmitsOperationalHistory(t *testing.T) {
+	a, _ := testAutonomy(t)
+	req := goalRequest()
+	if _, err := a.Create(req); err != nil {
+		t.Fatal(err)
+	}
+	b, _ := a.Snapshot()
+	g, c := b.Goals[0], b.Cards[0]
+	c.Phase = "work"
+	c.History = append(c.History, message("manager", strings.Repeat("dispatch telemetry ", 1000)))
+	g.Chat = append(g.Chat, message("user", "Use three stanzas."))
+	prompt := a.prompt(b, g, c)
+	if strings.Contains(prompt, "Return ONLY the requested JSON") {
+		t.Fatal("worker deliverable forced into JSON")
+	}
+	if strings.Contains(prompt, "dispatch telemetry") || !strings.Contains(prompt, "Use three stanzas.") || !strings.Contains(prompt, g.Requirements) {
+		t.Fatal("irrelevant history or missing task context")
+	}
+}

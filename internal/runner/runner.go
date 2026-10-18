@@ -16,15 +16,17 @@ import (
 )
 
 type Runner struct {
-	Models  *provider.Manager
-	Store   *state.Store
-	Plugins []tools.Tool
+	ContextLimit int
+	Models       *provider.Manager
+	Store        *state.Store
+	Plugins      []tools.Tool
 }
 type Options struct {
-	Session  string
-	Settings config.Settings
-	Emit     func(string)
-	Started  func(state.Run) error
+	AdaptiveContext bool
+	Session         string
+	Settings        config.Settings
+	Emit            func(string)
+	Started         func(state.Run) error
 }
 
 func (r *Runner) Run(parent context.Context, b config.Bot, input string, o Options) (run state.Run, err error) {
@@ -141,6 +143,24 @@ func (r *Runner) Run(parent context.Context, b config.Bot, input string, o Optio
 		}
 		request := provider.Request{Model: b.BaseModel, Messages: messages, Tools: definitions, Settings: settings}
 		request, prompt, e := fit(ctx, r.Models.Provider, request, current)
+		if errors.Is(e, ErrContextBudget) && o.AdaptiveContext {
+			limit := min(r.ContextLimit, b.Budgets.Tokens-run.Usage.Total)
+			if limit > settings.ContextSize {
+				previous := settings.ContextSize
+				settings.ContextSize = min(settings.ContextSize*2, limit)
+				release()
+				release = nil
+				release, e = r.Models.Acquire(ctx, provider.Model{ID: b.BaseModel, ContextSize: settings.ContextSize, Adapter: b.Adapter})
+				if e != nil {
+					return run, fmt.Errorf("context allocation failed: %w", e)
+				}
+				if e = r.Store.Event(run.ID, map[string]any{"kind": "context_allocated", "previous": previous, "context_size": settings.ContextSize, "max_tokens": settings.MaxTokens}); e != nil {
+					return run, e
+				}
+				continue
+			}
+			e = fmt.Errorf("%w (context %d, engine maximum %d, remaining run tokens %d). Increase engine.context_size or Tokens per run, or shorten the task", e, settings.ContextSize, r.ContextLimit, b.Budgets.Tokens-run.Usage.Total)
+		}
 		if e != nil {
 			run.Reason = "context_budget"
 			return run, e

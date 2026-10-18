@@ -291,7 +291,7 @@ func execute(ctx context.Context, args []string) error {
 			fmt.Fprintln(os.Stderr, "shutdown:", e)
 		}
 	}()
-	r := &runner.Runner{Models: manager, Store: store, Plugins: plugins}
+	r := &runner.Runner{ContextLimit: c.Engine.Context, Models: manager, Store: store, Plugins: plugins}
 	if args[0] == "compare" {
 		return compareCommand(ctx, c, r, args[1:])
 	}
