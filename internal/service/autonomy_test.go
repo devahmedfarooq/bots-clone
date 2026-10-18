@@ -470,3 +470,16 @@ func TestPlanStillInvalidAfterCorrectionBlocksWithReason(t *testing.T) {
 		t.Fatalf("bad block: %+v", b)
 	}
 }
+
+func TestPlanAcceptsStructuredRequirementsFromSmallModels(t *testing.T) {
+	var plan struct {
+		Tasks []planTask `json:"tasks"`
+	}
+	raw := `{"tasks":[{"title":"Poem","requirements":{"poem":"3 stanzas","tone":["calm","vivid"]},"acceptance":"A poem exists","owner":"echo"}]}`
+	if err := decodeBotOutput(raw, &plan); err != nil {
+		t.Fatal(err)
+	}
+	if got := string(plan.Tasks[0].Requirements); got != "poem: 3 stanzas; tone: calm; vivid" {
+		t.Fatal(got)
+	}
+}

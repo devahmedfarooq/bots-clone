@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"slices"
 	"sort"
 	"strings"
@@ -470,15 +471,19 @@ func (a *Autonomy) advance(b Board, i int) error {
 	switch c.Phase {
 	case "plan":
 		var plan struct {
-			Tasks []TaskPlan `json:"tasks"`
+			Tasks []planTask `json:"tasks"`
 		}
 		err := decodeBotOutput(output, &plan)
 		if err != nil {
 			err = decodeBotOutput(output, &plan.Tasks)
 		}
-		problem := "the response was not valid JSON like {\"tasks\":[...]}"
+		tasks := make([]TaskPlan, len(plan.Tasks))
+		for i, t := range plan.Tasks {
+			tasks[i] = TaskPlan{Title: t.Title, Requirements: string(t.Requirements), Acceptance: string(t.Acceptance), Owner: t.Owner}
+		}
+		problem := "the response did not match {\"tasks\":[{\"title\",\"requirements\",\"acceptance\",\"owner\"}]} (" + fmt.Sprint(err) + ")"
 		if err == nil {
-			problem = planProblem(plan.Tasks, g.Workers)
+			problem = planProblem(tasks, g.Workers)
 		}
 		if problem != "" {
 			c.Output = output
@@ -494,7 +499,7 @@ func (a *Autonomy) advance(b Board, i int) error {
 		c.Output = output
 		c.Status = Done
 		record(c, "manager", "Plan validated. Tasks assigned to workers.")
-		for _, t := range plan.Tasks {
+		for _, t := range tasks {
 			task := Card{ID: state.ID(), Goal: goalID, TaskPlan: t, Kind: "task", Status: Inbox, Phase: "work"}
 			record(&task, "manager", "Assigned to "+t.Owner+"; acceptance: "+t.Acceptance)
 			b.Cards = append(b.Cards, task)
@@ -660,4 +665,42 @@ func planProblem(tasks []TaskPlan, workers []string) string {
 		}
 	}
 	return ""
+}
+
+// planText accepts a string or, as small models often emit, a structured value flattened to readable text.
+type planText string
+
+type planTask struct {
+	Title        string   `json:"title"`
+	Requirements planText `json:"requirements"`
+	Acceptance   planText `json:"acceptance"`
+	Owner        string   `json:"owner"`
+}
+
+func (t *planText) UnmarshalJSON(data []byte) error {
+	var v any
+	if err := json.Unmarshal(data, &v); err != nil {
+		return err
+	}
+	*t = planText(flatten(v))
+	return nil
+}
+
+func flatten(v any) string {
+	var parts []string
+	switch x := v.(type) {
+	case string:
+		return x
+	case map[string]any:
+		for _, k := range slices.Sorted(maps.Keys(x)) {
+			parts = append(parts, k+": "+flatten(x[k]))
+		}
+	case []any:
+		for _, item := range x {
+			parts = append(parts, flatten(item))
+		}
+	default:
+		return fmt.Sprint(x)
+	}
+	return strings.Join(parts, "; ")
 }
