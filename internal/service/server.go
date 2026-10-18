@@ -38,6 +38,7 @@ func body(w http.ResponseWriter, r *http.Request, v any) error {
 
 func (s *Server) Handler() http.Handler {
 	m := http.NewServeMux()
+	m.Handle("GET /", dashboard())
 	m.HandleFunc("GET /api/bots", func(w http.ResponseWriter, r *http.Request) {
 		bots, err := s.Catalog.Registry.List()
 		if err != nil {
