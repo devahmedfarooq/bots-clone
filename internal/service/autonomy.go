@@ -44,6 +44,7 @@ type GoalRequest struct {
 	Requirements string   `json:"requirements"`
 	Manager      string   `json:"manager"`
 	Workers      []string `json:"workers"`
+	Direct       bool     `json:"direct"`
 	GoalSettings
 }
 
@@ -210,7 +211,11 @@ func (a *Autonomy) Create(req GoalRequest) (Goal, error) {
 		return Goal{}, errors.New("requirements (1..16000 bytes) and 1..16 workers required")
 	}
 	g := Goal{ID: state.ID(), GoalRequest: req, Versions: map[string]string{}, Created: time.Now().UTC(), Status: Inbox, Chat: []BoardMessage{message("user", req.Requirements), message("manager", "Goal saved. I will plan tasks, assign workers, and verify their results.")}}
-	for _, id := range append([]string{req.Manager}, req.Workers...) {
+	ids := req.Workers
+	if !req.Direct {
+		ids = append([]string{req.Manager}, ids...)
+	}
+	for _, id := range ids {
 		bot, err := a.q.catalog.Registry.Get(id)
 		if err != nil {
 			return Goal{}, err
@@ -223,7 +228,12 @@ func (a *Autonomy) Create(req GoalRequest) (Goal, error) {
 	b := cloneBoard(a.board)
 	b.Goals = append(b.Goals, g)
 	c := Card{ID: state.ID(), Goal: g.ID, TaskPlan: TaskPlan{Title: "Plan goal", Requirements: req.Requirements, Acceptance: "Concrete tasks with assigned workers and acceptance criteria", Owner: req.Manager}, Kind: "plan", Status: Inbox, Phase: "plan"}
-	record(&c, "manager", "Planning queued.")
+	if req.Direct {
+		c = Card{ID: state.ID(), Goal: g.ID, TaskPlan: TaskPlan{Title: strings.SplitN(strings.TrimSpace(req.Requirements), "\n", 2)[0], Requirements: req.Requirements, Acceptance: "Complete deliverable that satisfies the request", Owner: req.Workers[0]}, Kind: "task", Status: Inbox, Phase: "work"}
+		record(&c, "manager", "Assigned directly to "+c.Owner+".")
+	} else {
+		record(&c, "manager", "Planning queued.")
+	}
 	b.Cards = append(b.Cards, c)
 	return g, a.save(b)
 }
@@ -492,6 +502,9 @@ func (a *Autonomy) advance(b Board, i int) error {
 			b.Cards = append(b.Cards, task)
 		}
 	case "work":
+		if g.Direct {
+			return a.finishDirect(b, i, output)
+		}
 		var result struct {
 			Status  string `json:"status"`
 			Output  string `json:"output"`
@@ -545,7 +558,44 @@ func (a *Autonomy) advance(b Board, i int) error {
 	return a.save(b)
 }
 
+// finishDirect stores a direct-mode answer as the deliverable; models often skip the JSON envelope.
+func (a *Autonomy) finishDirect(b Board, i int, output string) error {
+	c := &b.Cards[i]
+	var envelope struct {
+		Output string `json:"output"`
+	}
+	text := strings.TrimSpace(output)
+	if decodeBotOutput(output, &envelope) == nil && strings.TrimSpace(envelope.Output) != "" {
+		text = envelope.Output
+	}
+	if text == "" {
+		block(c, "The assistant returned no result. Retry the task.")
+		return a.save(b)
+	}
+	c.Output = text
+	record(c, c.Owner, "Result ready.")
+	if b.Goals[goalIndex(b, c.Goal)].Rules.BeforeDone {
+		c.Status, c.Gate = Approval, "done"
+	} else {
+		c.Status = Done
+	}
+	return a.save(b)
+}
+
+func directPrompt(g Goal) string {
+	text := "Complete this task and reply with the finished deliverable only: no JSON, no preamble.\n" + g.Requirements
+	for _, m := range g.Chat[1:] {
+		if m.Actor == "user" {
+			text += "\nUser instruction: " + m.Text
+		}
+	}
+	return text
+}
+
 func (a *Autonomy) prompt(b Board, g Goal, c Card) string {
+	if g.Direct {
+		return directPrompt(g)
+	}
 	contextData, _ := json.Marshal(struct {
 		Goal    Goal       `json:"goal"`
 		Card    Card       `json:"card"`

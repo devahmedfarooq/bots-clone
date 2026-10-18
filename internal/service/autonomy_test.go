@@ -22,6 +22,7 @@ type boardEngine struct {
 	arrayPlan    bool
 	workerStatus string
 	reject       bool
+	plain        string
 	requests     []provider.Request
 }
 
@@ -44,6 +45,8 @@ func (e *boardEngine) Generate(_ context.Context, r provider.Request, _ func(str
 		if e.reject {
 			output = `{"approved":false,"reason":"Missing evidence."}`
 		}
+	} else if e.plain != "" {
+		output = e.plain
 	} else if e.workerStatus != "" {
 		data, _ := json.Marshal(map[string]string{"status": e.workerStatus, "output": "Partial work", "message": "Need user input"})
 		output = string(data)
@@ -430,3 +433,16 @@ func TestBoardReaderAssets(t *testing.T) {
 	}
 }
 
+func TestDirectGoalSkipsPlanningAndAcceptsPlainText(t *testing.T) {
+	a, e := testAutonomy(t)
+	e.plain = "Roses are red"
+	req := goalRequest()
+	req.Direct, req.Manager = true, ""
+	if _, err := a.Create(req); err != nil {
+		t.Fatal(err)
+	}
+	b := driveBoard(t, a, func(b Board) bool { return b.Goals[0].Status == Done })
+	if len(b.Cards) != 1 || b.Cards[0].Output != "Roses are red" || b.Goals[0].Runs != 1 {
+		t.Fatalf("bad direct result: %+v", b)
+	}
+}
