@@ -78,7 +78,12 @@ try {
     if ($result.invoice_number -ne 'INV-104' -or $result.total -ne 149.50) { throw 'Workflow output did not preserve invoice facts' }
     $trace = Request "runs/$($job.run.id)/trace" $null
     if ($trace.Count -lt 2) { throw 'Run trace missing' }
-    $evidence = @{ date = (Get-Date).ToUniversalTime().ToString('o'); model = $framework.engine.model_id; checks = @('CLI registration','API local installation','bot settings/compatibility','unauthorized request rejected','real invoice extraction','SSE final event','active cancellation','two-bot workflow','attributable trace'); invoice = $invoice; workflow_invoice = $result; resources = $job.resources; adapter_checks = 'Pending Phase 2'; test_state = $testRoot }
+    $stepMetrics = @{}
+    foreach ($property in $flow.steps.PSObject.Properties) {
+        $stepJob = Request "jobs/$($property.Value.job)" $null
+        $stepMetrics[$property.Name] = @{ duration_ms = $stepJob.run.duration_ms; usage = $stepJob.run.usage; bot = $stepJob.run.bot; version = $stepJob.run.version }
+    }
+    $evidence = @{ date = (Get-Date).ToUniversalTime().ToString('o'); model = $framework.engine.model_id; checks = @('CLI registration','API local installation','bot settings/compatibility','unauthorized request rejected','real invoice extraction','SSE final event','active cancellation','two-bot workflow','attributable trace'); invoice = $invoice; invoice_metrics = @{ duration_ms = $job.run.duration_ms; usage = $job.run.usage }; workflow_invoice = $result; workflow_metrics = $stepMetrics; resources = $job.resources; adapter_checks = 'Pending Phase 2'; test_state = $testRoot }
     $evidence | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath evaluation/phase3-acceptance.json -Encoding UTF8
     $completed = $true
     if ($KeepRunning) { @{ process_id = $process.Id; root = $testRoot; port = $Port } | ConvertTo-Json | Set-Content -LiteralPath .local/service-smoke-session.json -Encoding UTF8 }
