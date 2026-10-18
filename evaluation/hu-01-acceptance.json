@@ -1,0 +1,18 @@
+﻿{
+    "status":  "passed",
+    "timestamp":  "2026-10-18T21:11:39.0146306+05:00",
+    "checks":  [
+                   "Reader drawer markup present in board.html",
+                   "Reader CSS styling and mobile typography present in board.css",
+                   "JSON envelope extraction and raw fallback verified",
+                   "Poetry line breaks preserved with \u003cbr\u003e and stanzas with \u003cp\u003e",
+                   "Markdown codeblocks and tables formatted safely",
+                   "Strict HTML escaping prevents script injection and hostile tags",
+                   "Distinct status badges for waiting, running, review, done, and blocked",
+                   "Non-done results never labeled as verified deliverable",
+                   "Exact text copy and .txt download actions implemented",
+                   "Polling stability verified without clobbering scroll or selection",
+                   "Card output preserved in c.Output even on malformed worker outputs"
+               ],
+    "ticket":  "HU-01"
+}

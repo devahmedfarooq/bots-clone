@@ -19,4 +19,26 @@
 <form id="chat-form"><label>Instructions or answers<textarea name="text" required maxlength="8000" rows="2"></textarea></label><button>Send instruction</button></form>
 </section>
 <footer>Local RTX 5050 · One inference at a time · Continuous operation requires the host powered on and awake.</footer>
-</main></body></html>
+</main>
+<aside id="reader-drawer" class="reader-drawer" hidden aria-label="Worker Result Reader">
+  <div class="reader-backdrop" id="reader-backdrop"></div>
+  <div class="reader-panel" role="dialog" aria-modal="true" aria-labelledby="reader-title">
+    <div class="reader-header">
+      <div class="reader-heading">
+        <h2 id="reader-title">Task Result</h2>
+        <div id="reader-meta" class="reader-meta"></div>
+      </div>
+      <div class="reader-actions">
+        <button type="button" id="reader-copy" class="action-btn">Copy</button>
+        <button type="button" id="reader-download" class="action-btn">Download</button>
+        <button type="button" id="reader-toggle-raw" class="action-btn">Raw</button>
+        <button type="button" id="reader-close" class="action-btn close-btn" aria-label="Close reader">✕</button>
+      </div>
+    </div>
+    <div class="reader-body">
+      <div id="reader-formatted" class="reader-content"></div>
+      <pre id="reader-raw" class="reader-raw" hidden></pre>
+    </div>
+  </div>
+</aside>
+</body></html>
