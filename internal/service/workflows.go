@@ -189,7 +189,7 @@ func (w *Workflows) execute(ctx context.Context, f Flow, ordered []workflow.Step
 			var job Job
 			for {
 				job, err = w.q.Submit(Request{Bot: step.Bot, Input: input})
-				if err == nil || err.Error() != "queue full" {
+				if err == nil || !errors.Is(err, ErrQueueFull) {
 					break
 				}
 				select {

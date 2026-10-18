@@ -2,6 +2,7 @@ package service
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"path/filepath"
@@ -33,7 +34,11 @@ func respond(w http.ResponseWriter, code int, v any) {
 }
 
 func problem(w http.ResponseWriter, err error) {
-	respond(w, http.StatusBadRequest, map[string]string{"error": state.Redact(err.Error())})
+	status := http.StatusBadRequest
+	if errors.Is(err, ErrQueueFull) {
+		status = http.StatusTooManyRequests
+	}
+	respond(w, status, map[string]string{"error": state.Redact(err.Error())})
 }
 
 func body(w http.ResponseWriter, r *http.Request, v any) error {

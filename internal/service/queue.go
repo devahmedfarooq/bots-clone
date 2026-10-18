@@ -20,6 +20,8 @@ type Request struct {
 	Settings config.Settings `json:"settings,omitempty"`
 }
 
+var ErrQueueFull = errors.New("queue full")
+
 type Job struct {
 	ID        string              `json:"id"`
 	Bot       string              `json:"bot"`
@@ -55,6 +57,10 @@ func NewQueue(parent context.Context, r *runner.Runner, c application.Catalog, l
 	}
 	ctx, cancel := context.WithCancel(parent)
 	q := &Queue{jobs: map[string]Job{}, cancels: map[string]context.CancelFunc{}, pending: make(chan queued, limit), ctx: ctx, cancel: cancel, done: make(chan struct{}), runner: r, catalog: c}
+	if err := r.Store.Recover(); err != nil {
+		cancel()
+		return nil, err
+	}
 	data, err := r.Store.Checkpoints("job")
 	if err != nil {
 		cancel()
@@ -69,6 +75,11 @@ func NewQueue(parent context.Context, r *runner.Runner, c application.Catalog, l
 		if j.Status == "running" || j.Status == "queued" {
 			j.Status = "interrupted"
 			j.Error = "Service restarted. No automatic replay; inspect tool trace before submitting again."
+			if j.Run != nil {
+				if recovered, e := r.Store.Get(j.Run.ID); e == nil {
+					j.Run = &recovered
+				}
+			}
 			if err = r.Store.Checkpoint("job", j.ID, j); err != nil {
 				cancel()
 				return nil, err
@@ -104,7 +115,7 @@ func (q *Queue) Submit(req Request) (Job, error) {
 		return Job{}, errors.New("service stopped")
 	}
 	if len(q.pending) == cap(q.pending) {
-		return Job{}, errors.New("queue full")
+		return Job{}, ErrQueueFull
 	}
 	j := Job{ID: state.ID(), Bot: b.ID, Status: "queued", Created: time.Now().UTC()}
 	if err = q.runner.Store.Checkpoint("job", j.ID, j); err != nil {

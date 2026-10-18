@@ -42,11 +42,16 @@ async function loadBots() {
   }));
   selected();
 }
+const openRuns = new Set();
+const traces = new Map();
 function showRun(run) {
   const details=node('details');details.append(node('summary','Output and trace'));
+	details.open=openRuns.has(run.id);
+	details.ontoggle=()=>{if(details.open)openRuns.add(run.id);else openRuns.delete(run.id);};
   details.append(node('pre',run.output || run.error || 'No output.'));
   const trace=node('button','Inspect tool trace','secondary');
-  trace.onclick=async()=>{try {details.append(node('pre',JSON.stringify(await api('runs/'+run.id+'/trace'),null,2)));trace.disabled=true;}catch(error){report(error);}};
+  trace.onclick=async()=>{try {const text=JSON.stringify(await api('runs/'+run.id+'/trace'),null,2);traces.set(run.id,text);details.append(node('pre',text));trace.disabled=true;}catch(error){report(error);}};
+  if(traces.has(run.id)){details.append(node('pre',traces.get(run.id)));trace.disabled=true;}
   details.append(node('p',`${run.id} · ${run.duration_ms} ms · ${run.usage.total_tokens || 0} tokens`,'muted'),trace);
   return details;
 }

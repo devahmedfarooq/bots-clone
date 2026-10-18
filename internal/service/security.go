@@ -26,7 +26,7 @@ func Secure(next http.Handler, host, token string) http.Handler {
 		}
 		if strings.HasPrefix(r.URL.Path, "/api/") {
 			provided := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
-			if token == "" || subtle.ConstantTimeCompare([]byte(provided), []byte(token)) != 1 {
+			if token == "" || !strings.HasPrefix(r.Header.Get("Authorization"), "Bearer ") || subtle.ConstantTimeCompare([]byte(provided), []byte(token)) != 1 {
 				http.Error(w, "authentication required", http.StatusUnauthorized)
 				return
 			}

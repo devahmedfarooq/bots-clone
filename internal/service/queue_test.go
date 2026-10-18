@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -19,10 +20,11 @@ import (
 )
 
 type engine struct {
-	started chan struct{}
-	gate    chan struct{}
-	active  atomic.Int32
-	peak    atomic.Int32
+	started       chan struct{}
+	gate          chan struct{}
+	active        atomic.Int32
+	peak          atomic.Int32
+	failRemaining atomic.Int32
 }
 
 func (e *engine) Load(context.Context, provider.Model) error           { return nil }
@@ -41,6 +43,9 @@ func (e *engine) Generate(ctx context.Context, r provider.Request, emit func(str
 	case <-ctx.Done():
 		return provider.Response{}, ctx.Err()
 	case <-e.gate:
+	}
+	if e.failRemaining.Load() > 0 && e.failRemaining.Add(-1) >= 0 {
+		return provider.Response{}, errors.New("out of memory fixture")
 	}
 	return provider.Response{Message: provider.Message{Role: "assistant", Content: r.Messages[len(r.Messages)-1].Content}, Finish: "stop", Usage: provider.Usage{Prompt: 10, Completion: 1, Total: 11}}, nil
 }
@@ -161,5 +166,25 @@ func TestRestartNeverReplaysAndRedacts(t *testing.T) {
 	}
 	if e.active.Load() != 0 {
 		t.Fatal("replayed action")
+	}
+}
+
+func TestGenerationFailureDoesNotPoisonNextJob(t *testing.T) {
+	q, e, _ := testQueue(t, 4)
+	close(e.gate)
+	e.failRemaining.Store(2)
+	j, err := q.Submit(Request{Bot: "echo", Input: "fails"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if terminal(t, q, j.ID).Status != "failed" {
+		t.Fatal("failure hidden")
+	}
+	j, err = q.Submit(Request{Bot: "echo", Input: "recovers"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result := terminal(t, q, j.ID); result.Status != "completed" || result.Run.Output != "recovers" {
+		t.Fatal(result)
 	}
 }
