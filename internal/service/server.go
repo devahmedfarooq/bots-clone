@@ -23,7 +23,11 @@ type Server struct {
 func respond(w http.ResponseWriter, code int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
-	_ = json.NewEncoder(w).Encode(v)
+	data, err := state.Sanitized(v)
+	if err != nil {
+		return
+	}
+	_, _ = w.Write(data)
 }
 
 func problem(w http.ResponseWriter, err error) {

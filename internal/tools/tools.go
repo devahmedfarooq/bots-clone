@@ -9,6 +9,7 @@ import (
 
 	"bots/internal/config"
 	"bots/internal/provider"
+	"bots/internal/state"
 )
 
 type Tool interface {
@@ -26,7 +27,9 @@ type Failure struct {
 	Message string `json:"message"`
 }
 
-func failure(code string, e error) Result { return Result{Error: &Failure{code, e.Error()}} }
+func failure(code string, e error) Result {
+	return Result{Error: &Failure{code, state.Redact(e.Error())}}
+}
 
 type Registry struct {
 	items       map[string]Tool
@@ -88,6 +91,7 @@ func (r *Registry) Call(ctx context.Context, grants []string, c provider.Call) R
 			ch <- failure("tool_failure", e)
 			return
 		}
+		output = state.Redact(output)
 		result := Result{Output: output}
 		if len(output) > r.OutputLimit {
 			result.Output = output[:r.OutputLimit]

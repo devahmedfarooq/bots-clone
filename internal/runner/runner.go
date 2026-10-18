@@ -87,6 +87,8 @@ func (r *Runner) Run(parent context.Context, b config.Bot, input string, o Optio
 		if saveErr := r.Store.Save(run); saveErr != nil {
 			err = errors.Join(err, saveErr)
 		}
+		run.Output = state.Redact(run.Output)
+		run.Error = state.Redact(run.Error)
 	}()
 	if o.Started != nil {
 		if e = o.Started(run); e != nil {
@@ -159,6 +161,7 @@ func (r *Runner) Run(parent context.Context, b config.Bot, input string, o Optio
 			return run, errors.New("provider exceeded token budget")
 		}
 		m := response.Message
+		m.Content = state.Redact(m.Content)
 		if m.Role != "assistant" {
 			return run, errors.New("invalid assistant role")
 		}
